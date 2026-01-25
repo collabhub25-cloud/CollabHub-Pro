@@ -1,0 +1,1 @@
+"""Collaborations App Package"""

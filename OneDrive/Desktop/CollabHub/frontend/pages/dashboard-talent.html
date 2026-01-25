@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talent Dashboard - CollabHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' },
+                        secondary: { 500: '#d946ef' },
+                        accent: { 500: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen font-sans">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="../index.html" class="flex items-center space-x-2">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">C</span>
+                    </div>
+                    <span class="text-white font-bold text-xl">CollabHub</span>
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="opportunities.html"
+                        class="text-gray-400 hover:text-white transition-colors">Opportunities</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors relative">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                            </path>
+                        </svg>
+                        <span id="notification-badge"
+                            class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">0</span>
+                    </a>
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2">
+                            <div class="w-9 h-9 bg-gradient-to-r from-secondary-500 to-primary-500 rounded-full flex items-center justify-center text-white font-medium"
+                                id="user-avatar">U</div>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div
+                            class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-xl border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                            <a href="profile.html"
+                                class="block px-4 py-3 text-gray-300 hover:bg-white/5 rounded-t-xl">Profile</a>
+                            <a href="#" class="block px-4 py-3 text-gray-300 hover:bg-white/5">Settings</a>
+                            <button onclick="handleLogout()"
+                                class="block w-full text-left px-4 py-3 text-red-400 hover:bg-white/5 rounded-b-xl">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Welcome Section -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-white mb-2">Welcome back, <span id="user-name">User</span>! 👋</h1>
+                <p class="text-gray-400">Here's what's happening with your applications and opportunities.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-primary-500/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-applications">0</div>
+                    <div class="text-gray-400 text-sm">Applications Sent</div>
+                </div>
+                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-accent-500/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-accepted">0</div>
+                    <div class="text-gray-400 text-sm">Accepted</div>
+                </div>
+                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-pending">0</div>
+                    <div class="text-gray-400 text-sm">Pending Review</div>
+                </div>
+                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-secondary-500/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-secondary-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-connections">0</div>
+                    <div class="text-gray-400 text-sm">Connections</div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- My Applications -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-white">My Applications</h2>
+                            <a href="opportunities.html" class="text-primary-400 text-sm hover:text-primary-300">Find
+                                More →</a>
+                        </div>
+                        <div id="applications-list" class="divide-y divide-white/5">
+                            <!-- Loading -->
+                            <div class="p-6 text-center text-gray-400">
+                                <div class="spinner mx-auto mb-3"></div>
+                                Loading applications...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Quick Actions -->
+                    <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                        <h3 class="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+                        <div class="space-y-3">
+                            <a href="opportunities.html"
+                                class="flex items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
+                                <div
+                                    class="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-gray-300">Browse Opportunities</span>
+                            </a>
+                            <a href="profile.html"
+                                class="flex items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
+                                <div
+                                    class="w-10 h-10 bg-secondary-500/20 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-secondary-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <span class="text-gray-300">Update Profile</span>
+                            </a>
+                            <a href="#"
+                                class="flex items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
+                                <div
+                                    class="w-10 h-10 bg-accent-500/20 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <span class="text-gray-300">Messages</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Opportunities -->
+                    <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                        <h3 class="text-lg font-semibold text-white mb-4">Recommended For You</h3>
+                        <div id="recommended-list" class="space-y-4">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        // Check authentication
+        if (!window.CollabHubAPI.isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+
+        // Load user data
+        const user = window.CollabHubAPI.getUserData();
+        if (user) {
+            document.getElementById('user-name').textContent = user.first_name || user.username;
+            document.getElementById('user-avatar').textContent = (user.first_name?.[0] || user.username?.[0] || 'U').toUpperCase();
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            await window.CollabHubAPI.api.logout();
+            window.location.href = 'login.html';
+        }
+
+        // Load applications
+        async function loadApplications() {
+            const list = document.getElementById('applications-list');
+
+            try {
+                // Sample data for demo
+                const sampleApps = [
+                    { id: 1, opportunity: { title: 'AI Healthcare Hackathon', type: 'hackathon' }, status: 'pending', status_display: 'Pending', applied_at: '2026-01-20' },
+                    { id: 2, opportunity: { title: 'Frontend Developer Internship', type: 'internship' }, status: 'reviewing', status_display: 'Under Review', applied_at: '2026-01-18' },
+                    { id: 3, opportunity: { title: 'Open Source Project', type: 'project' }, status: 'accepted', status_display: 'Accepted', applied_at: '2026-01-15' }
+                ];
+
+                let applications;
+                try {
+                    const { api } = window.CollabHubAPI;
+                    const response = await api.getApplications();
+                    applications = response.results || response;
+                } catch (e) {
+                    applications = sampleApps;
+                }
+
+                // Update stats
+                document.getElementById('stat-applications').textContent = applications.length;
+                document.getElementById('stat-accepted').textContent = applications.filter(a => a.status === 'accepted').length;
+                document.getElementById('stat-pending').textContent = applications.filter(a => ['pending', 'reviewing'].includes(a.status)).length;
+
+                if (applications.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-8 text-center">
+                            <div class="text-5xl mb-4">📋</div>
+                            <h3 class="text-white font-medium mb-2">No applications yet</h3>
+                            <p class="text-gray-400 text-sm mb-4">Start exploring opportunities and apply!</p>
+                            <a href="opportunities.html" class="inline-block px-4 py-2 bg-primary-500 text-white rounded-lg text-sm">Browse Opportunities</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = applications.map(app => {
+                    const statusColors = {
+                        pending: 'badge-pending',
+                        reviewing: 'badge-reviewing',
+                        accepted: 'badge-accepted',
+                        rejected: 'badge-rejected'
+                    };
+                    const date = new Date(app.applied_at).toLocaleDateString();
+
+                    return `
+                        <div class="p-4 hover:bg-white/5 transition-all">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-medium">${app.opportunity?.title || app.opportunity_title}</h4>
+                                    <p class="text-gray-500 text-sm">Applied ${date}</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs ${statusColors[app.status] || 'badge-pending'}">${app.status_display || app.status}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                list.innerHTML = '<div class="p-6 text-center text-red-400">Error loading applications</div>';
+            }
+        }
+
+        // Load recommended opportunities
+        async function loadRecommended() {
+            const list = document.getElementById('recommended-list');
+
+            const sample = [
+                { id: 1, title: 'ML Competition', type: 'hackathon', deadline: '2 days left' },
+                { id: 2, title: 'React Native Role', type: 'job', deadline: '1 week left' },
+                { id: 3, title: 'Startup Co-founder', type: 'collaboration', deadline: 'Open' }
+            ];
+
+            list.innerHTML = sample.map(opp => `
+                <a href="opportunity-detail.html?id=${opp.id}" class="block p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
+                    <h4 class="text-white font-medium text-sm mb-1">${opp.title}</h4>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-400">${opp.type}</span>
+                        <span class="text-primary-400">${opp.deadline}</span>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Initialize
+        loadApplications();
+        loadRecommended();
+    </script>
+</body>
+
+</html>

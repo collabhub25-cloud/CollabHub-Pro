@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Opportunities - CollabHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' },
+                        secondary: { 500: '#d946ef', 600: '#c026d3' },
+                        accent: { 500: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen font-sans">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="../index.html" class="flex items-center space-x-2">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">C</span>
+                    </div>
+                    <span class="text-white font-bold text-xl">CollabHub</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="login.html" class="text-gray-300 hover:text-white transition-colors">Sign In</a>
+                    <a href="register.html"
+                        class="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90">Get
+                        Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-white mb-4">Explore Opportunities</h1>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Find hackathons, internships, projects, and more.
+                    Filter by type and skills to find your perfect match.</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-8">
+                <div class="grid md:grid-cols-4 gap-4">
+                    <!-- Search -->
+                    <div class="md:col-span-2">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Search opportunities..."
+                                class="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500">
+                        </div>
+                    </div>
+
+                    <!-- Type Filter -->
+                    <div>
+                        <select id="type-filter"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer">
+                            <option value="">All Types</option>
+                            <option value="hackathon">🏆 Hackathon</option>
+                            <option value="internship">💼 Internship</option>
+                            <option value="project">🛠️ Project</option>
+                            <option value="job">👔 Job</option>
+                            <option value="collaboration">🤝 Collaboration</option>
+                        </select>
+                    </div>
+
+                    <!-- Difficulty Filter -->
+                    <div>
+                        <select id="difficulty-filter"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer">
+                            <option value="">All Levels</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Skills Filter -->
+                <div class="mt-4">
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-gray-400 text-sm py-1">Popular skills:</span>
+                        <button
+                            class="skill-tag px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm hover:bg-primary-500/20 hover:text-primary-400 transition-all"
+                            data-skill="Python">Python</button>
+                        <button
+                            class="skill-tag px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm hover:bg-primary-500/20 hover:text-primary-400 transition-all"
+                            data-skill="React">React</button>
+                        <button
+                            class="skill-tag px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm hover:bg-primary-500/20 hover:text-primary-400 transition-all"
+                            data-skill="Node.js">Node.js</button>
+                        <button
+                            class="skill-tag px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm hover:bg-primary-500/20 hover:text-primary-400 transition-all"
+                            data-skill="Machine Learning">Machine Learning</button>
+                        <button
+                            class="skill-tag px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm hover:bg-primary-500/20 hover:text-primary-400 transition-all"
+                            data-skill="UI/UX">UI/UX</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Count -->
+            <div class="flex justify-between items-center mb-6">
+                <p class="text-gray-400"><span id="results-count">0</span> opportunities found</p>
+                <select id="sort-filter"
+                    class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-sm focus:outline-none">
+                    <option value="-created_at">Newest First</option>
+                    <option value="deadline">Deadline Soon</option>
+                    <option value="-total_applications">Most Popular</option>
+                </select>
+            </div>
+
+            <!-- Opportunities Grid -->
+            <div id="opportunities-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loading Skeleton -->
+                <div class="skeleton-card bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div class="skeleton h-6 w-20 rounded mb-4"></div>
+                    <div class="skeleton h-8 w-full rounded mb-3"></div>
+                    <div class="skeleton h-4 w-full rounded mb-2"></div>
+                    <div class="skeleton h-4 w-3/4 rounded mb-4"></div>
+                    <div class="flex gap-2 mb-4">
+                        <div class="skeleton h-6 w-16 rounded-full"></div>
+                        <div class="skeleton h-6 w-16 rounded-full"></div>
+                    </div>
+                    <div class="skeleton h-10 w-full rounded-lg"></div>
+                </div>
+                <div class="skeleton-card bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div class="skeleton h-6 w-20 rounded mb-4"></div>
+                    <div class="skeleton h-8 w-full rounded mb-3"></div>
+                    <div class="skeleton h-4 w-full rounded mb-2"></div>
+                    <div class="skeleton h-4 w-3/4 rounded mb-4"></div>
+                    <div class="flex gap-2 mb-4">
+                        <div class="skeleton h-6 w-16 rounded-full"></div>
+                        <div class="skeleton h-6 w-16 rounded-full"></div>
+                    </div>
+                    <div class="skeleton h-10 w-full rounded-lg"></div>
+                </div>
+                <div class="skeleton-card bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div class="skeleton h-6 w-20 rounded mb-4"></div>
+                    <div class="skeleton h-8 w-full rounded mb-3"></div>
+                    <div class="skeleton h-4 w-full rounded mb-2"></div>
+                    <div class="skeleton h-4 w-3/4 rounded mb-4"></div>
+                    <div class="flex gap-2 mb-4">
+                        <div class="skeleton h-6 w-16 rounded-full"></div>
+                        <div class="skeleton h-6 w-16 rounded-full"></div>
+                    </div>
+                    <div class="skeleton h-10 w-full rounded-lg"></div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="flex justify-center items-center space-x-2 mt-10">
+                <button id="prev-page"
+                    class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <span id="page-info" class="text-gray-400 px-4">Page 1</span>
+                <button id="next-page"
+                    class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        let currentPage = 1;
+        let selectedSkills = [];
+        const typeColors = {
+            hackathon: 'type-hackathon',
+            internship: 'type-internship',
+            project: 'type-project',
+            job: 'type-job',
+            collaboration: 'type-hackathon'
+        };
+
+        // Create opportunity card HTML
+        function createOpportunityCard(opp) {
+            const deadline = opp.deadline ? new Date(opp.deadline).toLocaleDateString() : 'No deadline';
+            const skills = (opp.required_skills || []).slice(0, 3);
+
+            return `
+                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-primary-500/30 transition-all card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 ${typeColors[opp.type] || 'bg-primary-500'} text-white rounded-full text-xs font-medium">
+                            ${opp.type_display || opp.type}
+                        </span>
+                        ${opp.is_featured ? '<span class="text-yellow-400 text-sm">⭐ Featured</span>' : ''}
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2 line-clamp-2">${opp.title}</h3>
+                    <p class="text-gray-400 text-sm mb-4 line-clamp-2">${opp.short_description || opp.description?.substring(0, 100) + '...'}</p>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${skills.map(skill => `<span class="px-2 py-1 bg-white/10 text-gray-300 rounded text-xs">${skill}</span>`).join('')}
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span>📍 ${opp.is_remote ? 'Remote' : opp.location || 'On-site'}</span>
+                        <span>📅 ${deadline}</span>
+                    </div>
+                    
+                    <a href="opportunity-detail.html?id=${opp.id}" class="block w-full py-2 text-center bg-white/10 text-white rounded-lg hover:bg-primary-500 transition-all">
+                        View Details
+                    </a>
+                </div>
+            `;
+        }
+
+        // Fetch and display opportunities
+        async function fetchOpportunities() {
+            const grid = document.getElementById('opportunities-grid');
+            const countEl = document.getElementById('results-count');
+
+            const params = {
+                page: currentPage,
+                search: document.getElementById('search-input').value,
+                type: document.getElementById('type-filter').value,
+                difficulty: document.getElementById('difficulty-filter').value,
+                ordering: document.getElementById('sort-filter').value
+            };
+
+            // Remove empty params
+            Object.keys(params).forEach(key => !params[key] && delete params[key]);
+
+            try {
+                // For demo, show sample data if API not available
+                const sampleData = {
+                    count: 6,
+                    results: [
+                        { id: 1, title: 'AI Healthcare Hackathon 2026', type: 'hackathon', type_display: 'Hackathon', short_description: 'Build innovative healthcare solutions using AI and machine learning.', required_skills: ['Python', 'TensorFlow', 'Healthcare'], is_remote: true, deadline: '2026-03-15', is_featured: true },
+                        { id: 2, title: 'Frontend Developer Internship', type: 'internship', type_display: 'Internship', short_description: 'Join our team to build beautiful user interfaces with React.', required_skills: ['React', 'TypeScript', 'CSS'], is_remote: false, location: 'San Francisco', deadline: '2026-02-28' },
+                        { id: 3, title: 'Open Source Contribution - CollabHub', type: 'project', type_display: 'Project', short_description: 'Help us build the future of collaboration platforms.', required_skills: ['Django', 'React', 'PostgreSQL'], is_remote: true, deadline: null },
+                        { id: 4, title: 'Climate Tech Challenge', type: 'hackathon', type_display: 'Hackathon', short_description: 'Create solutions for climate change and sustainability.', required_skills: ['Data Science', 'Python', 'IoT'], is_remote: true, deadline: '2026-04-01', is_featured: true },
+                        { id: 5, title: 'Mobile App Developer', type: 'job', type_display: 'Job', short_description: 'Full-time position building cross-platform mobile applications.', required_skills: ['React Native', 'Flutter', 'Swift'], is_remote: true, deadline: '2026-02-15' },
+                        { id: 6, title: 'Startup Co-founder Needed', type: 'collaboration', type_display: 'Collaboration', short_description: 'Looking for a technical co-founder for an EdTech startup.', required_skills: ['Full Stack', 'Leadership', 'EdTech'], is_remote: true, deadline: null }
+                    ]
+                };
+
+                let data;
+                try {
+                    const { api } = window.CollabHubAPI;
+                    const response = await api.getOpportunities(params);
+                    data = response;
+                } catch (e) {
+                    console.log('Using sample data');
+                    data = sampleData;
+                }
+
+                // Remove skeletons
+                document.querySelectorAll('.skeleton-card').forEach(el => el.remove());
+
+                countEl.textContent = data.count || data.results?.length || 0;
+
+                if (data.results && data.results.length > 0) {
+                    grid.innerHTML = data.results.map(createOpportunityCard).join('');
+                } else {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <div class="text-6xl mb-4">🔍</div>
+                            <h3 class="text-xl font-semibold text-white mb-2">No opportunities found</h3>
+                            <p class="text-gray-400">Try adjusting your filters or search terms</p>
+                        </div>
+                    `;
+                }
+
+                // Update pagination
+                document.getElementById('prev-page').disabled = currentPage <= 1;
+                document.getElementById('next-page').disabled = !data.next;
+                document.getElementById('page-info').textContent = `Page ${currentPage}`;
+
+            } catch (error) {
+                console.error('Error fetching opportunities:', error);
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-6xl mb-4">⚠️</div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Error loading opportunities</h3>
+                        <p class="text-gray-400">Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('search-input').addEventListener('input', debounce(fetchOpportunities, 300));
+        document.getElementById('type-filter').addEventListener('change', fetchOpportunities);
+        document.getElementById('difficulty-filter').addEventListener('change', fetchOpportunities);
+        document.getElementById('sort-filter').addEventListener('change', fetchOpportunities);
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchOpportunities();
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            currentPage++;
+            fetchOpportunities();
+        });
+
+        // Skill tag filters
+        document.querySelectorAll('.skill-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                const skill = tag.dataset.skill;
+                const searchInput = document.getElementById('search-input');
+                searchInput.value = skill;
+                tag.classList.toggle('bg-primary-500/20');
+                tag.classList.toggle('text-primary-400');
+                fetchOpportunities();
+            });
+        });
+
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Initial load
+        fetchOpportunities();
+    </script>
+</body>
+
+</html>
