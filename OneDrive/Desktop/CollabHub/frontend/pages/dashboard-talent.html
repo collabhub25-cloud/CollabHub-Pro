@@ -28,16 +28,25 @@
     <nav class="fixed w-full z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
+                <!-- Logo -->
                 <a href="../index.html" class="flex items-center space-x-2">
-                    <div
-                        class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
                         <span class="text-white font-bold text-xl">C</span>
                     </div>
                     <span class="text-white font-bold text-xl">CollabHub</span>
                 </a>
+
+                <!-- Authenticated Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="../index.html" class="text-gray-400 hover:text-white transition-colors">Home</a>
+                    <a href="startups.html" class="text-gray-400 hover:text-white transition-colors">Explore Startups</a>
+                    <a href="network.html" class="text-gray-400 hover:text-white transition-colors">Network</a>
+                    <a href="#" class="text-primary-400 hover:text-primary-300 transition-colors">Dashboard</a>
+                    <a href="messages.html" class="text-gray-400 hover:text-white transition-colors">Messages</a>
+                </div>
+
                 <div class="flex items-center space-x-6">
-                    <a href="opportunities.html"
-                        class="text-gray-400 hover:text-white transition-colors">Opportunities</a>
+                    <a href="opportunities.html" class="text-gray-400 hover:text-white transition-colors">Opportunities</a>
                     <a href="#" class="text-gray-400 hover:text-white transition-colors relative">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -85,68 +94,83 @@
                         <div class="w-12 h-12 bg-primary-500/20 rounded-xl flex items-center justify-center">
                             <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
                                 </path>
                             </svg>
                         </div>
                     </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="stat-applications">0</div>
-                    <div class="text-gray-400 text-sm">Applications Sent</div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-interests">0</div>
+                    <div class="text-gray-400 text-sm">Interests Sent</div>
                 </div>
                 <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-accent-500/20 rounded-xl flex items-center justify-center">
                             <svg class="w-6 h-6 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                </path>
                             </svg>
                         </div>
                     </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="stat-accepted">0</div>
-                    <div class="text-gray-400 text-sm">Accepted</div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-teams">0</div>
+                    <div class="text-gray-400 text-sm">Active Teams</div>
                 </div>
                 <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
                             <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="stat-pending">0</div>
-                    <div class="text-gray-400 text-sm">Pending Review</div>
-                </div>
-                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-secondary-500/20 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-secondary-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z">
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
                                 </path>
                             </svg>
                         </div>
                     </div>
-                    <div class="text-3xl font-bold text-white mb-1" id="stat-connections">0</div>
-                    <div class="text-gray-400 text-sm">Connections</div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-matches">0</div>
+                    <div class="text-gray-400 text-sm">Matches Found</div>
+                </div>
+                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-secondary-500/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-completion">0%</div>
+                    <div class="text-gray-400 text-sm">Profile Completion</div>
                 </div>
             </div>
 
             <div class="grid lg:grid-cols-3 gap-8">
-                <!-- My Applications -->
+                <!-- Your Interests -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                    <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden mb-8">
                         <div class="p-6 border-b border-white/10 flex justify-between items-center">
-                            <h2 class="text-xl font-semibold text-white">My Applications</h2>
-                            <a href="opportunities.html" class="text-primary-400 text-sm hover:text-primary-300">Find
-                                More →</a>
+                            <h2 class="text-xl font-semibold text-white">Your Interests</h2>
+                            <a href="opportunities.html" class="text-primary-400 text-sm hover:text-primary-300">Find More →</a>
                         </div>
-                        <div id="applications-list" class="divide-y divide-white/5">
+                        <div id="interests-list" class="divide-y divide-white/5">
                             <!-- Loading -->
                             <div class="p-6 text-center text-gray-400">
                                 <div class="spinner mx-auto mb-3"></div>
-                                Loading applications...
+                                Loading your interests...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Teams -->
+                    <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-white">My Teams</h2>
+                            <a href="startups.html" class="text-primary-400 text-sm hover:text-primary-300">Explore Startups →</a>
+                        </div>
+                        <div id="teams-list" class="divide-y divide-white/5">
+                            <!-- Loading -->
+                            <div class="p-6 text-center text-gray-400">
+                                <div class="spinner mx-auto mb-3"></div>
+                                Loading your teams...
                             </div>
                         </div>
                     </div>
@@ -183,7 +207,7 @@
                                 </div>
                                 <span class="text-gray-300">Update Profile</span>
                             </a>
-                            <a href="#"
+                            <a href="messages.html"
                                 class="flex items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
                                 <div
                                     class="w-10 h-10 bg-accent-500/20 rounded-lg flex items-center justify-center mr-3">
@@ -199,11 +223,15 @@
                         </div>
                     </div>
 
-                    <!-- Recommended Opportunities -->
+                    <!-- Recommended For You -->
                     <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
                         <h3 class="text-lg font-semibold text-white mb-4">Recommended For You</h3>
                         <div id="recommended-list" class="space-y-4">
-                            <!-- Will be populated by JS -->
+                            <!-- Loading -->
+                            <div class="text-center text-gray-400 py-4">
+                                <div class="spinner mx-auto mb-2"></div>
+                                Loading recommendations...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -232,96 +260,211 @@
             window.location.href = 'login.html';
         }
 
-        // Load applications
-        async function loadApplications() {
-            const list = document.getElementById('applications-list');
-
+        // Load dashboard stats
+        async function loadDashboardStats() {
             try {
-                // Sample data for demo
-                const sampleApps = [
-                    { id: 1, opportunity: { title: 'AI Healthcare Hackathon', type: 'hackathon' }, status: 'pending', status_display: 'Pending', applied_at: '2026-01-20' },
-                    { id: 2, opportunity: { title: 'Frontend Developer Internship', type: 'internship' }, status: 'reviewing', status_display: 'Under Review', applied_at: '2026-01-18' },
-                    { id: 3, opportunity: { title: 'Open Source Project', type: 'project' }, status: 'accepted', status_display: 'Accepted', applied_at: '2026-01-15' }
-                ];
+                const { api } = window.CollabHubAPI;
+                const stats = await api.getDashboardStats();
+                
+                // Update stat cards
+                document.getElementById('stat-interests').textContent = stats.interests_sent || 0;
+                document.getElementById('stat-teams').textContent = stats.active_teams || 0;
+                document.getElementById('stat-matches').textContent = stats.matches_found || 0;
+                document.getElementById('stat-completion').textContent = `${stats.profile_completion || 0}%`;
+                
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                // Use fallback values
+                document.getElementById('stat-interests').textContent = '0';
+                document.getElementById('stat-teams').textContent = '0';
+                document.getElementById('stat-matches').textContent = '0';
+                document.getElementById('stat-completion').textContent = '0%';
+            }
+        }
 
-                let applications;
-                try {
-                    const { api } = window.CollabHubAPI;
-                    const response = await api.getApplications();
-                    applications = response.results || response;
-                } catch (e) {
-                    applications = sampleApps;
-                }
+        // Load user interests (recent interactions)
+        async function loadInterests() {
+            const list = document.getElementById('interests-list');
+            
+            try {
+                const { api } = window.CollabHubAPI;
+                const data = await api.getDashboardInteractions();
+                const interactions = data.interactions || [];
 
-                // Update stats
-                document.getElementById('stat-applications').textContent = applications.length;
-                document.getElementById('stat-accepted').textContent = applications.filter(a => a.status === 'accepted').length;
-                document.getElementById('stat-pending').textContent = applications.filter(a => ['pending', 'reviewing'].includes(a.status)).length;
-
-                if (applications.length === 0) {
+                if (interactions.length === 0) {
                     list.innerHTML = `
                         <div class="p-8 text-center">
-                            <div class="text-5xl mb-4">📋</div>
-                            <h3 class="text-white font-medium mb-2">No applications yet</h3>
-                            <p class="text-gray-400 text-sm mb-4">Start exploring opportunities and apply!</p>
+                            <div class="text-5xl mb-4">💡</div>
+                            <h3 class="text-white font-medium mb-2">No interests yet</h3>
+                            <p class="text-gray-400 text-sm mb-4">Start exploring opportunities to show your interests!</p>
                             <a href="opportunities.html" class="inline-block px-4 py-2 bg-primary-500 text-white rounded-lg text-sm">Browse Opportunities</a>
                         </div>
                     `;
                     return;
                 }
 
-                list.innerHTML = applications.map(app => {
+                list.innerHTML = interactions.map(interaction => {
+                    const date = new Date(interaction.date).toLocaleDateString();
                     const statusColors = {
-                        pending: 'badge-pending',
-                        reviewing: 'badge-reviewing',
-                        accepted: 'badge-accepted',
-                        rejected: 'badge-rejected'
+                        pending: 'text-yellow-400',
+                        reviewing: 'text-blue-400',
+                        accepted: 'text-green-400',
+                        rejected: 'text-red-400'
                     };
-                    const date = new Date(app.applied_at).toLocaleDateString();
 
                     return `
                         <div class="p-4 hover:bg-white/5 transition-all">
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-start justify-between">
                                 <div class="flex-1">
-                                    <h4 class="text-white font-medium">${app.opportunity?.title || app.opportunity_title}</h4>
-                                    <p class="text-gray-500 text-sm">Applied ${date}</p>
+                                    <div class="flex items-center mb-2">
+                                        ${interaction.startup ? `
+                                            <div class="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center text-white text-xs font-bold mr-3">
+                                                ${interaction.startup.name.charAt(0)}
+                                            </div>
+                                        ` : ''}
+                                        <div>
+                                            <h4 class="text-white font-medium">${interaction.opportunity.title}</h4>
+                                            ${interaction.startup ? `<p class="text-gray-500 text-xs">${interaction.startup.name}</p>` : ''}
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-400 text-sm">${interaction.interaction_type} • ${date}</p>
                                 </div>
-                                <span class="px-3 py-1 rounded-full text-xs ${statusColors[app.status] || 'badge-pending'}">${app.status_display || app.status}</span>
+                                <span class="px-3 py-1 rounded-full text-xs ${statusColors[interaction.status] || 'text-gray-400'}">${interaction.status}</span>
                             </div>
                         </div>
                     `;
                 }).join('');
 
             } catch (error) {
-                console.error('Error loading applications:', error);
-                list.innerHTML = '<div class="p-6 text-center text-red-400">Error loading applications</div>';
+                console.error('Error loading interests:', error);
+                list.innerHTML = '<div class="p-6 text-center text-red-400">Error loading interests</div>';
+            }
+        }
+
+        // Load user teams
+        async function loadTeams() {
+            const list = document.getElementById('teams-list');
+            
+            try {
+                const { api } = window.CollabHubAPI;
+                const data = await api.getDashboardTeams();
+                const teams = data.teams || [];
+
+                if (teams.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-8 text-center">
+                            <div class="text-5xl mb-4">👥</div>
+                            <h3 class="text-white font-medium mb-2">No teams yet</h3>
+                            <p class="text-gray-400 text-sm mb-4">Join a startup team or create your own!</p>
+                            <a href="startups.html" class="inline-block px-4 py-2 bg-primary-500 text-white rounded-lg text-sm">Explore Startups</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = teams.map(team => {
+                    const joinedDate = new Date(team.joined_at).toLocaleDateString();
+                    const stageColors = {
+                        idea: 'text-gray-400',
+                        mvp: 'text-blue-400',
+                        early: 'text-green-400',
+                        growth: 'text-purple-400',
+                        scale: 'text-yellow-400'
+                    };
+
+                    return `
+                        <div class="p-4 hover:bg-white/5 transition-all">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center flex-1">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center text-white font-bold mr-4">
+                                        ${team.name.charAt(0)}
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-white font-medium">${team.name}</h4>
+                                        <p class="text-gray-400 text-sm">${team.tagline || team.industry}</p>
+                                        <div class="flex items-center gap-4 mt-1">
+                                            <span class="text-xs ${stageColors[team.stage] || 'text-gray-400'}">${team.stage}</span>
+                                            <span class="text-xs text-gray-500">${team.team_size} members</span>
+                                            <span class="text-xs text-gray-500">Joined ${joinedDate}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="px-2 py-1 bg-primary-500/20 text-primary-400 rounded text-xs">${team.role}</span>
+                                    ${team.is_founder ? '<div class="text-xs text-yellow-400 mt-1">👑 Founder</div>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading teams:', error);
+                list.innerHTML = '<div class="p-6 text-center text-red-400">Error loading teams</div>';
             }
         }
 
         // Load recommended opportunities
-        async function loadRecommended() {
+        async function loadRecommendations() {
             const list = document.getElementById('recommended-list');
 
-            const sample = [
-                { id: 1, title: 'ML Competition', type: 'hackathon', deadline: '2 days left' },
-                { id: 2, title: 'React Native Role', type: 'job', deadline: '1 week left' },
-                { id: 3, title: 'Startup Co-founder', type: 'collaboration', deadline: 'Open' }
-            ];
+            try {
+                const { api } = window.CollabHubAPI;
+                const data = await api.getDashboardRecommendations();
+                const recommendations = data.recommendations || [];
 
-            list.innerHTML = sample.map(opp => `
-                <a href="opportunity-detail.html?id=${opp.id}" class="block p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
-                    <h4 class="text-white font-medium text-sm mb-1">${opp.title}</h4>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-gray-400">${opp.type}</span>
-                        <span class="text-primary-400">${opp.deadline}</span>
-                    </div>
-                </a>
-            `).join('');
+                if (recommendations.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-4">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <p class="text-gray-400 text-sm">No recommendations yet</p>
+                            <p class="text-gray-500 text-xs mt-1">Add skills to your profile for better matches</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = recommendations.slice(0, 5).map(rec => {
+                    const deadline = rec.deadline ? new Date(rec.deadline).toLocaleDateString() : 'Open';
+                    const matchBadge = rec.match_score > 0 ? `<span class="text-xs text-green-400">${rec.match_score}% match</span>` : '';
+
+                    return `
+                        <a href="opportunity-detail.html?id=${rec.id}" class="block p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
+                            <div class="flex items-start justify-between mb-2">
+                                <h4 class="text-white font-medium text-sm flex-1">${rec.title}</h4>
+                                ${matchBadge}
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-gray-400">${rec.type}</span>
+                                <span class="text-primary-400">${deadline}</span>
+                            </div>
+                            ${rec.matching_skills && rec.matching_skills.length > 0 ? `
+                                <div class="flex flex-wrap gap-1 mt-2">
+                                    ${rec.matching_skills.slice(0, 2).map(skill => `<span class="px-1 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">${skill}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </a>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading recommendations:', error);
+                list.innerHTML = '<div class="text-center text-red-400 text-sm py-4">Error loading recommendations</div>';
+            }
         }
 
-        // Initialize
-        loadApplications();
-        loadRecommended();
+        // Initialize dashboard
+        async function initializeDashboard() {
+            await Promise.all([
+                loadDashboardStats(),
+                loadInterests(),
+                loadTeams(),
+                loadRecommendations()
+            ]);
+        }
+
+        // Start loading
+        initializeDashboard();
     </script>
 </body>
 

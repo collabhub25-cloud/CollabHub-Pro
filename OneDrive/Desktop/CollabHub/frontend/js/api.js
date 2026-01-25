@@ -337,6 +337,31 @@ const api = {
         });
         if (!response.ok) throw new Error('Failed to mark notifications');
         return response.json();
+    },
+
+    // Dashboard
+    async getDashboardStats() {
+        const response = await apiRequest('/users/me/dashboard/stats/');
+        if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+        return response.json();
+    },
+
+    async getDashboardInteractions() {
+        const response = await apiRequest('/users/me/dashboard/interactions/');
+        if (!response.ok) throw new Error('Failed to fetch dashboard interactions');
+        return response.json();
+    },
+
+    async getDashboardTeams() {
+        const response = await apiRequest('/users/me/dashboard/teams/');
+        if (!response.ok) throw new Error('Failed to fetch dashboard teams');
+        return response.json();
+    },
+
+    async getDashboardRecommendations() {
+        const response = await apiRequest('/users/me/dashboard/recommendations/');
+        if (!response.ok) throw new Error('Failed to fetch dashboard recommendations');
+        return response.json();
     }
 };
 
