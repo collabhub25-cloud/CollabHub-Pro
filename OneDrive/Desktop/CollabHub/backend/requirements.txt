@@ -18,3 +18,25 @@ Pillow>=10.0.0
 
 # Django Filters for API filtering
 django-filter>=23.5
+
+# Security
+django-axes>=6.0.0
+django-csp>=3.8
+bleach>=6.1.0
+
+# Database
+psycopg2-binary>=2.9.9
+
+# File handling
+python-magic>=0.4.27
+
+# HTTP requests (for CAPTCHA verification)
+requests>=2.31.0
+
+# MFA / Two-Factor Authentication
+django-otp>=1.3.0
+pyotp>=2.9.0
+qrcode>=7.4.2
+
+
+

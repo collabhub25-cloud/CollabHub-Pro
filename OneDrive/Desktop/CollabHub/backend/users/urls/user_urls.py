@@ -17,7 +17,8 @@ from ..dashboard_views import (
     DashboardStatsView,
     DashboardInteractionsView,
     DashboardTeamsView,
-    DashboardRecommendationsView
+    DashboardRecommendationsView,
+    ActivityFeedView
 )
 
 urlpatterns = [
@@ -31,6 +32,7 @@ urlpatterns = [
     path('me/dashboard/interactions/', DashboardInteractionsView.as_view(), name='dashboard_interactions'),
     path('me/dashboard/teams/', DashboardTeamsView.as_view(), name='dashboard_teams'),
     path('me/dashboard/recommendations/', DashboardRecommendationsView.as_view(), name='dashboard_recommendations'),
+    path('me/feed/', ActivityFeedView.as_view(), name='activity_feed'),
     
     # User listing and details
     path('', UserListView.as_view(), name='user_list'),

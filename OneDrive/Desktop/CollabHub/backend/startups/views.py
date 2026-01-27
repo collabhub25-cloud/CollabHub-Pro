@@ -93,14 +93,16 @@ class StartupMemberView(APIView):
     
     def get(self, request, pk):
         """Get all members of a startup."""
-        startup = Startup.objects.get(pk=pk)
+        from django.shortcuts import get_object_or_404
+        startup = get_object_or_404(Startup, pk=pk)
         members = StartupMember.objects.filter(startup=startup).select_related('user')
         serializer = StartupMemberSerializer(members, many=True)
         return Response(serializer.data)
     
     def post(self, request, pk):
         """Add a member to startup (founder only)."""
-        startup = Startup.objects.get(pk=pk)
+        from django.shortcuts import get_object_or_404
+        startup = get_object_or_404(Startup, pk=pk)
         
         if startup.founder != request.user:
             return Response(
@@ -116,7 +118,8 @@ class StartupMemberView(APIView):
     
     def delete(self, request, pk):
         """Remove a member from startup (founder only)."""
-        startup = Startup.objects.get(pk=pk)
+        from django.shortcuts import get_object_or_404
+        startup = get_object_or_404(Startup, pk=pk)
         
         if startup.founder != request.user:
             return Response(

@@ -1,13 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messages - CollabHub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' },
+                        secondary: { 500: '#d946ef', 600: '#c026d3' },
+                        accent: { 500: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .messages-container {
+            height: calc(100vh - 180px);
+        }
+
+        .chat-messages {
+            height: calc(100% - 80px);
+            overflow-y: auto;
+        }
+
+        .message-input {
+            height: 80px;
+        }
+    </style>
 </head>
+
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen font-sans">
     <!-- Navigation -->
     <nav class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
@@ -15,7 +44,8 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Logo -->
                 <a href="../index.html" class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
                         <span class="text-white font-bold text-xl">C</span>
                     </div>
                     <span class="text-white font-bold text-xl">CollabHub</span>
@@ -23,24 +53,31 @@
 
                 <!-- Unauthenticated Navigation -->
                 <div id="unauthenticated-nav" class="hidden md:flex items-center space-x-8">
-                    <a href="../index.html#features" class="text-gray-300 hover:text-white transition-colors">Features</a>
-                    <a href="opportunities.html" class="text-gray-300 hover:text-white transition-colors">Opportunities</a>
+                    <a href="../index.html#features"
+                        class="text-gray-300 hover:text-white transition-colors">Features</a>
+                    <a href="opportunities.html"
+                        class="text-gray-300 hover:text-white transition-colors">Opportunities</a>
                     <a href="../index.html#about" class="text-gray-300 hover:text-white transition-colors">About</a>
                 </div>
 
                 <!-- Authenticated Navigation -->
                 <div id="authenticated-nav" class="hidden md:flex items-center space-x-8">
                     <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
-                    <a href="startups.html" class="text-gray-300 hover:text-white transition-colors">Explore Startups</a>
+                    <a href="startups.html" class="text-gray-300 hover:text-white transition-colors">Explore
+                        Startups</a>
                     <a href="network.html" class="text-gray-300 hover:text-white transition-colors">Network</a>
-                    <a href="#" id="dashboard-link" class="text-gray-300 hover:text-white transition-colors">Dashboard</a>
-                    <a href="messages.html" class="text-primary-400 hover:text-primary-300 transition-colors">Messages</a>
+                    <a href="#" id="dashboard-link"
+                        class="text-gray-300 hover:text-white transition-colors">Dashboard</a>
+                    <a href="messages.html"
+                        class="text-primary-400 hover:text-primary-300 transition-colors">Messages</a>
                 </div>
 
                 <!-- Unauthenticated Actions -->
                 <div id="unauthenticated-actions" class="flex items-center space-x-4">
                     <a href="login.html" class="text-gray-300 hover:text-white transition-colors">Sign In</a>
-                    <a href="register.html" class="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90">Get Started</a>
+                    <a href="register.html"
+                        class="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90">Get
+                        Started</a>
                 </div>
 
                 <!-- Authenticated Actions -->
@@ -52,31 +89,368 @@
         </div>
     </nav>
 
-    <main class="pt-24 pb-12 px-4">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-12">
-                <h1 class="text-4xl font-bold text-white mb-4">Messages</h1>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Stay connected with your collaborators and potential partners.</p>
-            </div>
+    <main class="pt-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div
+                class="messages-container bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden flex">
+                <!-- Conversations List (Left) -->
+                <div class="w-80 border-r border-white/10 flex flex-col">
+                    <div class="p-4 border-b border-white/10">
+                        <h2 class="text-lg font-semibold text-white">Messages</h2>
+                    </div>
+                    <div class="p-3">
+                        <input type="text" id="search-conversations" placeholder="Search conversations..."
+                            class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-primary-500">
+                    </div>
+                    <div id="conversations-list" class="flex-1 overflow-y-auto">
+                        <div class="p-4 text-center text-gray-400">
+                            <div class="spinner mx-auto mb-2"></div>
+                            Loading...
+                        </div>
+                    </div>
+                </div>
 
-            <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-12 border border-white/10 text-center">
-                <div class="text-6xl mb-6">💬</div>
-                <h2 class="text-2xl font-bold text-white mb-4">Coming Soon</h2>
-                <p class="text-gray-400 mb-6">We're building a powerful messaging system to help you communicate with your network.</p>
-                <a href="opportunities.html" class="inline-block px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
-                    Explore Opportunities Instead
-                </a>
+                <!-- Chat Window (Right) -->
+                <div class="flex-1 flex flex-col">
+                    <!-- Chat Header -->
+                    <div id="chat-header" class="p-4 border-b border-white/10 flex items-center hidden">
+                        <div id="chat-avatar"
+                            class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center text-white font-bold mr-3">
+                        </div>
+                        <div>
+                            <h3 id="chat-name" class="text-white font-semibold"></h3>
+                            <p id="chat-status" class="text-gray-400 text-sm"></p>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="empty-state" class="flex-1 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-6xl mb-4">💬</div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Your Messages</h3>
+                            <p class="text-gray-400 mb-4">Select a conversation to start chatting</p>
+                            <a href="network.html" class="text-primary-400 hover:text-primary-300">Find people to
+                                connect with →</a>
+                        </div>
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div id="messages-area" class="flex-1 flex flex-col hidden">
+                        <div id="chat-messages" class="chat-messages p-4 space-y-4">
+                            <!-- Messages loaded here -->
+                        </div>
+
+                        <!-- Message Input -->
+                        <div class="message-input p-4 border-t border-white/10">
+                            <form id="message-form" class="flex space-x-3">
+                                <input type="text" id="message-input" placeholder="Type a message..."
+                                    class="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-primary-500">
+                                <button type="submit"
+                                    class="px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
+    <script src="../js/security.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        // Require authentication for this page
+        let currentUserId = null;
+        let currentConversationId = null;
+        let conversations = [];
+
+        // Check auth
         if (!window.CollabHubAPI.isAuthenticated()) {
-            window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+            window.location.href = 'login.html';
         }
+        const userData = window.CollabHubAPI.getUserData();
+        currentUserId = userData?.id;
+
+        // Format time
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else if (diffDays === 1) {
+                return 'Yesterday';
+            } else if (diffDays < 7) {
+                return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        // Get initials
+        function getInitials(user) {
+            return ((user.first_name?.[0] || '') + (user.last_name?.[0] || user.email?.[0] || 'U')).toUpperCase();
+        }
+
+        // Load conversations
+        async function loadConversations() {
+            const list = document.getElementById('conversations-list');
+
+            try {
+                const { api } = window.CollabHubAPI;
+                let data;
+                try {
+                    data = await api.getConversations();
+                } catch (e) {
+                    // Sample data
+                    data = [
+                        { id: 1, other_user: { id: 2, first_name: 'Sarah', last_name: 'Chen', email: 'sarah@example.com' }, last_message: { content: 'Hey, loved your profile!', created_at: new Date().toISOString(), sender: { id: 2 } }, unread_count: 2 },
+                        { id: 2, other_user: { id: 3, first_name: 'Mike', last_name: 'Johnson', email: 'mike@example.com' }, last_message: { content: 'Let me know if you\'re interested!', created_at: new Date(Date.now() - 86400000).toISOString(), sender: { id: 1 } }, unread_count: 0 }
+                    ];
+                }
+
+                conversations = data.results || data || [];
+
+                if (conversations.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-6 text-center">
+                            <div class="text-4xl mb-3">📭</div>
+                            <p class="text-gray-400 text-sm">No conversations yet</p>
+                            <a href="network.html" class="text-primary-400 text-sm hover:text-primary-300">Connect with users →</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // SECURITY: Use escapeHTML for all user-generated content
+                const esc = window.CollabHubSecurity.escapeHTML;
+                list.innerHTML = conversations.map(conv => {
+                    const other = conv.other_user || conv.participants?.find(p => p.id !== currentUserId) || {};
+                    const lastMsg = conv.last_message;
+                    const unread = conv.unread_count || 0;
+                    const isActive = conv.id === currentConversationId;
+
+                    // Escape user-provided content
+                    const safeName = esc((other.first_name || '') + ' ' + (other.last_name || other.email?.split('@')[0] || 'User'));
+                    const safeInitials = esc(getInitials(other));
+                    const safeContent = lastMsg ? esc((lastMsg.sender?.id === currentUserId ? 'You: ' : '') + lastMsg.content) : 'No messages yet';
+
+                    return `
+                        <div onclick="selectConversation(${parseInt(conv.id)})" 
+                             class="conversation-item p-4 cursor-pointer hover:bg-white/5 transition-all border-b border-white/5 ${isActive ? 'bg-white/10' : ''}"
+                             data-id="${parseInt(conv.id)}">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center text-white font-bold mr-3">
+                                    ${safeInitials}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="text-white font-medium truncate">${safeName}</h4>
+                                        <span class="text-xs text-gray-500 ml-2 whitespace-nowrap">${lastMsg ? formatTime(lastMsg.created_at) : ''}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-1">
+                                        <p class="text-gray-400 text-sm truncate">${safeContent}</p>
+                                        ${unread > 0 ? `<span class="ml-2 px-2 py-0.5 bg-primary-500 text-white rounded-full text-xs">${parseInt(unread)}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Check URL for user param to start new conversation
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('user');
+                if (userId) {
+                    startNewConversation(parseInt(userId));
+                }
+
+            } catch (error) {
+                console.error('Error loading conversations:', error);
+                list.innerHTML = '<div class="p-4 text-center text-red-400">Error loading conversations</div>';
+            }
+        }
+
+        // Start new conversation
+        async function startNewConversation(userId) {
+            try {
+                const { api } = window.CollabHubAPI;
+                const conv = await api.startConversation(userId);
+                await loadConversations();
+                selectConversation(conv.id);
+            } catch (error) {
+                console.error('Error starting conversation:', error);
+            }
+        }
+
+        // Select conversation
+        async function selectConversation(conversationId) {
+            currentConversationId = conversationId;
+
+            // Update UI
+            document.querySelectorAll('.conversation-item').forEach(el => {
+                el.classList.toggle('bg-white/10', parseInt(el.dataset.id) === conversationId);
+            });
+
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('messages-area').classList.remove('hidden');
+            document.getElementById('chat-header').classList.remove('hidden');
+
+            // Find conversation
+            const conv = conversations.find(c => c.id === conversationId);
+            if (conv) {
+                const other = conv.other_user || conv.participants?.find(p => p.id !== currentUserId) || {};
+                document.getElementById('chat-avatar').textContent = getInitials(other);
+                document.getElementById('chat-name').textContent = `${other.first_name || ''} ${other.last_name || other.email?.split('@')[0] || 'User'}`;
+                document.getElementById('chat-status').textContent = other.headline || other.role || 'CollabHub User';
+            }
+
+            // Load messages
+            await loadMessages();
+        }
+
+        // Load messages
+        async function loadMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '<div class="text-center text-gray-400 py-8"><div class="spinner mx-auto mb-2"></div>Loading...</div>';
+
+            try {
+                const { api } = window.CollabHubAPI;
+                let messages;
+                try {
+                    const data = await api.getMessages(currentConversationId);
+                    messages = data.results || data || [];
+                } catch (e) {
+                    // Sample messages
+                    messages = [
+                        { id: 1, content: 'Hey! I saw your profile and really liked your projects.', sender: { id: 2, first_name: 'Sarah' }, created_at: new Date(Date.now() - 3600000).toISOString() },
+                        { id: 2, content: 'Thanks! I\'d love to connect and discuss potential collaboration.', sender: { id: currentUserId, first_name: 'You' }, created_at: new Date(Date.now() - 3000000).toISOString() },
+                        { id: 3, content: 'That sounds great! Are you interested in AI/ML projects?', sender: { id: 2, first_name: 'Sarah' }, created_at: new Date(Date.now() - 1800000).toISOString() }
+                    ];
+                }
+
+                if (messages.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="text-4xl mb-3">👋</div>
+                            <p class="text-gray-400">Start the conversation!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // SECURITY: Escape message content to prevent XSS
+                const escapeMsg = window.CollabHubSecurity.escapeHTML;
+                container.innerHTML = messages.map(msg => {
+                    const isMine = msg.sender?.id === currentUserId;
+                    const time = formatTime(msg.created_at);
+                    // CRITICAL: Escape message content - this is user input!
+                    const safeContent = escapeMsg(msg.content);
+
+                    return `
+                        <div class="flex ${isMine ? 'justify-end' : 'justify-start'}">
+                            <div class="max-w-xs lg:max-w-md">
+                                <div class="${isMine ? 'bg-primary-500 text-white' : 'bg-white/10 text-gray-200'} px-4 py-2 rounded-2xl ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'}">
+                                    ${safeContent}
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1 ${isMine ? 'text-right' : ''}">${time}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Scroll to bottom
+                container.scrollTop = container.scrollHeight;
+
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                container.innerHTML = '<div class="text-center text-red-400 py-8">Error loading messages</div>';
+            }
+        }
+
+        // Send message
+        document.getElementById('message-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+
+            if (!content || !currentConversationId) return;
+
+            input.value = '';
+
+            // Optimistic update
+            const container = document.getElementById('chat-messages');
+            const tempId = Date.now();
+            // SECURITY: Escape content before adding to DOM
+            const safeNewContent = window.CollabHubSecurity.escapeHTML(content);
+            container.innerHTML += `
+                <div class="flex justify-end" id="msg-${tempId}">
+                    <div class="max-w-xs lg:max-w-md">
+                        <div class="bg-primary-500 text-white px-4 py-2 rounded-2xl rounded-br-sm">
+                            ${safeNewContent}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1 text-right">Sending...</p>
+                    </div>
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const { api } = window.CollabHubAPI;
+                await api.sendMessage(currentConversationId, content);
+
+                // Update temp message
+                const tempMsg = document.getElementById(`msg-${tempId}`);
+                if (tempMsg) {
+                    tempMsg.querySelector('.text-gray-500').textContent = 'Just now';
+                }
+
+                // Refresh conversation list
+                loadConversations();
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                const tempMsg = document.getElementById(`msg-${tempId}`);
+                if (tempMsg) {
+                    tempMsg.querySelector('.text-gray-500').textContent = 'Failed to send';
+                    tempMsg.querySelector('.text-gray-500').classList.add('text-red-400');
+                }
+            }
+        });
+
+        // Search conversations
+        document.getElementById('search-conversations').addEventListener('input', function (e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                const name = item.querySelector('h4').textContent.toLowerCase();
+                item.style.display = name.includes(query) ? '' : 'none';
+            });
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await window.CollabHubAPI.api.logout();
+            window.location.href = 'login.html';
+        });
+
+        // Poll for new messages
+        setInterval(async () => {
+            if (currentConversationId) {
+                // Could refresh messages here
+            }
+            loadConversations();
+        }, 30000); // Every 30 seconds
+
+        // Initialize
+        loadConversations();
     </script>
 </body>
+
 </html>

@@ -1,13 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Explore Startups - CollabHub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' },
+                        secondary: { 500: '#d946ef', 600: '#c026d3' },
+                        accent: { 500: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
+
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen font-sans">
     <!-- Navigation -->
     <nav class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
@@ -15,7 +30,8 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Logo -->
                 <a href="../index.html" class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
                         <span class="text-white font-bold text-xl">C</span>
                     </div>
                     <span class="text-white font-bold text-xl">CollabHub</span>
@@ -23,24 +39,30 @@
 
                 <!-- Unauthenticated Navigation -->
                 <div id="unauthenticated-nav" class="hidden md:flex items-center space-x-8">
-                    <a href="../index.html#features" class="text-gray-300 hover:text-white transition-colors">Features</a>
-                    <a href="opportunities.html" class="text-gray-300 hover:text-white transition-colors">Opportunities</a>
+                    <a href="../index.html#features"
+                        class="text-gray-300 hover:text-white transition-colors">Features</a>
+                    <a href="opportunities.html"
+                        class="text-gray-300 hover:text-white transition-colors">Opportunities</a>
                     <a href="../index.html#about" class="text-gray-300 hover:text-white transition-colors">About</a>
                 </div>
 
                 <!-- Authenticated Navigation -->
                 <div id="authenticated-nav" class="hidden md:flex items-center space-x-8">
                     <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
-                    <a href="startups.html" class="text-primary-400 hover:text-primary-300 transition-colors">Explore Startups</a>
+                    <a href="startups.html" class="text-primary-400 hover:text-primary-300 transition-colors">Explore
+                        Startups</a>
                     <a href="network.html" class="text-gray-300 hover:text-white transition-colors">Network</a>
-                    <a href="#" id="dashboard-link" class="text-gray-300 hover:text-white transition-colors">Dashboard</a>
+                    <a href="#" id="dashboard-link"
+                        class="text-gray-300 hover:text-white transition-colors">Dashboard</a>
                     <a href="messages.html" class="text-gray-300 hover:text-white transition-colors">Messages</a>
                 </div>
 
                 <!-- Unauthenticated Actions -->
                 <div id="unauthenticated-actions" class="flex items-center space-x-4">
                     <a href="login.html" class="text-gray-300 hover:text-white transition-colors">Sign In</a>
-                    <a href="register.html" class="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90">Get Started</a>
+                    <a href="register.html"
+                        class="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90">Get
+                        Started</a>
                 </div>
 
                 <!-- Authenticated Actions -->
@@ -54,23 +76,345 @@
 
     <main class="pt-24 pb-12 px-4">
         <div class="max-w-7xl mx-auto">
+            <!-- Header -->
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold text-white mb-4">Explore Startups</h1>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Discover innovative startups and connect with founders building the future.</p>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Discover innovative startups, connect with founders,
+                    and find your perfect team match.</p>
             </div>
 
-            <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-12 border border-white/10 text-center">
-                <div class="text-6xl mb-6">🚀</div>
-                <h2 class="text-2xl font-bold text-white mb-4">Coming Soon</h2>
-                <p class="text-gray-400 mb-6">We're building an amazing startup discovery experience. Check back soon!</p>
-                <a href="opportunities.html" class="inline-block px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
-                    Explore Opportunities Instead
-                </a>
+            <!-- Filters -->
+            <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-8">
+                <div class="grid md:grid-cols-4 gap-4">
+                    <!-- Search -->
+                    <div class="md:col-span-2">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Search startups..."
+                                class="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500">
+                        </div>
+                    </div>
+
+                    <!-- Industry Filter -->
+                    <div>
+                        <select id="industry-filter"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer">
+                            <option value="">All Industries</option>
+                            <option value="AI/ML">🤖 AI/ML</option>
+                            <option value="FinTech">💰 FinTech</option>
+                            <option value="HealthTech">🏥 HealthTech</option>
+                            <option value="EdTech">📚 EdTech</option>
+                            <option value="SaaS">☁️ SaaS</option>
+                            <option value="E-commerce">🛒 E-commerce</option>
+                            <option value="CleanTech">🌱 CleanTech</option>
+                            <option value="Gaming">🎮 Gaming</option>
+                            <option value="Other">📦 Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Stage Filter -->
+                    <div>
+                        <select id="stage-filter"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer">
+                            <option value="">All Stages</option>
+                            <option value="idea">💡 Idea Stage</option>
+                            <option value="mvp">🔧 MVP</option>
+                            <option value="early">🌱 Early Stage</option>
+                            <option value="growth">📈 Growth</option>
+                            <option value="scale">🚀 Scale Up</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Sort and Results -->
+                <div class="flex justify-between items-center mt-4">
+                    <p class="text-gray-400"><span id="results-count">0</span> startups found</p>
+                    <select id="sort-filter"
+                        class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-sm focus:outline-none">
+                        <option value="-created_at">Most Recent</option>
+                        <option value="name">Name (A-Z)</option>
+                        <option value="-team_size">Largest Team</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Startups Grid -->
+            <div id="startups-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loading Skeletons -->
+                <div class="skeleton-card bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center mb-4">
+                        <div class="skeleton w-14 h-14 rounded-xl mr-4"></div>
+                        <div class="flex-1">
+                            <div class="skeleton h-5 w-32 rounded mb-2"></div>
+                            <div class="skeleton h-4 w-24 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton h-4 w-full rounded mb-2"></div>
+                    <div class="skeleton h-4 w-3/4 rounded mb-4"></div>
+                    <div class="skeleton h-10 w-full rounded-lg"></div>
+                </div>
+                <div class="skeleton-card bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center mb-4">
+                        <div class="skeleton w-14 h-14 rounded-xl mr-4"></div>
+                        <div class="flex-1">
+                            <div class="skeleton h-5 w-32 rounded mb-2"></div>
+                            <div class="skeleton h-4 w-24 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton h-4 w-full rounded mb-2"></div>
+                    <div class="skeleton h-4 w-3/4 rounded mb-4"></div>
+                    <div class="skeleton h-10 w-full rounded-lg"></div>
+                </div>
+                <div class="skeleton-card bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div class="flex items-center mb-4">
+                        <div class="skeleton w-14 h-14 rounded-xl mr-4"></div>
+                        <div class="flex-1">
+                            <div class="skeleton h-5 w-32 rounded mb-2"></div>
+                            <div class="skeleton h-4 w-24 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton h-4 w-full rounded mb-2"></div>
+                    <div class="skeleton h-4 w-3/4 rounded mb-4"></div>
+                    <div class="skeleton h-10 w-full rounded-lg"></div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="flex justify-center items-center space-x-2 mt-10">
+                <button id="prev-page"
+                    class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <span id="page-info" class="text-gray-400 px-4">Page 1</span>
+                <button id="next-page"
+                    class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
             </div>
         </div>
     </main>
 
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
+    <script>
+        let currentPage = 1;
+        let userSkills = [];
+
+        const stageColors = {
+            idea: 'bg-gray-500/20 text-gray-300',
+            mvp: 'bg-blue-500/20 text-blue-400',
+            early: 'bg-green-500/20 text-green-400',
+            growth: 'bg-purple-500/20 text-purple-400',
+            scale: 'bg-yellow-500/20 text-yellow-400'
+        };
+
+        const stageEmojis = {
+            idea: '💡',
+            mvp: '🔧',
+            early: '🌱',
+            growth: '📈',
+            scale: '🚀'
+        };
+
+        // Load user skills for matching
+        async function loadUserSkills() {
+            try {
+                if (window.CollabHubAPI.isAuthenticated()) {
+                    const profile = await window.CollabHubAPI.api.getProfile();
+                    userSkills = (profile.skills || []).map(s => s.skill?.name || s.name || s);
+                }
+            } catch (e) {
+                console.log('Could not load user skills');
+            }
+        }
+
+        // Calculate match percentage based on startup industry and user skills
+        function calculateMatch(startup) {
+            if (userSkills.length === 0) return 0;
+
+            // Simple matching based on industry keywords
+            const industryKeywords = {
+                'AI/ML': ['Python', 'TensorFlow', 'Machine Learning', 'Data Science', 'AI'],
+                'FinTech': ['Finance', 'Blockchain', 'Python', 'Node.js'],
+                'HealthTech': ['Healthcare', 'Python', 'React', 'Data Science'],
+                'EdTech': ['React', 'Education', 'Full Stack', 'Node.js'],
+                'SaaS': ['React', 'Node.js', 'Full Stack', 'AWS', 'Cloud'],
+                'E-commerce': ['React', 'Node.js', 'Shopify', 'Full Stack'],
+                'Gaming': ['Unity', 'C++', 'Game Development', 'C#'],
+                'CleanTech': ['Python', 'IoT', 'Data Science', 'Engineering']
+            };
+
+            const relevantSkills = industryKeywords[startup.industry] || [];
+            if (relevantSkills.length === 0) return 0;
+
+            const matchingSkills = userSkills.filter(skill =>
+                relevantSkills.some(rs => skill.toLowerCase().includes(rs.toLowerCase()))
+            );
+
+            return Math.min(Math.round((matchingSkills.length / relevantSkills.length) * 100), 100);
+        }
+
+        // Create startup card HTML
+        function createStartupCard(startup) {
+            const matchPercent = calculateMatch(startup);
+            const matchBadge = matchPercent > 0
+                ? `<span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">${matchPercent}% match</span>`
+                : '';
+
+            const stageBadge = stageColors[startup.stage] || stageColors.idea;
+            const stageEmoji = stageEmojis[startup.stage] || '💡';
+
+            return `
+                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-primary-500/30 transition-all card-hover">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-14 h-14 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center text-white font-bold text-xl mr-4">
+                                ${startup.logo ? `<img src="${startup.logo}" class="w-full h-full object-cover rounded-xl">` : startup.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-white">${startup.name}</h3>
+                                <p class="text-gray-400 text-sm">${startup.industry}</p>
+                            </div>
+                        </div>
+                        ${matchBadge}
+                    </div>
+
+                    <p class="text-gray-300 text-sm mb-4 line-clamp-2">${startup.tagline || 'Building something amazing...'}</p>
+
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 ${stageBadge} rounded-full text-xs font-medium">
+                            ${stageEmoji} ${startup.stage_display || startup.stage}
+                        </span>
+                        <span class="text-gray-500 text-xs">${startup.team_size} member${startup.team_size !== 1 ? 's' : ''}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm mb-4">
+                        <div class="flex items-center text-gray-400">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span>${startup.founder_name || 'Founder'}</span>
+                        </div>
+                        <span class="text-gray-500">${startup.is_remote ? '🌍 Remote' : '📍 ' + (startup.location || 'On-site')}</span>
+                    </div>
+
+                    <a href="startup-detail.html?id=${startup.id}" 
+                       class="block w-full py-2 text-center bg-white/10 text-white rounded-lg hover:bg-primary-500 transition-all">
+                        View Details
+                    </a>
+                </div>
+            `;
+        }
+
+        // Fetch and display startups
+        async function fetchStartups() {
+            const grid = document.getElementById('startups-grid');
+            const countEl = document.getElementById('results-count');
+
+            const params = {
+                page: currentPage,
+                search: document.getElementById('search-input').value,
+                industry: document.getElementById('industry-filter').value,
+                stage: document.getElementById('stage-filter').value,
+                ordering: document.getElementById('sort-filter').value
+            };
+
+            // Remove empty params
+            Object.keys(params).forEach(key => !params[key] && delete params[key]);
+
+            try {
+                // Sample data for demo
+                const sampleData = {
+                    count: 6,
+                    results: [
+                        { id: 1, name: 'TechConnect', tagline: 'AI-powered networking platform for professionals', industry: 'AI/ML', stage: 'mvp', stage_display: 'MVP', founder_name: 'Sarah Chen', team_size: 4, is_remote: true, location: '' },
+                        { id: 2, name: 'FinFlow', tagline: 'Simplifying personal finance for Gen Z', industry: 'FinTech', stage: 'early', stage_display: 'Early Stage', founder_name: 'Mike Johnson', team_size: 6, is_remote: false, location: 'San Francisco' },
+                        { id: 3, name: 'MedAssist', tagline: 'AI diagnostics for rural healthcare', industry: 'HealthTech', stage: 'idea', stage_display: 'Idea Stage', founder_name: 'Dr. Priya Sharma', team_size: 2, is_remote: true, location: '' },
+                        { id: 4, name: 'LearnWise', tagline: 'Personalized learning paths powered by AI', industry: 'EdTech', stage: 'growth', stage_display: 'Growth', founder_name: 'Alex Rodriguez', team_size: 12, is_remote: true, location: '' },
+                        { id: 5, name: 'CloudScale', tagline: 'Enterprise SaaS infrastructure automation', industry: 'SaaS', stage: 'scale', stage_display: 'Scale Up', founder_name: 'James Wilson', team_size: 45, is_remote: false, location: 'New York' },
+                        { id: 6, name: 'GreenGrid', tagline: 'Smart energy management for sustainable cities', industry: 'CleanTech', stage: 'mvp', stage_display: 'MVP', founder_name: 'Emma Green', team_size: 5, is_remote: true, location: '' }
+                    ]
+                };
+
+                let data;
+                try {
+                    const { api } = window.CollabHubAPI;
+                    const response = await api.getStartups(params);
+                    data = response;
+                } catch (e) {
+                    console.log('Using sample data');
+                    data = sampleData;
+                }
+
+                // Remove skeletons
+                document.querySelectorAll('.skeleton-card').forEach(el => el.remove());
+
+                countEl.textContent = data.count || data.results?.length || 0;
+
+                if (data.results && data.results.length > 0) {
+                    grid.innerHTML = data.results.map(createStartupCard).join('');
+                } else {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <div class="text-6xl mb-4">🔍</div>
+                            <h3 class="text-xl font-semibold text-white mb-2">No startups found</h3>
+                            <p class="text-gray-400">Try adjusting your filters or search terms</p>
+                        </div>
+                    `;
+                }
+
+                // Update pagination
+                document.getElementById('prev-page').disabled = currentPage <= 1;
+                document.getElementById('next-page').disabled = !data.next;
+                document.getElementById('page-info').textContent = `Page ${currentPage}`;
+
+            } catch (error) {
+                console.error('Error fetching startups:', error);
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-6xl mb-4">⚠️</div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Error loading startups</h3>
+                        <p class="text-gray-400">Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Event listeners
+        document.getElementById('search-input').addEventListener('input', debounce(fetchStartups, 300));
+        document.getElementById('industry-filter').addEventListener('change', fetchStartups);
+        document.getElementById('stage-filter').addEventListener('change', fetchStartups);
+        document.getElementById('sort-filter').addEventListener('change', fetchStartups);
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchStartups();
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            currentPage++;
+            fetchStartups();
+        });
+
+        // Initialize
+        async function init() {
+            await loadUserSkills();
+            await fetchStartups();
+        }
+
+        init();
+    </script>
 </body>
+
 </html>

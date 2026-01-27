@@ -122,8 +122,9 @@ async function apiRequest(endpoint, options = {}) {
             accessToken = await refreshAccessToken();
             response = await makeRequest(accessToken);
         } catch (e) {
-            // Redirect to login
-            window.location.href = '/frontend/pages/login.html';
+            // Redirect to login with dynamic path detection
+            const basePath = window.location.pathname.includes('/pages/') ? '' : 'pages/';
+            window.location.href = basePath + 'login.html';
             throw e;
         }
     }
@@ -193,6 +194,31 @@ const api = {
             body: JSON.stringify(data)
         });
         if (!response.ok) throw new Error('Failed to update profile');
+        return response.json();
+    },
+
+    // Dashboard
+    async getDashboardStats() {
+        const response = await apiRequest('/users/me/dashboard/stats/');
+        if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+        return response.json();
+    },
+
+    async getDashboardInteractions() {
+        const response = await apiRequest('/users/me/dashboard/interactions/');
+        if (!response.ok) throw new Error('Failed to fetch interactions');
+        return response.json();
+    },
+
+    async getDashboardTeams() {
+        const response = await apiRequest('/users/me/dashboard/teams/');
+        if (!response.ok) throw new Error('Failed to fetch teams');
+        return response.json();
+    },
+
+    async getDashboardRecommendations() {
+        const response = await apiRequest('/users/me/dashboard/recommendations/');
+        if (!response.ok) throw new Error('Failed to fetch recommendations');
         return response.json();
     },
 
@@ -361,6 +387,55 @@ const api = {
     async getDashboardRecommendations() {
         const response = await apiRequest('/users/me/dashboard/recommendations/');
         if (!response.ok) throw new Error('Failed to fetch dashboard recommendations');
+        return response.json();
+    },
+
+    // Connections
+    async getConnections() {
+        const response = await apiRequest('/collaborations/connections/');
+        if (!response.ok) throw new Error('Failed to fetch connections');
+        return response.json();
+    },
+
+    async getConnectionRequests() {
+        const response = await apiRequest('/collaborations/connections/requests/');
+        if (!response.ok) throw new Error('Failed to fetch connection requests');
+        return response.json();
+    },
+
+    async sendConnectionRequest(receiverId) {
+        const response = await apiRequest('/collaborations/connections/', {
+            method: 'POST',
+            body: JSON.stringify({ receiver_id: receiverId })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || error.error || 'Failed to send connection request');
+        }
+        return response.json();
+    },
+
+    async respondToConnection(connectionId, action) {
+        const response = await apiRequest(`/collaborations/connections/${connectionId}/respond/`, {
+            method: 'POST',
+            body: JSON.stringify({ action })  // 'accept' or 'decline'
+        });
+        if (!response.ok) throw new Error('Failed to respond to connection');
+        return response.json();
+    },
+
+    // Users
+    async getUsers(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        const response = await apiRequest(`/users/?${query}`);
+        if (!response.ok) throw new Error('Failed to fetch users');
+        return response.json();
+    },
+
+    // Activity Feed
+    async getActivityFeed(limit = 20) {
+        const response = await apiRequest(`/users/me/feed/?limit=${limit}`);
+        if (!response.ok) throw new Error('Failed to fetch activity feed');
         return response.json();
     }
 };

@@ -1,10 +1,13 @@
 """
 Messaging App - Views
+
+SECURITY: Rate limiting applied to prevent message spam.
 """
 
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.throttling import ScopedRateThrottle
 from django.utils import timezone
 from django.db.models import Q
 
@@ -16,6 +19,11 @@ from .serializers import (
     MessageCreateSerializer
 )
 from collaborations.models import Notification
+
+
+class MessagingThrottle(ScopedRateThrottle):
+    """Custom throttle for messaging endpoints."""
+    scope = 'messaging'
 
 
 class ConversationListView(generics.ListAPIView):
@@ -41,9 +49,14 @@ class ConversationDetailView(generics.RetrieveAPIView):
 
 
 class StartConversationView(APIView):
-    """Start a new conversation with a user."""
+    """
+    Start a new conversation with a user.
+    
+    SECURITY: Rate limited to prevent spam.
+    """
     
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [MessagingThrottle]
     
     def post(self, request):
         recipient_id = request.data.get('recipient_id')
@@ -102,9 +115,12 @@ class ConversationMessagesView(generics.ListCreateAPIView):
     """
     GET: List messages in a conversation
     POST: Send a new message
+    
+    SECURITY: Rate limited to prevent spam.
     """
     
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [MessagingThrottle]
     
     def get_serializer_class(self):
         if self.request.method == 'POST':

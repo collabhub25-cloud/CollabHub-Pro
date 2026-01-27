@@ -72,13 +72,23 @@ urlpatterns = [
     # Django Admin
     path('admin/', admin.site.urls),
     
-    # API Endpoints (all prefixed with /api/)
-    path('api/auth/', include('users.urls.auth_urls')),           # Authentication
-    path('api/users/', include('users.urls.user_urls')),          # User management
-    path('api/startups/', include('startups.urls')),              # Startups
-    path('api/opportunities/', include('opportunities.urls')),    # Opportunities
-    path('api/collaborations/', include('collaborations.urls')),  # Collaborations
-    path('api/messages/', include('messaging.urls')),             # Messaging
+    # API v1 Endpoints (versioned - recommended)
+    path('api/v1/auth/', include('users.urls.auth_urls')),
+    path('api/v1/users/', include('users.urls.user_urls')),
+    path('api/v1/startups/', include('startups.urls')),
+    path('api/v1/opportunities/', include('opportunities.urls')),
+    path('api/v1/collaborations/', include('collaborations.urls')),
+    path('api/v1/messages/', include('messaging.urls')),
+    path('api/v1/security/', include('security.urls')),
+    
+    # API Endpoints (backwards compatibility - deprecated)
+    path('api/auth/', include('users.urls.auth_urls')),
+    path('api/users/', include('users.urls.user_urls')),
+    path('api/startups/', include('startups.urls')),
+    path('api/opportunities/', include('opportunities.urls')),
+    path('api/collaborations/', include('collaborations.urls')),
+    path('api/messages/', include('messaging.urls')),
+    path('api/security/', include('security.urls')),
 ]
 
 # Serve media and static files in development

@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeApp() {
+    // Determine base path for navigation (handles both root and subdirectory pages)
+    window.AppBasePath = getBasePath();
+
     // Check auth status and update navigation
     updateNavigation();
 
@@ -22,11 +25,24 @@ function initializeApp() {
 }
 
 /**
+ * Get base path relative to current page location
+ * Returns '' for root pages, '../' for pages in subdirectories
+ */
+function getBasePath() {
+    const path = window.location.pathname;
+    // Check if we're in a subdirectory (like /pages/)
+    if (path.includes('/pages/') || path.match(/\/[^/]+\/[^/]+\.html$/)) {
+        return '../';
+    }
+    return '';
+}
+
+/**
  * Update navigation based on auth status
  */
 function updateNavigation() {
     const { isAuthenticated, getUserData } = window.CollabHubAPI || {};
-    
+
     // Get navigation elements
     const unauthenticatedNav = document.getElementById('unauthenticated-nav');
     const authenticatedNav = document.getElementById('authenticated-nav');
@@ -40,16 +56,17 @@ function updateNavigation() {
         if (authenticatedNav) authenticatedNav.classList.remove('hidden');
         if (unauthenticatedActions) unauthenticatedActions.classList.add('hidden');
         if (authenticatedActions) authenticatedActions.classList.remove('hidden');
-        
+
         // Set dashboard link based on user role
         if (dashboardLink && getUserData) {
             const user = getUserData();
             if (user && user.role) {
+                const basePath = window.AppBasePath || getBasePath();
                 const dashboards = {
-                    founder: 'pages/dashboard-founder.html',
-                    talent: 'pages/dashboard-talent.html',
-                    investor: 'pages/dashboard-investor.html',
-                    student: 'pages/dashboard-talent.html'
+                    founder: basePath + 'pages/dashboard-founder.html',
+                    talent: basePath + 'pages/dashboard-talent.html',
+                    investor: basePath + 'pages/dashboard-investor.html',
+                    student: basePath + 'pages/dashboard-talent.html'
                 };
                 dashboardLink.href = dashboards[user.role] || dashboards.talent;
             }
@@ -185,17 +202,18 @@ function debounce(func, wait) {
 function redirectToDashboard() {
     const { getUserData } = window.CollabHubAPI || {};
     const user = getUserData ? getUserData() : null;
+    const basePath = window.AppBasePath || getBasePath();
 
     if (!user) {
-        window.location.href = 'pages/login.html';
+        window.location.href = basePath + 'pages/login.html';
         return;
     }
 
     const dashboards = {
-        founder: 'pages/dashboard-founder.html',
-        talent: 'pages/dashboard-talent.html',
-        investor: 'pages/dashboard-investor.html',
-        student: 'pages/dashboard-talent.html'
+        founder: basePath + 'pages/dashboard-founder.html',
+        talent: basePath + 'pages/dashboard-talent.html',
+        investor: basePath + 'pages/dashboard-investor.html',
+        student: basePath + 'pages/dashboard-talent.html'
     };
 
     window.location.href = dashboards[user.role] || dashboards.talent;
@@ -206,9 +224,10 @@ function redirectToDashboard() {
  */
 function requireAuth() {
     const { isAuthenticated } = window.CollabHubAPI || {};
+    const basePath = window.AppBasePath || getBasePath();
 
     if (!isAuthenticated || !isAuthenticated()) {
-        window.location.href = 'pages/login.html?redirect=' + encodeURIComponent(window.location.href);
+        window.location.href = basePath + 'pages/login.html?redirect=' + encodeURIComponent(window.location.href);
         return false;
     }
     return true;
@@ -231,8 +250,9 @@ async function handleLogout() {
     }
 
     // Always redirect to home page after logout attempt
+    const basePath = window.AppBasePath || getBasePath();
     setTimeout(() => {
-        window.location.href = 'index.html';
+        window.location.href = basePath + 'index.html';
     }, 1000);
 }
 
@@ -246,5 +266,6 @@ window.AppUtils = {
     redirectToDashboard,
     requireAuth,
     handleLogout,
-    updateNavigation
+    updateNavigation,
+    getBasePath
 };

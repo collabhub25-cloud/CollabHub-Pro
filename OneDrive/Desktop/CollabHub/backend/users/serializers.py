@@ -117,13 +117,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating user information."""
+    """
+    Serializer for updating user information.
+    
+    SECURITY: 'role' field is intentionally excluded to prevent
+    privilege escalation. Role changes are admin-only operations.
+    """
     
     profile = ProfileSerializer()
     
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'role', 'profile']
+        # SECURITY: role is NOT included - prevents privilege escalation
+        fields = ['username', 'first_name', 'last_name', 'profile']
     
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', None)

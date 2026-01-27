@@ -30,7 +30,8 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Logo -->
                 <a href="../index.html" class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
                         <span class="text-white font-bold text-xl">C</span>
                     </div>
                     <span class="text-white font-bold text-xl">CollabHub</span>
@@ -38,24 +39,30 @@
 
                 <!-- Unauthenticated Navigation -->
                 <div id="unauthenticated-nav" class="hidden md:flex items-center space-x-8">
-                    <a href="../index.html#features" class="text-gray-300 hover:text-white transition-colors">Features</a>
-                    <a href="opportunities.html" class="text-gray-300 hover:text-white transition-colors">Opportunities</a>
+                    <a href="../index.html#features"
+                        class="text-gray-300 hover:text-white transition-colors">Features</a>
+                    <a href="opportunities.html"
+                        class="text-gray-300 hover:text-white transition-colors">Opportunities</a>
                     <a href="../index.html#about" class="text-gray-300 hover:text-white transition-colors">About</a>
                 </div>
 
                 <!-- Authenticated Navigation -->
                 <div id="authenticated-nav" class="hidden md:flex items-center space-x-8">
                     <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
-                    <a href="startups.html" class="text-gray-300 hover:text-white transition-colors">Explore Startups</a>
+                    <a href="startups.html" class="text-gray-300 hover:text-white transition-colors">Explore
+                        Startups</a>
                     <a href="network.html" class="text-gray-300 hover:text-white transition-colors">Network</a>
-                    <a href="#" id="dashboard-link" class="text-gray-300 hover:text-white transition-colors">Dashboard</a>
+                    <a href="#" id="dashboard-link"
+                        class="text-gray-300 hover:text-white transition-colors">Dashboard</a>
                     <a href="messages.html" class="text-gray-300 hover:text-white transition-colors">Messages</a>
                 </div>
 
                 <!-- Unauthenticated Actions -->
                 <div id="unauthenticated-actions" class="flex items-center space-x-4">
                     <a href="login.html" class="text-gray-300 hover:text-white transition-colors">Sign In</a>
-                    <a href="register.html" class="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90">Get Started</a>
+                    <a href="register.html"
+                        class="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:opacity-90">Get
+                        Started</a>
                 </div>
 
                 <!-- Authenticated Actions -->
@@ -72,7 +79,8 @@
             <!-- Header -->
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold text-white mb-4">Explore Opportunities</h1>
-                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Find hackathons, internships, projects, and more.
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Find co-founder roles, team positions, and startup
+                    projects.
                     Filter by type and skills to find your perfect match.</p>
             </div>
 
@@ -97,10 +105,10 @@
                         <select id="type-filter"
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500 appearance-none cursor-pointer">
                             <option value="">All Types</option>
-                            <option value="hackathon">🏆 Hackathon</option>
-                            <option value="internship">💼 Internship</option>
+                            <option value="cofounder">🚀 Co-Founder Role</option>
+                            <option value="team_member">👥 Team Position</option>
                             <option value="project">🛠️ Project</option>
-                            <option value="job">👔 Job</option>
+                            <option value="advisor">💡 Advisor</option>
                             <option value="collaboration">🤝 Collaboration</option>
                         </select>
                     </div>
@@ -207,10 +215,10 @@
         let currentPage = 1;
         let selectedSkills = [];
         const typeColors = {
-            hackathon: 'type-hackathon',
-            internship: 'type-internship',
+            cofounder: 'type-hackathon',
+            team_member: 'type-internship',
             project: 'type-project',
-            job: 'type-job',
+            advisor: 'type-job',
             collaboration: 'type-hackathon'
         };
 
@@ -267,12 +275,12 @@
                 const sampleData = {
                     count: 6,
                     results: [
-                        { id: 1, title: 'AI Healthcare Hackathon 2026', type: 'hackathon', type_display: 'Hackathon', short_description: 'Build innovative healthcare solutions using AI and machine learning.', required_skills: ['Python', 'TensorFlow', 'Healthcare'], is_remote: true, deadline: '2026-03-15', is_featured: true },
-                        { id: 2, title: 'Frontend Developer Internship', type: 'internship', type_display: 'Internship', short_description: 'Join our team to build beautiful user interfaces with React.', required_skills: ['React', 'TypeScript', 'CSS'], is_remote: false, location: 'San Francisco', deadline: '2026-02-28' },
+                        { id: 1, title: 'Technical Co-Founder - AI HealthTech', type: 'cofounder', type_display: 'Co-Founder Role', short_description: 'Build innovative healthcare solutions using AI and machine learning.', required_skills: ['Python', 'TensorFlow', 'Healthcare'], is_remote: true, deadline: '2026-03-15', is_featured: true },
+                        { id: 2, title: 'Frontend Engineer for FinTech Startup', type: 'team_member', type_display: 'Team Position', short_description: 'Join our growing team to build beautiful user interfaces with React.', required_skills: ['React', 'TypeScript', 'CSS'], is_remote: false, location: 'San Francisco', deadline: '2026-02-28' },
                         { id: 3, title: 'Open Source Contribution - CollabHub', type: 'project', type_display: 'Project', short_description: 'Help us build the future of collaboration platforms.', required_skills: ['Django', 'React', 'PostgreSQL'], is_remote: true, deadline: null },
-                        { id: 4, title: 'Climate Tech Challenge', type: 'hackathon', type_display: 'Hackathon', short_description: 'Create solutions for climate change and sustainability.', required_skills: ['Data Science', 'Python', 'IoT'], is_remote: true, deadline: '2026-04-01', is_featured: true },
-                        { id: 5, title: 'Mobile App Developer', type: 'job', type_display: 'Job', short_description: 'Full-time position building cross-platform mobile applications.', required_skills: ['React Native', 'Flutter', 'Swift'], is_remote: true, deadline: '2026-02-15' },
-                        { id: 6, title: 'Startup Co-founder Needed', type: 'collaboration', type_display: 'Collaboration', short_description: 'Looking for a technical co-founder for an EdTech startup.', required_skills: ['Full Stack', 'Leadership', 'EdTech'], is_remote: true, deadline: null }
+                        { id: 4, title: 'CleanTech Startup - CTO Needed', type: 'cofounder', type_display: 'Co-Founder Role', short_description: 'Lead technical development for a climate sustainability startup.', required_skills: ['Data Science', 'Python', 'IoT'], is_remote: true, deadline: '2026-04-01', is_featured: true },
+                        { id: 5, title: 'Mobile Developer - Early Stage Startup', type: 'team_member', type_display: 'Team Position', short_description: 'Full equity position building cross-platform mobile applications.', required_skills: ['React Native', 'Flutter', 'Swift'], is_remote: true, deadline: '2026-02-15' },
+                        { id: 6, title: 'EdTech Startup Seeking Technical Advisor', type: 'advisor', type_display: 'Advisor', short_description: 'Seeking experienced advisor to guide early-stage EdTech startup.', required_skills: ['Full Stack', 'Leadership', 'EdTech'], is_remote: true, deadline: null }
                     ]
                 };
 

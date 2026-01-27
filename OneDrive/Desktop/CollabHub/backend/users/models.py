@@ -31,6 +31,12 @@ class User(AbstractUser):
         default=Role.STUDENT
     )
     is_verified = models.BooleanField(default=False)
+    
+    # MFA fields
+    mfa_enabled = models.BooleanField(default=False)
+    mfa_secret = models.CharField(max_length=32, blank=True, null=True)
+    backup_codes = models.JSONField(default=list, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -141,3 +147,158 @@ class UserSkill(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - {self.skill.name} ({self.proficiency})"
+
+
+# =============================================================================
+# EMAIL VERIFICATION TOKEN MODEL
+# =============================================================================
+
+class EmailVerificationToken(models.Model):
+    """Stores email verification tokens with expiry."""
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='verification_tokens'
+    )
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'email_verification_tokens'
+    
+    @classmethod
+    def create_token(cls, user):
+        """Create a new verification token for a user."""
+        import secrets
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        # Invalidate any existing tokens
+        cls.objects.filter(user=user, used=False).update(used=True)
+        
+        # Generate new token
+        token = secrets.token_urlsafe(48)
+        expires_at = timezone.now() + timedelta(hours=24)
+        
+        return cls.objects.create(
+            user=user,
+            token=token,
+            expires_at=expires_at
+        )
+    
+    @classmethod
+    def verify_token(cls, token):
+        """Verify a token and return the user if valid."""
+        from django.utils import timezone
+        
+        try:
+            token_obj = cls.objects.get(
+                token=token,
+                used=False,
+                expires_at__gt=timezone.now()
+            )
+            # Mark token as used
+            token_obj.used = True
+            token_obj.save()
+            
+            # Mark user as verified
+            token_obj.user.is_verified = True
+            token_obj.user.save()
+            
+            return token_obj.user
+        except cls.DoesNotExist:
+            return None
+    
+    def is_valid(self):
+        """Check if token is still valid."""
+        from django.utils import timezone
+        return not self.used and self.expires_at > timezone.now()
+
+
+# =============================================================================
+# PASSWORD RESET TOKEN MODEL
+# =============================================================================
+
+class PasswordResetToken(models.Model):
+    """Stores password reset tokens with expiry."""
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='password_reset_tokens'
+    )
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'password_reset_tokens'
+    
+    @classmethod
+    def create_token(cls, user, ip_address=None):
+        """Create a new password reset token for a user."""
+        import secrets
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        # Invalidate any existing tokens
+        cls.objects.filter(user=user, used=False).update(used=True)
+        
+        # Generate new token (shorter expiry for security)
+        token = secrets.token_urlsafe(48)
+        expires_at = timezone.now() + timedelta(hours=1)
+        
+        return cls.objects.create(
+            user=user,
+            token=token,
+            expires_at=expires_at,
+            ip_address=ip_address
+        )
+    
+    @classmethod
+    def verify_token(cls, token):
+        """Verify a token and return token_obj if valid."""
+        from django.utils import timezone
+        
+        try:
+            return cls.objects.get(
+                token=token,
+                used=False,
+                expires_at__gt=timezone.now()
+            )
+        except cls.DoesNotExist:
+            return None
+    
+    @classmethod
+    def reset_password(cls, token, new_password):
+        """Reset password using a valid token."""
+        from django.contrib.auth.hashers import make_password
+        
+        token_obj = cls.verify_token(token)
+        if not token_obj:
+            return None
+        
+        # Update password
+        user = token_obj.user
+        user.password = make_password(new_password)
+        user.save()
+        
+        # Mark token as used
+        token_obj.used = True
+        token_obj.save()
+        
+        # Invalidate all other tokens for this user
+        cls.objects.filter(user=user, used=False).update(used=True)
+        
+        return user
+    
+    def is_valid(self):
+        """Check if token is still valid."""
+        from django.utils import timezone
+        return not self.used and self.expires_at > timezone.now()
+

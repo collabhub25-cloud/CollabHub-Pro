@@ -273,3 +273,148 @@ class DashboardRecommendationsView(APIView):
             'recommendations': recommendations,
             'user_skills': user_skills
         })
+
+
+class ActivityFeedView(APIView):
+    """
+    Get activity feed for the home page.
+    Aggregates recent startups, connections, and team events.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        limit = int(request.query_params.get('limit', 20))
+        
+        # Get user's connections for network activity
+        user_connections = Connection.objects.filter(
+            Q(requester=user) | Q(receiver=user),
+            status='accepted'
+        ).values_list('requester_id', 'receiver_id')
+        
+        connected_user_ids = set()
+        for req_id, rec_id in user_connections:
+            connected_user_ids.add(req_id)
+            connected_user_ids.add(rec_id)
+        connected_user_ids.discard(user.id)
+        
+        feed_items = []
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        # 1. New startups from network or recent
+        recent_startups = Startup.objects.filter(
+            Q(founder_id__in=connected_user_ids) | Q(created_at__gte=thirty_days_ago)
+        ).select_related('founder').order_by('-created_at')[:10]
+        
+        for startup in recent_startups:
+            feed_items.append({
+                'type': 'startup_created',
+                'icon': '🚀',
+                'title': f'{startup.founder.get_full_name() or startup.founder.email} created a new startup',
+                'subtitle': startup.name,
+                'description': startup.tagline or startup.industry,
+                'link': f'/pages/startup-detail.html?id={startup.id}',
+                'timestamp': startup.created_at,
+                'user': {
+                    'id': startup.founder.id,
+                    'name': startup.founder.get_full_name() or startup.founder.email,
+                },
+                'meta': {
+                    'startup_id': startup.id,
+                    'industry': startup.industry,
+                    'stage': startup.stage
+                }
+            })
+        
+        # 2. New connections in network
+        recent_connections = Connection.objects.filter(
+            Q(requester_id__in=connected_user_ids) | Q(receiver_id__in=connected_user_ids),
+            status='accepted',
+            updated_at__gte=thirty_days_ago
+        ).select_related('requester', 'receiver').order_by('-updated_at')[:10]
+        
+        for conn in recent_connections:
+            # Show when connected users make new connections
+            if conn.requester_id != user.id and conn.receiver_id != user.id:
+                user1 = conn.requester
+                user2 = conn.receiver
+                feed_items.append({
+                    'type': 'connection_made',
+                    'icon': '🤝',
+                    'title': f'{user1.get_full_name() or user1.email} connected with {user2.get_full_name() or user2.email}',
+                    'subtitle': 'New network connection',
+                    'description': '',
+                    'link': f'/pages/network.html',
+                    'timestamp': conn.updated_at,
+                    'user': {
+                        'id': user1.id,
+                        'name': user1.get_full_name() or user1.email,
+                    }
+                })
+        
+        # 3. Team joins
+        recent_team_joins = StartupMember.objects.filter(
+            Q(startup__founder_id__in=connected_user_ids) | Q(user_id__in=connected_user_ids),
+            joined_at__gte=thirty_days_ago
+        ).select_related('user', 'startup', 'startup__founder').order_by('-joined_at')[:10]
+        
+        for member in recent_team_joins:
+            if member.user_id != user.id:
+                feed_items.append({
+                    'type': 'team_join',
+                    'icon': '👥',
+                    'title': f'{member.user.get_full_name() or member.user.email} joined {member.startup.name}',
+                    'subtitle': f'As {member.get_role_display()}',
+                    'description': member.startup.tagline or '',
+                    'link': f'/pages/startup-detail.html?id={member.startup.id}',
+                    'timestamp': member.joined_at,
+                    'user': {
+                        'id': member.user.id,
+                        'name': member.user.get_full_name() or member.user.email,
+                    },
+                    'meta': {
+                        'startup_id': member.startup.id,
+                        'startup_name': member.startup.name,
+                        'role': member.role
+                    }
+                })
+        
+        # 4. New opportunities
+        recent_opportunities = Opportunity.objects.filter(
+            Q(startup__founder_id__in=connected_user_ids) | Q(created_at__gte=thirty_days_ago),
+            status='open'
+        ).select_related('startup', 'startup__founder').order_by('-created_at')[:5]
+        
+        for opp in recent_opportunities:
+            startup = opp.startup
+            poster_name = startup.founder.get_full_name() if startup else 'Someone'
+            feed_items.append({
+                'type': 'opportunity_posted',
+                'icon': '💼',
+                'title': f'{poster_name} posted a new opportunity',
+                'subtitle': opp.title,
+                'description': f'{opp.opportunity_type} • {startup.name if startup else ""}',
+                'link': f'/pages/opportunity-detail.html?id={opp.id}',
+                'timestamp': opp.created_at,
+                'user': {
+                    'id': startup.founder.id if startup else None,
+                    'name': poster_name,
+                },
+                'meta': {
+                    'opportunity_id': opp.id,
+                    'type': opp.opportunity_type
+                }
+            })
+        
+        # Sort by timestamp and limit
+        feed_items.sort(key=lambda x: x['timestamp'], reverse=True)
+        feed_items = feed_items[:limit]
+        
+        # Convert timestamps to ISO format
+        for item in feed_items:
+            item['timestamp'] = item['timestamp'].isoformat()
+        
+        return Response({
+            'feed': feed_items,
+            'count': len(feed_items)
+        })
