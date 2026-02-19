@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { connectDB } from '@/lib/mongodb';
+import { Subscription, User } from '@/lib/models';
+import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
+  apiVersion: '2024-11-20.acacia',
+});
+
+// POST /api/stripe/portal - Create Stripe billing portal session
+// ONLY FOUNDERS CAN ACCESS BILLING PORTAL
+export async function POST(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    // Check user role
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // CRITICAL: Only founders can access billing portal
+    if (user.role !== 'founder') {
+      return NextResponse.json(
+        { 
+          error: 'Billing is only available for founders. Talent and Investor accounts are free.',
+          code: 'BILLING_FOUNDER_ONLY'
+        },
+        { status: 403 }
+      );
+    }
+
+    const subscription = await Subscription.findOne({ userId: decoded.userId });
+
+    if (!subscription?.stripeCustomerId) {
+      return NextResponse.json(
+        { error: 'No active subscription found. Please subscribe to a plan first.' },
+        { status: 400 }
+      );
+    }
+
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripeCustomerId,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}`,
+    });
+
+    return NextResponse.json({
+      portalUrl: portalSession.url,
+    });
+  } catch (error) {
+    console.error('Error creating portal session:', error);
+    return NextResponse.json(
+      { error: 'Failed to create portal session' },
+      { status: 500 }
+    );
+  }
+}
