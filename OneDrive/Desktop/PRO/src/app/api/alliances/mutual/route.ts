@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Alliance, User } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 
 // GET /api/alliances/mutual - Get mutual alliances between users
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

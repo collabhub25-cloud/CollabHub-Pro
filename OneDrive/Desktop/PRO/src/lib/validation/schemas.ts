@@ -18,8 +18,8 @@ export const RegisterSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
-  role: z.enum(['founder', 'talent', 'investor'], {
-    errorMap: () => ({ message: 'Invalid role selected' }),
+  role: z.enum(['founder', 'talent', 'investor'] as const, {
+    error: 'Invalid role selected',
   }),
 });
 
@@ -98,14 +98,14 @@ export const CreateStartupSchema = z.object({
   description: z.string()
     .min(50, 'Description must be at least 50 characters')
     .max(2000, 'Description must be at most 2000 characters'),
-  stage: z.enum(['idea', 'validation', 'mvp', 'growth', 'scaling'], {
-    errorMap: () => ({ message: 'Invalid startup stage' }),
+  stage: z.enum(['idea', 'validation', 'mvp', 'growth', 'scaling'] as const, {
+    error: 'Invalid startup stage',
   }),
   industry: z.string()
     .min(1, 'Industry is required')
     .max(50, 'Industry must be at most 50 characters'),
-  fundingStage: z.enum(['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'], {
-    errorMap: () => ({ message: 'Invalid funding stage' }),
+  fundingStage: z.enum(['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'] as const, {
+    error: 'Invalid funding stage',
   }),
   fundingAmount: z.number()
     .min(0, 'Funding amount must be non-negative')
@@ -242,8 +242,8 @@ export type SearchQueryInput = z.infer<typeof SearchQuerySchema>;
  * Only founders can checkout, and they use founder-specific plans
  */
 export const CheckoutSchema = z.object({
-  plan: z.enum(['pro', 'scale', 'premium', 'pro_founder', 'scale_founder', 'enterprise_founder'], {
-    errorMap: () => ({ message: 'Invalid plan selected' }),
+  plan: z.enum(['pro', 'scale', 'premium', 'pro_founder', 'scale_founder', 'enterprise_founder'] as const, {
+    error: 'Invalid plan selected',
   }),
   billingPeriod: z.enum(['monthly', 'yearly']).default('monthly'),
 });
@@ -360,17 +360,16 @@ export function sanitizeString(str: string): string {
 /**
  * Validate and sanitize input
  */
-export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): 
-  { success: true; data: T } | { success: false; errors: string[] } {
+export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[] } {
   const result = schema.safeParse(data);
-  
+
   if (result.success) {
     return { success: true, data: result.data };
   }
-  
-  const errors = result.error.errors.map(err => 
+
+  const errors = result.error.issues.map(err =>
     `${err.path.join('.')}: ${err.message}`
   );
-  
+
   return { success: false, errors };
 }

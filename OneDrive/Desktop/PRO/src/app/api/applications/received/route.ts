@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Application, Startup } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 
 // GET /api/applications/received - Get applications received for founder's startups
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -18,7 +17,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },

@@ -21,7 +21,7 @@ export const safeLocalStorage = {
       return null;
     }
   },
-  
+
   setItem: (key: string, value: string): void => {
     if (!isClient) return;
     try {
@@ -30,7 +30,7 @@ export const safeLocalStorage = {
       console.error('localStorage.setItem error:', e);
     }
   },
-  
+
   removeItem: (key: string): void => {
     if (!isClient) return;
     try {
@@ -39,7 +39,7 @@ export const safeLocalStorage = {
       console.error('localStorage.removeItem error:', e);
     }
   },
-  
+
   clear: (): void => {
     if (!isClient) return;
     try {
@@ -63,7 +63,7 @@ export const safeSessionStorage = {
       return null;
     }
   },
-  
+
   setItem: (key: string, value: string): void => {
     if (!isClient) return;
     try {
@@ -72,7 +72,7 @@ export const safeSessionStorage = {
       console.error('sessionStorage.setItem error:', e);
     }
   },
-  
+
   removeItem: (key: string): void => {
     if (!isClient) return;
     try {
@@ -87,7 +87,6 @@ export const safeSessionStorage = {
  * Hook-friendly storage key constants
  */
 export const STORAGE_KEYS = {
-  TOKEN: 'collabhub-token',
   VIEW_PROFILE: 'viewProfile',
   OPEN_CONVERSATION: 'openConversation',
   MESSAGE_USER: 'messageUser',

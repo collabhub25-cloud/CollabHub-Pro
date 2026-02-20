@@ -1,22 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Investment, FundingRound, Startup, User, Notification, Payment } from '@/lib/models';
-import { verifyToken } from '@/lib/auth';
+import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
 import Stripe from 'stripe';
+import { createLogger } from '@/lib/logger';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2023-10-16' as any,
-});
+const log = createLogger('funding-invest');
+
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error('STRIPE_SECRET_KEY is not configured');
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
 
 // POST /api/funding/invest - Create investment with Stripe checkout
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -88,7 +97,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create Stripe checkout session
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
@@ -143,7 +152,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating investment:', error);
+    log.error('Error creating investment:', error);
     return NextResponse.json(
       { error: 'Failed to create investment' },
       { status: 500 }
@@ -154,12 +163,12 @@ export async function POST(request: NextRequest) {
 // GET /api/funding/invest - Get user's investments
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -177,7 +186,7 @@ export async function GET(request: NextRequest) {
       total: investments.length,
     });
   } catch (error) {
-    console.error('Error fetching investments:', error);
+    log.error('Error fetching investments:', error);
     return NextResponse.json(
       { error: 'Failed to fetch investments' },
       { status: 500 }

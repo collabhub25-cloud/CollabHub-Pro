@@ -1,3 +1,0 @@
-"""
-CollabHub Project Package
-"""

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Plan {
   name: string;
@@ -84,17 +85,16 @@ const founderPlans: Record<string, Plan> = {
 };
 
 export function PricingPage() {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
 
   const fetchSubscription = useCallback(async () => {
-    if (!token) return;
 
     try {
       const response = await fetch('/api/subscriptions', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
 
       if (response.ok) {
@@ -106,22 +106,22 @@ export function PricingPage() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);
 
   const handleUpgrade = async (planKey: string) => {
-    if (!token || planKey === 'free_founder') return;
+    if ( planKey === 'free_founder') return;
 
     setProcessing(planKey);
     try {
       const response = await fetch('/api/stripe/checkout', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ plan: planKey }),
       });
@@ -142,15 +142,13 @@ export function PricingPage() {
   };
 
   const handleManageSubscription = async () => {
-    if (!token) return;
 
     setProcessing('manage');
     try {
       const response = await fetch('/api/stripe/portal', {
+          credentials: 'include',
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        
       });
 
       if (response.ok) {

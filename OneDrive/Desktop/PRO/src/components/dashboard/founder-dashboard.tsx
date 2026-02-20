@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { CreateMilestoneModal } from '@/components/milestones/create-milestone-modal';
+import { apiFetch } from '@/lib/api-client';
 
 interface Startup {
   _id: string;
@@ -108,7 +109,7 @@ interface FounderDashboardProps {
 }
 
 export function FounderDashboard({ activeTab }: FounderDashboardProps) {
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const [startups, setStartups] = useState<Startup[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -152,12 +153,11 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!token) return;
     setLoading(true);
     try {
       // Fetch startups
       const startupsRes = await fetch('/api/startups', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
@@ -167,7 +167,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
       // Fetch applications
       const appsRes = await fetch('/api/applications/received', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (appsRes.ok) {
         const data = await appsRes.json();
@@ -176,7 +176,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
       // Fetch milestones
       const milestonesRes = await fetch('/api/milestones', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (milestonesRes.ok) {
         const data = await milestonesRes.json();
@@ -189,7 +189,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       toast.error('Failed to load data');
     }
     setLoading(false);
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -202,10 +202,9 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   // Fetch funding rounds
   const fetchFundingRounds = useCallback(async () => {
-    if (!token) return;
     try {
       const res = await fetch('/api/funding/create-round?status=open', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();
@@ -214,14 +213,13 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     } catch (error) {
       console.error('Error fetching funding rounds:', error);
     }
-  }, [token]);
+  }, []);
 
   // Fetch agreements
   const fetchAgreements = useCallback(async () => {
-    if (!token) return;
     try {
       const res = await fetch('/api/agreements', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();
@@ -230,7 +228,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     } catch (error) {
       console.error('Error fetching agreements:', error);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'funding') {
@@ -246,10 +244,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     setSubmitting(true);
     try {
       const res = await fetch('/api/startups', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(newStartup),
       });
@@ -284,10 +282,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     setSubmitting(true);
     try {
       const res = await fetch('/api/startups', {
+          credentials: 'include',
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: showEditStartup._id,
@@ -316,10 +314,9 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     setSubmitting(true);
     try {
       const res = await fetch(`/api/startups?id=${showDeleteStartup._id}`, {
+          credentials: 'include',
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        
       });
 
       const data = await res.json();
@@ -352,10 +349,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const handleUpdateApplication = async (id: string, status: string) => {
     try {
       const res = await fetch('/api/applications', {
+          credentials: 'include',
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id, status }),
       });
@@ -383,10 +380,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     setSubmitting(true);
     try {
       const res = await fetch('/api/funding/create-round', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           startupId: newFundingRound.startupId,

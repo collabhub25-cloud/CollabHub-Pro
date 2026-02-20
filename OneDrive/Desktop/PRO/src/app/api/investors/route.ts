@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Investor, User, Startup, FundingRound } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('investors');
 
 // GET /api/investors - Get investor profile or list
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -18,7 +20,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (investorId) {
       const investor = await Investor.findById(investorId)
         .populate('userId', 'name email avatar trustScore verificationLevel');
-      
+
       if (!investor) {
         return NextResponse.json(
           { error: 'Investor not found' },
@@ -75,7 +77,7 @@ export async function GET(request: NextRequest) {
       dealFlow,
     });
   } catch (error) {
-    console.error('Get investor error:', error);
+    log.error('Get investor error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -88,8 +90,7 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     await investor.populate('userId', 'name email avatar trustScore verificationLevel');
 
-    console.log(`✅ New investor profile created: ${user.email}`);
+    log.info(`New investor profile created: ${user.email}`);
 
     return NextResponse.json({
       success: true,
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
       investor,
     });
   } catch (error) {
-    console.error('Create investor error:', error);
+    log.error('Create investor error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -179,8 +180,7 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -189,7 +189,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -234,7 +234,7 @@ export async function PUT(request: NextRequest) {
       investor,
     });
   } catch (error) {
-    console.error('Update investor error:', error);
+    log.error('Update investor error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

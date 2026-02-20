@@ -4,11 +4,20 @@ import { connectDB } from '@/lib/mongodb';
 import { Milestone, Payment, User, TrustScoreLog, Subscription, Notification, WebhookEvent } from '@/lib/models';
 import { env } from '@/lib/env';
 import { FOUNDER_PLAN_FEATURES, FounderPlanType } from '@/lib/subscription/features';
+import { createLogger } from '@/lib/logger';
 
-// Initialize Stripe with environment variable
-const stripe = new Stripe(env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
-});
+const log = createLogger('stripe-webhooks');
+
+// Lazy Stripe initialization — prevents crash during `next build` page data collection
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error('STRIPE_SECRET_KEY is not configured');
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
 
 // SECURITY FIX: Use database-backed webhook deduplication instead of in-memory Set
 // This ensures webhooks are not processed multiple times even across server restarts
@@ -60,10 +69,10 @@ export async function POST(request: NextRequest) {
 
     // SECURITY FIX: Verify webhook signature instead of just parsing JSON
     let event: Stripe.Event;
-    
+
     try {
       const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
-      
+
       if (!webhookSecret) {
         console.error('STRIPE_WEBHOOK_SECRET not configured');
         return NextResponse.json(
@@ -73,10 +82,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Construct and verify the event using Stripe's signature verification
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       const error = err as Error;
-      console.error('Webhook signature verification failed:', error.message);
+      log.error('Webhook signature verification failed', err);
       return NextResponse.json(
         { error: `Webhook signature verification failed: ${error.message}` },
         { status: 400 }
@@ -87,11 +96,11 @@ export async function POST(request: NextRequest) {
 
     // SECURITY FIX: Database-backed idempotency check
     if (await isWebhookProcessed(eventId)) {
-      console.log(`⚠️ Webhook already processed: ${eventId}`);
+      log.warn(`Webhook already processed: ${eventId}`);
       return NextResponse.json({ received: true });
     }
 
-    console.log(`📦 Webhook received: ${event.type} (${eventId})`);
+    log.info(`Webhook received: ${event.type} (${eventId})`);
 
     // Handle different event types
     switch (event.type) {
@@ -105,24 +114,24 @@ export async function POST(request: NextRequest) {
 
         // CRITICAL: Only process subscription events for founders
         if (role && role !== 'founder') {
-          console.log(`⚠️ Ignoring subscription event for non-founder role: ${role}`);
+          log.warn(`Ignoring subscription event for non-founder role: ${role}`);
           break;
         }
 
         if (userId && plan) {
           // Map plan to founder plan
           const founderPlan = PLAN_MAPPING[plan] || plan as FounderPlanType;
-          
+
           // Get user to verify they are a founder
           const user = await User.findById(userId);
           if (!user || user.role !== 'founder') {
-            console.log(`⚠️ Ignoring subscription event for non-founder user: ${userId}`);
+            log.warn(`Ignoring subscription event for non-founder user: ${userId}`);
             break;
           }
 
           // Create or update subscription
           const existingSub = await Subscription.findOne({ userId });
-          
+
           if (existingSub) {
             existingSub.plan = founderPlan;
             existingSub.status = 'active';
@@ -155,7 +164,7 @@ export async function POST(request: NextRequest) {
             metadata: { plan: founderPlan, sessionId: session.id },
           });
 
-          console.log(`✅ Founder subscription created: ${founderPlan} for user ${userId}`);
+          log.info(`Founder subscription created: ${founderPlan} for user ${userId}`);
         }
         break;
       }
@@ -170,16 +179,17 @@ export async function POST(request: NextRequest) {
           // Verify user is founder
           const user = await User.findById(userSubscription.userId);
           if (!user || user.role !== 'founder') {
-            console.log(`⚠️ Ignoring subscription created for non-founder`);
+            log.warn(`Ignoring subscription created for non-founder`);
             break;
           }
 
           userSubscription.stripeSubscriptionId = subscription.id;
           userSubscription.status = subscription.status;
-          userSubscription.currentPeriodStart = new Date(subscription.current_period_start * 1000);
-          userSubscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+          const subAny = subscription as unknown as Record<string, number>;
+          userSubscription.currentPeriodStart = new Date((subAny.current_period_start ?? Math.floor(Date.now() / 1000)) * 1000);
+          userSubscription.currentPeriodEnd = new Date((subAny.current_period_end ?? Math.floor(Date.now() / 1000) + 30 * 86400) * 1000);
           await userSubscription.save();
-          console.log(`✅ Stripe subscription created: ${subscription.id}`);
+          log.info(`Stripe subscription created: ${subscription.id}`);
         }
         break;
       }
@@ -193,14 +203,15 @@ export async function POST(request: NextRequest) {
           // Verify user is founder
           const user = await User.findById(userSubscription.userId);
           if (!user || user.role !== 'founder') {
-            console.log(`⚠️ Ignoring subscription update for non-founder`);
+            log.warn(`Ignoring subscription update for non-founder`);
             break;
           }
 
           userSubscription.status = subscription.status;
           userSubscription.cancelAtPeriodEnd = subscription.cancel_at_period_end;
-          userSubscription.currentPeriodStart = new Date(subscription.current_period_start * 1000);
-          userSubscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+          const subAny2 = subscription as unknown as Record<string, number>;
+          userSubscription.currentPeriodStart = new Date((subAny2.current_period_start ?? Math.floor(Date.now() / 1000)) * 1000);
+          userSubscription.currentPeriodEnd = new Date((subAny2.current_period_end ?? Math.floor(Date.now() / 1000) + 30 * 86400) * 1000);
           await userSubscription.save();
 
           // Notify user if subscription status changed
@@ -215,7 +226,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        console.log(`📝 Subscription updated: ${subscription.id}`);
+        log.info(`Subscription updated: ${subscription.id}`);
         break;
       }
 
@@ -228,7 +239,7 @@ export async function POST(request: NextRequest) {
           // Verify user is founder
           const user = await User.findById(userSubscription.userId);
           if (!user || user.role !== 'founder') {
-            console.log(`⚠️ Ignoring subscription deletion for non-founder`);
+            log.warn(`Ignoring subscription deletion for non-founder`);
             break;
           }
 
@@ -247,7 +258,7 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        console.log(`❌ Subscription cancelled: ${subscription.id}`);
+        log.info(`Subscription cancelled: ${subscription.id}`);
         break;
       }
 
@@ -261,7 +272,7 @@ export async function POST(request: NextRequest) {
             // Verify user is founder
             const user = await User.findById(userSubscription.userId);
             if (!user || user.role !== 'founder') {
-              console.log(`⚠️ Ignoring payment success for non-founder`);
+              log.warn(`Ignoring payment success for non-founder`);
               break;
             }
 
@@ -279,7 +290,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        console.log(`💳 Invoice paid: ${invoice.id}`);
+        log.info(`Invoice paid: ${invoice.id}`);
         break;
       }
 
@@ -292,7 +303,7 @@ export async function POST(request: NextRequest) {
           // Verify user is founder
           const user = await User.findById(userSubscription.userId);
           if (!user || user.role !== 'founder') {
-            console.log(`⚠️ Ignoring payment failure for non-founder`);
+            log.warn(`Ignoring payment failure for non-founder`);
             break;
           }
 
@@ -308,7 +319,7 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        console.log(`❌ Invoice payment failed: ${invoice.id}`);
+        log.info(`Invoice payment failed: ${invoice.id}`);
         break;
       }
 
@@ -317,14 +328,14 @@ export async function POST(request: NextRequest) {
       // ============================================
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
+
         // Check if this payment was already processed (idempotency)
         const existingPayment = await Payment.findOne({
           stripePaymentId: paymentIntent.id,
         });
 
         if (existingPayment) {
-          console.log(`⚠️ Payment already processed: ${paymentIntent.id}`);
+          log.warn(`Payment already processed: ${paymentIntent.id}`);
           break;
         }
 
@@ -382,44 +393,44 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        console.log(`✅ Payment processed: $${payment.amount} ${payment.currency}`);
+        log.info(`Payment processed: $${payment.amount} ${payment.currency}`);
         break;
       }
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
+
         await Payment.findOneAndUpdate(
           { stripePaymentId: paymentIntent.id },
           { $set: { status: 'failed', updatedAt: new Date() } }
         );
 
-        console.log(`❌ Payment failed: ${paymentIntent.id}`);
+        log.info(`Payment failed: ${paymentIntent.id}`);
         break;
       }
 
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
-        
+
         await Payment.findOneAndUpdate(
           { stripePaymentId: charge.payment_intent as string },
           { $set: { status: 'refunded', updatedAt: new Date() } }
         );
 
-        console.log(`💸 Payment refunded: ${charge.payment_intent}`);
+        log.info(`Payment refunded: ${charge.payment_intent}`);
         break;
       }
 
       default:
-        console.log(`⚠️ Unhandled event type: ${event.type}`);
+        log.warn(`Unhandled event type: ${event.type}`);
     }
 
     // SECURITY FIX: Mark webhook as processed in database
     await markWebhookProcessed(eventId, event.type);
-    
+
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    log.error('Webhook processing error', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -431,8 +442,8 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     configured: !!env.STRIPE_WEBHOOK_SECRET,
-    message: env.STRIPE_WEBHOOK_SECRET 
-      ? 'Webhook endpoint is configured' 
+    message: env.STRIPE_WEBHOOK_SECRET
+      ? 'Webhook endpoint is configured'
       : 'Webhook secret not configured',
   });
 }

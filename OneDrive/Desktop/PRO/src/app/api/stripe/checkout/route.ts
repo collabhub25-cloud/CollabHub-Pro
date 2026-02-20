@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User, Subscription } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { validateInput, CheckoutSchema } from '@/lib/validation/schemas';
 import { env } from '@/lib/env';
 import { FounderPlanType, PLAN_PRICES } from '@/lib/subscription/features';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2024-11-20.acacia',
-});
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error('STRIPE_SECRET_KEY is not configured');
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
 
 // Stripe Price IDs for Founder Plans
 const STRIPE_PRICES: Record<FounderPlanType, string> = {
@@ -30,13 +36,12 @@ const LEGACY_TO_FOUNDER_PLAN: Record<string, FounderPlanType> = {
 // ONLY FOUNDERS CAN CREATE CHECKOUT SESSIONS
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
     // CRITICAL: Only founders can create Stripe checkout sessions
     if (user.role !== 'founder') {
       return NextResponse.json(
-        { 
+        {
           error: 'Subscription plans are only available for founders. Talent and Investor accounts are free.',
           code: 'BILLING_FOUNDER_ONLY'
         },
@@ -60,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Zod validation
     const validation = validateInput(CheckoutSchema, body);
     if (!validation.success) {
@@ -70,14 +75,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let { plan } = validation.data;
+    let plan: string = validation.data.plan;
 
     // Map legacy plan names to founder plans
     if (plan in LEGACY_TO_FOUNDER_PLAN) {
-      plan = LEGACY_TO_FOUNDER_PLAN[plan];
+      plan = LEGACY_TO_FOUNDER_PLAN[plan as keyof typeof LEGACY_TO_FOUNDER_PLAN];
     }
 
-    if (!plan || plan === 'free' || plan === 'free_founder') {
+    if (!plan || (plan as string) === 'free' || (plan as string) === 'free_founder') {
       return NextResponse.json(
         { error: 'Invalid plan selected. Please select a paid plan.' },
         { status: 400 }
@@ -98,7 +103,7 @@ export async function POST(request: NextRequest) {
     let customerId = subscription?.stripeCustomerId;
 
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: user.email,
         name: user.name,
         metadata: {
@@ -119,7 +124,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create checkout session
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripe().checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],

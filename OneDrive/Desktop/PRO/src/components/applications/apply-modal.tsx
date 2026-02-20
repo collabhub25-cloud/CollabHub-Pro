@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Role {
   _id: string;
@@ -42,7 +43,7 @@ interface ApplyModalProps {
 }
 
 export function ApplyModal({ startup, open, onOpenChange, onSuccess }: ApplyModalProps) {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [coverLetter, setCoverLetter] = useState('');
   const [proposedEquity, setProposedEquity] = useState('');
@@ -59,7 +60,7 @@ export function ApplyModal({ startup, open, onOpenChange, onSuccess }: ApplyModa
   };
 
   const handleSubmit = async () => {
-    if (!startup || !token || !user) return;
+    if (!startup  || !user) return;
 
     // Validation
     if (!selectedRole) {
@@ -82,10 +83,10 @@ export function ApplyModal({ startup, open, onOpenChange, onSuccess }: ApplyModa
 
     try {
       const response = await fetch('/api/applications', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           startupId: startup._id,

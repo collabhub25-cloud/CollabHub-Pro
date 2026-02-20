@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { safeLocalStorage, STORAGE_KEYS } from '@/lib/client-utils';
+import { apiFetch } from '@/lib/api-client';
 
 interface FundingRound {
   _id: string;
@@ -118,7 +119,7 @@ const industries = [
 const stages = ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'];
 
 export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
-  const { user, token, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { setActiveTab: setGlobalTab } = useUIStore();
   
   // State
@@ -164,14 +165,13 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
   // Fetch all data
   const fetchData = useCallback(async () => {
-    if (!token) return;
     
     setLoading(true);
     
     try {
       // Fetch funding rounds
       const roundsRes = await fetch('/api/funding/create-round?status=open', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (roundsRes.ok) {
         const data = await roundsRes.json();
@@ -180,7 +180,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch user investments
       const investmentsRes = await fetch('/api/funding/invest', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (investmentsRes.ok) {
         const data = await investmentsRes.json();
@@ -189,7 +189,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch access requests (investor's own requests)
       const accessRes = await fetch('/api/funding/request-access', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (accessRes.ok) {
         const data = await accessRes.json();
@@ -198,7 +198,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch favorites
       const favoritesRes = await fetch('/api/favorites', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (favoritesRes.ok) {
         const data = await favoritesRes.json();
@@ -207,7 +207,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch startups for deal flow
       const startupsRes = await fetch('/api/search/startups?limit=20', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
@@ -219,7 +219,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     }
     
     setLoading(false);
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -239,10 +239,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   const toggleFavorite = async (startupId: string) => {
     try {
       const res = await fetch('/api/favorites', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ startupId }),
       });
@@ -269,10 +269,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
     try {
       const res = await fetch('/api/funding/request-access', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           startupId: selectedStartup._id,
@@ -311,10 +311,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
     try {
       const res = await fetch('/api/funding/invest', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           roundId: selectedRound._id,
@@ -339,15 +339,14 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   // Handle profile update
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
     
     setSaving(true);
     try {
       const res = await fetch('/api/auth/me', {
+          credentials: 'include',
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           bio: profile.bio,
@@ -1068,7 +1067,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
   // Agreements
   if (activeTab === 'agreements') {
-    return <AgreementsSection token={token} />;
+    return <AgreementsSection />;
   }
 
   // Profile
@@ -1395,19 +1394,18 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 }
 
 // Agreements Section Component
-function AgreementsSection({ token }: { token: string | null }) {
+function AgreementsSection({}) {
   const [agreements, setAgreements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [signingId, setSigningId] = useState<string | null>(null);
 
   const fetchAgreements = useCallback(async () => {
-    if (!token) return;
     
     setLoading(true);
     
     try {
       const res = await fetch('/api/agreements', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();
@@ -1418,7 +1416,7 @@ function AgreementsSection({ token }: { token: string | null }) {
     }
     
     setLoading(false);
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -1430,10 +1428,10 @@ function AgreementsSection({ token }: { token: string | null }) {
     
     try {
       const res = await fetch('/api/agreements/sign', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ agreementId }),
       });

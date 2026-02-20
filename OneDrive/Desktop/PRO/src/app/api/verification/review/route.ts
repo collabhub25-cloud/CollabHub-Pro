@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User, Verification, Notification, IVerification } from '@/lib/models';
-import { verifyToken } from '@/lib/auth';
+import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
 import { getRequiredLevels, isVerificationComplete } from '@/lib/verification-service';
 
 // PATCH /api/verification/review - Admin review verification
 export async function PATCH(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -124,12 +124,12 @@ export async function PATCH(request: NextRequest) {
 // GET /api/verification/review - Get pending verifications for admin
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

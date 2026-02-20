@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Alliance, User, Notification, TrustScoreLog } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
 import { validateInput, AllianceRequestSchema } from '@/lib/validation/schemas';
 
@@ -19,13 +19,12 @@ async function checkExistingAlliance(userId1: string, userId2: string) {
 // GET /api/alliances - Get my alliances (accepted, pending received, pending sent)
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -150,13 +149,12 @@ export async function POST(request: NextRequest) {
       return rateLimitResponse(rateLimitResult.resetTime, RATE_LIMITS.alliance.message);
     }
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -268,13 +266,12 @@ export async function POST(request: NextRequest) {
 // DELETE /api/alliances - Remove alliance
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

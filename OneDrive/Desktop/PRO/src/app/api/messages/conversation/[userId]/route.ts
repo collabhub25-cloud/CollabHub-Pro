@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User, Message, Conversation } from '@/lib/models';
-import { verifyToken } from '@/lib/auth';
+import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
 
 // Helper to generate conversation ID between two users
 function generateConversationId(userId1: string, userId2: string): string {
@@ -15,13 +15,13 @@ export async function GET(
 ) {
   try {
     const { userId: otherUserId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const token = extractTokenFromCookies(request);
     
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

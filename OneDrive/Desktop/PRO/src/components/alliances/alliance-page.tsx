@@ -14,6 +14,7 @@ import {
   Building2, Briefcase, TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Alliance {
   _id: string;
@@ -55,7 +56,7 @@ const roleIcons: Record<string, React.ReactNode> = {
 };
 
 export function AlliancePage() {
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('accepted');
   const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [counts, setCounts] = useState<AllianceCounts>({ accepted: 0, received: 0, sent: 0 });
@@ -63,7 +64,7 @@ export function AlliancePage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchAlliances = useCallback(async (type: string) => {
-    if (!user || !token) {
+    if (!user ) {
       setLoading(false);
       return;
     }
@@ -71,8 +72,8 @@ export function AlliancePage() {
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/alliances?type=${type}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `/api/alliances?type=${type}`, {
+          credentials: 'include' }
       );
       
       if (res.ok) {
@@ -93,7 +94,7 @@ export function AlliancePage() {
     } finally {
       setLoading(false);
     }
-  }, [user, token]);
+  }, [user]);
 
   // Fetch on mount
   useEffect(() => {
@@ -107,13 +108,12 @@ export function AlliancePage() {
   };
 
   const acceptRequest = async (allianceId: string) => {
-    if (!token) return;
     setActionLoading(allianceId);
     try {
       const res = await fetch('/api/alliances/accept', {
+          credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ allianceId }),
@@ -135,13 +135,12 @@ export function AlliancePage() {
   };
 
   const rejectRequest = async (allianceId: string) => {
-    if (!token) return;
     setActionLoading(allianceId);
     try {
       const res = await fetch('/api/alliances/reject', {
+          credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ allianceId }),
@@ -163,13 +162,13 @@ export function AlliancePage() {
   };
 
   const removeAlliance = async (allianceId: string) => {
-    if (!confirm('Remove this alliance?') || !token) return;
+    if (!confirm('Remove this alliance?') ) return;
     
     setActionLoading(allianceId);
     try {
       const res = await fetch(`/api/alliances?id=${allianceId}`, {
+          credentials: 'include',
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();

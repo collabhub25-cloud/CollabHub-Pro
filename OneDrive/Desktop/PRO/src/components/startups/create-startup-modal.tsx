@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface CreateStartupModalProps {
   onSuccess?: () => void;
@@ -44,7 +45,7 @@ const industries = [
 ];
 
 export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -61,10 +62,6 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!token) {
-      toast.error('Please login to create a startup');
-      return;
-    }
 
     if (user?.role !== 'founder') {
       toast.error('Only founders can create startups');
@@ -80,10 +77,10 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
 
     try {
       const response = await fetch('/api/startups', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: formData.name,

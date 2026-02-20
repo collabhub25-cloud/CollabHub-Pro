@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User, Verification, Notification, Agreement } from '@/lib/models';
-import { verifyToken } from '@/lib/auth';
+import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
 import { getLevelForType, isVerificationTypeAllowed } from '@/lib/verification-service';
 import crypto from 'crypto';
 
 // POST /api/verification/sign-nda - Sign NDA for verification
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

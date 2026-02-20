@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/lib/models';
-import { hashPassword, generateAccessToken, sanitizeUser } from '@/lib/auth';
+import {
+  hashPassword,
+  generateAccessToken,
+  generateRefreshToken,
+  sanitizeUser,
+  setAuthCookies,
+} from '@/lib/auth';
 import { RegisterSchema, validateInput } from '@/lib/validation/schemas';
 import { checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
 
@@ -10,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Rate limiting
     const rateLimitKey = getRateLimitKey(request, 'register');
     const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.register);
-    
+
     if (!rateLimitResult.allowed) {
       return rateLimitResponse(rateLimitResult.resetTime, RATE_LIMITS.register.message);
     }
@@ -18,7 +24,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    
+
     // Zod validation
     const validation = validateInput(RegisterSchema, body);
     if (!validation.success) {
@@ -53,24 +59,27 @@ export async function POST(request: NextRequest) {
       skills: [],
     });
 
-    // Generate token
-    const token = generateAccessToken({
+    // Generate tokens
+    const tokenPayload = {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
-    });
+    };
 
-    console.log(`✅ New user registered: ${user.email} (${user.role})`);
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
 
-    return NextResponse.json({
+    // Set cookies — no token in response body
+    const response = NextResponse.json({
       success: true,
       message: 'Account created successfully',
       user: sanitizeUser(user),
-      token,
     });
+
+    return setAuthCookies(response, accessToken, refreshToken);
   } catch (error) {
     console.error('Registration error:', error);
-    
+
     // Handle duplicate key error
     if (error instanceof Error && error.message.includes('duplicate key')) {
       return NextResponse.json(
@@ -78,7 +87,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-    
+
     return NextResponse.json(
       { error: 'Internal server error. Please try again.' },
       { status: 500 }

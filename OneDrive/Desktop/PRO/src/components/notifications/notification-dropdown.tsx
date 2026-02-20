@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore, useUIStore } from '@/store';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Notification {
   _id: string;
@@ -43,7 +44,7 @@ const notificationIcons: Record<string, string> = {
 };
 
 export function NotificationDropdown() {
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -77,12 +78,11 @@ export function NotificationDropdown() {
 
   // Fetch initial notifications
   const fetchNotifications = useCallback(async () => {
-    if (!token) return;
     
     setLoading(true);
     try {
       const response = await fetch('/api/notifications?limit=20', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       
       if (response.ok) {
@@ -95,14 +95,12 @@ export function NotificationDropdown() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   // Initialize WebSocket connection
   useEffect(() => {
-    if (!token) return;
 
     const socketInstance = io('/?XTransformPort=3003', {
-      auth: { token },
       transports: ['websocket', 'polling'],
     });
 
@@ -142,16 +140,16 @@ export function NotificationDropdown() {
     return () => {
       socketInstance.disconnect();
     };
-  }, [token, fetchNotifications]);
+  }, [fetchNotifications]);
 
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
     try {
       const response = await fetch('/api/notifications/read', {
+          credentials: 'include',
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ notificationIds: [notificationId] }),
       });
@@ -172,10 +170,10 @@ export function NotificationDropdown() {
   const markAllAsRead = async () => {
     try {
       const response = await fetch('/api/notifications/read', {
+          credentials: 'include',
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ markAll: true }),
       });

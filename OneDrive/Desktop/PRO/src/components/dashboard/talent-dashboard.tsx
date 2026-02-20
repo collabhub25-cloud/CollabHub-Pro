@@ -19,6 +19,7 @@ import {
   Edit, Save, X, Settings, Bell, Shield, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Application {
   _id: string;
@@ -65,7 +66,7 @@ interface TalentDashboardProps {
 }
 
 export function TalentDashboard({ activeTab }: TalentDashboardProps) {
-  const { user, token, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { setActiveTab: setGlobalTab } = useUIStore();
   const [applications, setApplications] = useState<Application[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -98,12 +99,11 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
   ];
 
   const fetchData = useCallback(async () => {
-    if (!token) return;
     setLoading(true);
     try {
       // Fetch applications
       const appsRes = await fetch('/api/applications', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (appsRes.ok) {
         const data = await appsRes.json();
@@ -112,7 +112,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
       // Fetch milestones
       const milestonesRes = await fetch('/api/milestones?assigned=true', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (milestonesRes.ok) {
         const data = await milestonesRes.json();
@@ -121,7 +121,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
       // Fetch agreements
       const agreementsRes = await fetch('/api/agreements', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (agreementsRes.ok) {
         const data = await agreementsRes.json();
@@ -130,7 +130,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
       // Fetch startups for browsing
       const startupsRes = await fetch('/api/startups?all=true&limit=10', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
@@ -140,7 +140,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
       console.error('Error fetching data:', error);
     }
     setLoading(false);
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -151,15 +151,14 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
     
     setSaving(true);
     try {
       const res = await fetch('/api/auth/me', {
+          credentials: 'include',
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           bio: profile.bio,

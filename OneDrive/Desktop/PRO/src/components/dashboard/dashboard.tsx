@@ -7,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { 
-  LayoutDashboard, Building2, Users, FileText, CreditCard, 
+import {
+  LayoutDashboard, Building2, Users, FileText, CreditCard,
   Settings, LogOut, Menu, ChevronLeft, Award, BarChart3,
   UserCheck, DollarSign, AlertTriangle, CheckCircle2,
   Search, Shield, CreditCard as SubscriptionIcon, MessageSquare,
@@ -33,6 +33,7 @@ import { SubscriptionBadge } from './shared-components';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -95,7 +96,7 @@ const navigation = {
 };
 
 export function Dashboard({ onLogout }: DashboardProps) {
-  const { user, setUser, token } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { sidebarOpen, toggleSidebar, setActiveTab, activeTab } = useUIStore();
   const [key, setKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -111,12 +112,12 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
   // Refresh user data using Zustand token with proper error handling
   const refreshUser = useCallback(async () => {
-    if (!token || isRefreshing) return;
+    if (isRefreshing) return;
 
     setIsRefreshing(true);
     try {
       const response = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       if (response.ok) {
         const data = await response.json();
@@ -130,7 +131,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [token, isRefreshing, setUser]);
+  }, [isRefreshing, setUser]);
 
   if (!user) return null;
 
@@ -199,155 +200,152 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
   return (
     <TooltipProvider>
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside
-        className={`fixed left-0 top-0 z-40 h-screen bg-card border-r transition-all duration-300 ${
-          sidebarOpen ? 'w-64' : 'w-16'
-        }`}
-      >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center gap-2 p-4 border-b">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-5 w-5 text-primary-foreground" />
-            </div>
-            {sidebarOpen && <span className="text-xl font-bold">CollabHub</span>}
-          </div>
-
-          {/* Navigation */}
-          <ScrollArea className="flex-1 py-4">
-            <nav className="space-y-1 px-2">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    activeTab === item.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-                </button>
-              ))}
-            </nav>
-          </ScrollArea>
-
-          {/* Subscription Upgrade CTA - ONLY FOR FOUNDERS */}
-          {sidebarOpen && user.role === 'founder' && (userPlan === 'free' || userPlan === 'free_founder') && (
-            <div className="mx-4 mb-2 p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Upgrade Plan</span>
+      <div className="min-h-screen bg-background flex">
+        {/* Sidebar */}
+        <aside
+          className={`fixed left-0 top-0 z-40 h-screen bg-card border-r transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-16'
+            }`}
+        >
+          <div className="flex flex-col h-full">
+            {/* Logo */}
+            <div className="flex items-center gap-2 p-4 border-b">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0">
+                <Building2 className="h-5 w-5 text-primary-foreground" />
               </div>
-              <p className="text-xs text-muted-foreground mb-2">
-                Unlock more features with a premium plan
-              </p>
-              <Button size="sm" className="w-full" onClick={handleUpgradeClick}>
-                View Plans
-              </Button>
+              {sidebarOpen && <span className="text-xl font-bold">CollabHub</span>}
             </div>
-          )}
 
-          {/* User Profile - Clickable */}
-          <div className="p-4 border-t">
-            <button
-              onClick={handleProfileClick}
-              className={`w-full flex items-center gap-3 rounded-lg transition-colors ${
-                activeTab === 'profile' ? 'bg-muted' : 'hover:bg-muted'
-              }`}
-            >
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-              {sidebarOpen && (
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium truncate">{user.name}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Badge variant="secondary" className={`text-xs ${verificationBadge.color} text-white`}>
-                      L{user.verificationLevel}
-                    </Badge>
-                    {/* Only show plan badge for founders */}
-                    {user.role === 'founder' && (
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {getPlanDisplayName(userPlan, user.role)}
-                      </Badge>
-                    )}
-                    {/* Show "Free" badge for non-founders */}
-                    {user.role !== 'founder' && user.role !== 'admin' && (
-                      <Badge variant="outline" className="text-xs">
-                        Free
-                      </Badge>
-                    )}
-                  </div>
+            {/* Navigation */}
+            <ScrollArea className="flex-1 py-4">
+              <nav className="space-y-1 px-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === item.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                      }`}
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                  </button>
+                ))}
+              </nav>
+            </ScrollArea>
+
+            {/* Subscription Upgrade CTA - ONLY FOR FOUNDERS */}
+            {sidebarOpen && user.role === 'founder' && (userPlan === 'free' || userPlan === 'free_founder') && (
+              <div className="mx-4 mb-2 p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Upgrade Plan</span>
                 </div>
-              )}
-            </button>
-            {/* Sign Out - Always visible, full width when expanded, icon only when collapsed */}
-            <Button
-              variant="ghost"
-              size={sidebarOpen ? 'sm' : 'icon'}
-              className={`w-full mt-3 text-muted-foreground hover:text-destructive ${!sidebarOpen ? 'p-2' : ''}`}
-              onClick={onLogout}
-              title="Sign Out"
-            >
-              <LogOut className="h-4 w-4" />
-              {sidebarOpen && <span className="ml-2">Sign Out</span>}
-            </Button>
-          </div>
-        </div>
-      </aside>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Unlock more features with a premium plan
+                </p>
+                <Button size="sm" className="w-full" onClick={handleUpgradeClick}>
+                  View Plans
+                </Button>
+              </div>
+            )}
 
-      {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 h-16 bg-background/95 backdrop-blur border-b">
-          <div className="flex items-center justify-between h-full px-4">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-                {sidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-              <h1 className="text-lg font-semibold capitalize hidden md:block">
-                {navItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
-              </h1>
-              
-              {/* Quick Actions */}
-              {user.role === 'founder' && (activeTab === 'startups' || activeTab === 'dashboard') && (
-                <CreateStartupModal onSuccess={() => setKey(k => k + 1)} />
-              )}
-              {user.role === 'founder' && activeTab === 'milestones' && (
-                <CreateMilestoneModal onSuccess={() => setKey(k => k + 1)} />
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Notification Dropdown */}
-              <NotificationDropdown />
-              
-              {/* Trust Score */}
-              <button 
+            {/* User Profile - Clickable */}
+            <div className="p-4 border-t">
+              <button
                 onClick={handleProfileClick}
-                className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors"
+                className={`w-full flex items-center gap-3 rounded-lg transition-colors ${activeTab === 'profile' ? 'bg-muted' : 'hover:bg-muted'
+                  }`}
               >
-                <Award className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">{user.trustScore}</span>
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={user.avatar} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
+                </Avatar>
+                {sidebarOpen && (
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium truncate">{user.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <Badge variant="secondary" className={`text-xs ${verificationBadge.color} text-white`}>
+                        L{user.verificationLevel}
+                      </Badge>
+                      {/* Only show plan badge for founders */}
+                      {user.role === 'founder' && (
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {getPlanDisplayName(userPlan as import('@/lib/subscription/features').PlanType, user.role)}
+                        </Badge>
+                      )}
+                      {/* Show "Free" badge for non-founders */}
+                      {user.role !== 'founder' && user.role !== 'admin' && (
+                        <Badge variant="outline" className="text-xs">
+                          Free
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
               </button>
+              {/* Sign Out - Always visible, full width when expanded, icon only when collapsed */}
+              <Button
+                variant="ghost"
+                size={sidebarOpen ? 'sm' : 'icon'}
+                className={`w-full mt-3 text-muted-foreground hover:text-destructive ${!sidebarOpen ? 'p-2' : ''}`}
+                onClick={onLogout}
+                title="Sign Out"
+              >
+                <LogOut className="h-4 w-4" />
+                {sidebarOpen && <span className="ml-2">Sign Out</span>}
+              </Button>
             </div>
           </div>
-        </header>
+        </aside>
 
-        {/* Page Content - Wrapped with ErrorBoundary */}
-        <main className="p-6" key={key}>
-          <ErrorBoundary>
-            {renderContent()}
-          </ErrorBoundary>
-        </main>
+        {/* Main Content */}
+        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
+          {/* Top Header */}
+          <header className="sticky top-0 z-30 h-16 bg-background/95 backdrop-blur border-b">
+            <div className="flex items-center justify-between h-full px-4">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+                  {sidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </Button>
+                <h1 className="text-lg font-semibold capitalize hidden md:block">
+                  {navItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
+                </h1>
+
+                {/* Quick Actions */}
+                {user.role === 'founder' && (activeTab === 'startups' || activeTab === 'dashboard') && (
+                  <CreateStartupModal onSuccess={() => setKey(k => k + 1)} />
+                )}
+                {user.role === 'founder' && activeTab === 'milestones' && (
+                  <CreateMilestoneModal onSuccess={() => setKey(k => k + 1)} />
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                {/* Notification Dropdown */}
+                <NotificationDropdown />
+
+                {/* Trust Score */}
+                <button
+                  onClick={handleProfileClick}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors"
+                >
+                  <Award className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">{user.trustScore}</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Page Content - Wrapped with ErrorBoundary */}
+          <main className="p-6" key={key}>
+            <ErrorBoundary>
+              {renderContent()}
+            </ErrorBoundary>
+          </main>
+        </div>
       </div>
-    </div>
     </TooltipProvider>
   );
 }

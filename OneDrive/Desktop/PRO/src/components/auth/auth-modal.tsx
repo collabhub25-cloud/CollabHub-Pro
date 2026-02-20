@@ -28,11 +28,11 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'founder' | 'talent' | 'investor'>('founder');
-  
+
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  
+
   // Register form state
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
@@ -47,13 +47,14 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        login(data.user, data.token);
+        login(data.user);
         toast.success('Welcome back!');
         onClose();
       } else {
@@ -68,7 +69,7 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (registerPassword !== registerConfirmPassword) {
       toast.error('Passwords do not match');
       return;
@@ -85,6 +86,7 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           name: registerName,
           email: registerEmail,
@@ -96,7 +98,7 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
       const data = await response.json();
 
       if (response.ok) {
-        login(data.user, data.token);
+        login(data.user);
         toast.success('Welcome to CollabHub!');
         onClose();
       } else {
@@ -201,11 +203,10 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
                       key={role.id}
                       type="button"
                       onClick={() => setSelectedRole(role.id)}
-                      className={`flex flex-col items-center p-3 rounded-lg border transition-all ${
-                        selectedRole === role.id
+                      className={`flex flex-col items-center p-3 rounded-lg border transition-all ${selectedRole === role.id
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-border hover:border-primary/50'
-                      }`}
+                        }`}
                     >
                       {role.icon}
                       <span className="text-sm font-medium mt-1">{role.label}</span>

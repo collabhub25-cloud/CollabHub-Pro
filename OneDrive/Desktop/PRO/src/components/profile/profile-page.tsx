@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, Mail, MapPin, ExternalLink, Briefcase, 
-  Building2, TrendingUp, Star, Shield, FileText, 
+import {
+  ArrowLeft, Mail, MapPin, ExternalLink, Briefcase,
+  Building2, TrendingUp, Star, Shield, FileText,
   MessageSquare, Loader2, Download, Github, Linkedin, Globe, Users,
   Edit, Save, X, Plus
 } from 'lucide-react';
@@ -21,6 +21,7 @@ import { AllianceButton } from '@/components/alliances/alliance-button';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface ProfileData {
   _id: string;
@@ -65,7 +66,7 @@ interface ProfilePageProps {
 
 export function ProfilePage({ profileId }: ProfilePageProps) {
   const router = useRouter();
-  const { user, token, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { setActiveTab } = useUIStore();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,33 +84,28 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
   });
 
   const fetchProfile = useCallback(async () => {
-    if (!token) {
-      console.log('No token found in auth store');
-      setLoading(false);
-      return;
-    }
 
     try {
-      const endpoint = profileId 
+      const endpoint = profileId
         ? `/api/users/profile/${profileId}`
         : '/api/users/me';
-      
+
       console.log('Fetching profile from:', endpoint);
       const response = await fetch(endpoint, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
+        credentials: 'include',
+        headers: {
           'Content-Type': 'application/json'
         },
       });
 
       console.log('Response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Profile data received:', data);
         const profileData = data.profile || data.user;
         setProfile(profileData);
-        
+
         // Initialize edit form with current values
         setEditForm({
           name: profileData.name || '',
@@ -132,15 +128,14 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
     } finally {
       setLoading(false);
     }
-  }, [profileId, token]);
+  }, [profileId]);
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
   const handleSaveProfile = async () => {
-    if (!token) return;
-    
+
     setSaving(true);
     try {
       const updates: Record<string, unknown> = {
@@ -163,10 +158,10 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
       }
 
       const response = await fetch('/api/users/me', {
+        credentials: 'include',
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(updates),
       });
@@ -261,7 +256,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                 {getInitials(profile.name)}
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-3 flex-wrap">
                 {isEditing ? (
@@ -280,7 +275,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                 </Badge>
                 {profile.plan && profile.role === 'founder' && (
                   <Badge variant="outline" className="capitalize">
-                    {getPlanDisplayName(profile.plan, profile.role)}
+                    {getPlanDisplayName(profile.plan as import('@/lib/subscription/features').PlanType, profile.role)}
                   </Badge>
                 )}
               </div>
@@ -367,8 +362,8 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                       Message
                     </Button>
                   )}
-                  <AllianceButton 
-                    targetUserId={profile._id} 
+                  <AllianceButton
+                    targetUserId={profile._id}
                     showMutualCount={true}
                   />
                 </div>
@@ -440,7 +435,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               {profile.githubUrl && (
-                <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer" 
+                <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 text-primary hover:underline">
                   <Github className="h-4 w-4" />
                   GitHub
@@ -594,7 +589,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                 </p>
               </div>
             )}
-            
+
             {profile.preferredIndustries && profile.preferredIndustries.length > 0 && (
               <div>
                 <h4 className="font-medium mb-2">Preferred Industries</h4>

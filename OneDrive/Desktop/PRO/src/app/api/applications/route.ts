@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Application, Startup, User } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('applications');
 
 // GET /api/applications - Get applications (for talent)
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -18,7 +20,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
       total: applications.length,
     });
   } catch (error) {
-    console.error('Get applications error:', error);
+    log.error('Get applications error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -63,8 +65,7 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
       { path: 'talentId', select: 'name email avatar skills trustScore verificationLevel' },
     ]);
 
-    console.log(`✅ New application: ${user.email} applied to ${startup.name}`);
+    log.info(`New application: ${user.email} applied to ${startup.name}`);
 
     return NextResponse.json({
       success: true,
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
       application,
     });
   } catch (error) {
-    console.error('Create application error:', error);
+    log.error('Create application error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -178,8 +179,7 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -188,7 +188,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -250,7 +250,7 @@ export async function PUT(request: NextRequest) {
       application: updatedApplication,
     });
   } catch (error) {
-    console.error('Update application error:', error);
+    log.error('Update application error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -31,7 +31,7 @@ interface HealthStatus {
 export async function GET() {
   const startTime = Date.now();
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   const health: HealthStatus = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -49,7 +49,7 @@ export async function GET() {
   try {
     const dbStart = Date.now();
     if (mongoose.connection.readyState === 1) {
-      await mongoose.connection.db.admin().ping();
+      await mongoose.connection.db?.admin().ping();
       health.checks.database = {
         status: 'up',
         latency: Date.now() - dbStart,
@@ -96,16 +96,16 @@ export async function GET() {
 
   // Calculate response time
   const responseTime = Date.now() - startTime;
-  
+
   // Build response
   const response = NextResponse.json(health, {
     status: health.status === 'unhealthy' ? 503 : 200,
   });
-  
+
   // Add timing headers
   response.headers.set('X-Response-Time', `${responseTime}ms`);
   response.headers.set('X-Health-Status', health.status);
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  
+
   return response;
 }

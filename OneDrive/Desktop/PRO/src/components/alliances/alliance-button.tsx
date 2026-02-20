@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  UserPlus, UserCheck, Clock, X, Check, Loader2, Users 
+import {
+  UserPlus, UserCheck, Clock, X, Check, Loader2, Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store';
+import { apiFetch } from '@/lib/api-client';
 
 interface AllianceButtonProps {
   targetUserId: string;
@@ -26,13 +27,13 @@ interface AllianceStatus {
   };
 }
 
-export function AllianceButton({ 
-  targetUserId, 
+export function AllianceButton({
+  targetUserId,
   onStatusChange,
   showMutualCount = false,
-  compact = false 
+  compact = false
 }: AllianceButtonProps) {
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const [status, setStatus] = useState<AllianceStatus | null>(null);
   const [mutualCount, setMutualCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -42,8 +43,8 @@ export function AllianceButton({
     // Compare as strings to handle both string and ObjectId types
     const currentUserId = user?._id?.toString();
     const targetId = targetUserId?.toString();
-    
-    if (!user || !currentUserId || currentUserId === targetId || !token) {
+
+    if (!user || !currentUserId || currentUserId === targetId) {
       setLoading(false);
       return;
     }
@@ -51,10 +52,11 @@ export function AllianceButton({
     try {
       // Fetch alliance status
       const statusRes = await fetch(
-        `/api/alliances/status?userId=${targetId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `/api/alliances/status?userId=${targetId}`, {
+        credentials: 'include'
+      }
       );
-      
+
       if (statusRes.ok) {
         const data = await statusRes.json();
         setStatus(data);
@@ -65,10 +67,11 @@ export function AllianceButton({
       // Fetch mutual count if needed
       if (showMutualCount) {
         const mutualRes = await fetch(
-          `/api/alliances/mutual?userId=${targetId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `/api/alliances/mutual?userId=${targetId}`, {
+          credentials: 'include',
+        }
         );
-        
+
         if (mutualRes.ok) {
           const mutualData = await mutualRes.json();
           setMutualCount(mutualData.count);
@@ -79,25 +82,25 @@ export function AllianceButton({
     } finally {
       setLoading(false);
     }
-  }, [user, targetUserId, showMutualCount, token]);
+  }, [user, targetUserId, showMutualCount]);
 
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
 
   const sendRequest = async () => {
-    if (!user || !token) {
+    if (!user) {
       toast.error('Please log in to send alliance requests');
       return;
     }
-    
+
     setActionLoading(true);
     try {
       console.log('Sending alliance request to:', targetUserId);
       const res = await fetch('/api/alliances', {
+        credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ receiverId: targetUserId }),
@@ -105,7 +108,7 @@ export function AllianceButton({
 
       const data = await res.json();
       console.log('Alliance request response:', res.status, data);
-      
+
       if (res.ok) {
         toast.success('Alliance request sent!');
         setStatus({ status: 'pending_sent', alliance: data.alliance });
@@ -123,21 +126,21 @@ export function AllianceButton({
   };
 
   const acceptRequest = async () => {
-    if (!status?.alliance || !token) return;
-    
+    if (!status?.alliance) return;
+
     setActionLoading(true);
     try {
       const res = await fetch('/api/alliances/accept', {
+        credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ allianceId: status.alliance._id }),
       });
 
       const data = await res.json();
-      
+
       if (res.ok) {
         toast.success('Alliance accepted! Your trust score increased by 2.');
         setStatus({ status: 'accepted', alliance: data.alliance });
@@ -153,21 +156,21 @@ export function AllianceButton({
   };
 
   const rejectRequest = async () => {
-    if (!status?.alliance || !token) return;
-    
+    if (!status?.alliance) return;
+
     setActionLoading(true);
     try {
       const res = await fetch('/api/alliances/reject', {
+        credentials: 'include',
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ allianceId: status.alliance._id }),
       });
 
       const data = await res.json();
-      
+
       if (res.ok) {
         toast.success('Alliance request declined');
         setStatus({ status: 'none' });
@@ -183,22 +186,21 @@ export function AllianceButton({
   };
 
   const removeAlliance = async () => {
-    if (!status?.alliance || !token) return;
-    
+    if (!status?.alliance) return;
+
     if (!confirm('Are you sure you want to remove this alliance?')) return;
-    
+
     setActionLoading(true);
     try {
       const res = await fetch(
-        `/api/alliances?id=${status.alliance._id}`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `/api/alliances?id=${status.alliance._id}`, {
+        credentials: 'include',
+        method: 'DELETE',
+      }
       );
 
       const data = await res.json();
-      
+
       if (res.ok) {
         toast.success('Alliance removed');
         setStatus({ status: 'none' });
@@ -234,8 +236,8 @@ export function AllianceButton({
     case 'accepted':
       return (
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="gap-2 text-green-600 border-green-300"
             disabled
           >
@@ -279,8 +281,8 @@ export function AllianceButton({
     case 'pending_received':
       return (
         <div className="flex items-center gap-2">
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             className="gap-2"
             onClick={acceptRequest}
             disabled={actionLoading}
@@ -292,8 +294,8 @@ export function AllianceButton({
             )}
             {!compact && 'Accept'}
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="gap-2 text-destructive border-destructive"
             onClick={rejectRequest}
             disabled={actionLoading}
@@ -318,8 +320,8 @@ export function AllianceButton({
     default:
       return (
         <div className="flex items-center gap-2">
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             className="gap-2"
             onClick={sendRequest}
             disabled={actionLoading}

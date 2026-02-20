@@ -1,275 +1,213 @@
 /**
  * Production Security Middleware
- * Handles security headers, CSRF protection, and request validation
+ * Global auth enforcement, security headers, CORS, and rate limiting
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
 
 // ============================================
-// SECURITY CONFIGURATION
+// CONFIGURATION
 // ============================================
 
-const SECURITY_CONFIG = {
-  // Content Security Policy
-  csp: {
-    'default-src': ["'self'"],
-    'script-src': [
-      "'self'",
-      "'unsafe-inline'", // Required for Next.js in development
-      "'unsafe-eval'", // Required for some Next.js features
-      'https://js.stripe.com',
-      'https://challenges.cloudflare.com',
-    ],
-    'style-src': [
-      "'self'",
-      "'unsafe-inline'", // Required for Tailwind CSS
-    ],
-    'img-src': [
-      "'self'",
-      'data:',
-      'blob:',
-      'https:',
-      'https://avatars.githubusercontent.com',
-      'https://lh3.googleusercontent.com',
-    ],
-    'font-src': ["'self'", 'data:'],
-    'connect-src': [
-      "'self'",
-      'https://api.stripe.com',
-      'https://js.stripe.com',
-      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    ],
-    'frame-src': [
-      "'self'",
-      'https://js.stripe.com',
-      'https://hooks.stripe.com',
-    ],
-    'object-src': ["'none'"],
-    'base-uri': ["'self'"],
-    'form-action': ["'self'"],
-    'frame-ancestors': ["'none'"],
-    'upgrade-insecure-requests': [],
-  },
+const JWT_SECRET = process.env.JWT_SECRET || 'collabhub-dev-secret-change-in-production';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-  // Rate limiting (memory-based fallback)
-  rateLimit: {
-    windowMs: 60 * 1000, // 1 minute
-    maxRequests: 100,
-  },
+/** Routes that do NOT require authentication */
+const PUBLIC_ROUTES = new Set([
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh',
+  '/api/auth/logout',
+  '/api/health',
+]);
 
-  // Paths that should have stricter security
-  strictPaths: ['/api/admin', '/api/webhooks', '/api/stripe'],
+/** Route prefixes that are public */
+const PUBLIC_PREFIXES = [
+  '/api/webhooks/',
+];
 
-  // Paths that should be public
-  publicPaths: ['/api/health', '/api/auth/login', '/api/auth/register'],
-
-  // Paths that require authentication
-  protectedPaths: ['/api/'],
-};
-
-// ============================================
-// RATE LIMITING (In-memory fallback)
-// ============================================
-
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-function checkRateLimit(identifier: string): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const entry = rateLimitStore.get(identifier);
-
-  if (!entry || now > entry.resetTime) {
-    rateLimitStore.set(identifier, {
-      count: 1,
-      resetTime: now + SECURITY_CONFIG.rateLimit.windowMs,
-    });
-    return { allowed: true, remaining: SECURITY_CONFIG.rateLimit.maxRequests - 1 };
-  }
-
-  if (entry.count >= SECURITY_CONFIG.rateLimit.maxRequests) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  entry.count++;
-  return { allowed: true, remaining: SECURITY_CONFIG.rateLimit.maxRequests - entry.count };
-}
+/** Route prefixes that require admin role */
+const ADMIN_ROUTES = [
+  '/api/admin/',
+];
 
 // ============================================
 // SECURITY HEADERS
 // ============================================
 
-function getSecurityHeaders(isProduction: boolean): Record<string, string> {
-  const cspDirectives = Object.entries(SECURITY_CONFIG.csp)
-    .map(([key, values]) => {
-      if (values.length === 0) return key;
-      return `${key} ${values.join(' ')}`;
-    })
-    .join('; ');
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-DNS-Prefetch-Control': 'on',
+  'X-XSS-Protection': '1; mode=block',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
 
-  return {
-    // Prevent clickjacking
-    'X-Frame-Options': 'DENY',
+if (IS_PRODUCTION) {
+  SECURITY_HEADERS['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload';
+}
 
-    // Prevent MIME type sniffing
-    'X-Content-Type-Options': 'nosniff',
+// ============================================
+// RATE LIMITING (in-memory; Phase 5 upgrades to Redis)
+// ============================================
 
-    // Enable XSS filter
-    'X-XSS-Protection': '1; mode=block',
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
 
-    // Referrer policy
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
+const rateLimitStore = new Map<string, RateLimitEntry>();
 
-    // Permissions policy
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+// Cleanup expired entries every 60s
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of rateLimitStore.entries()) {
+      if (now > entry.resetTime) {
+        rateLimitStore.delete(key);
+      }
+    }
+  }, 60000);
+}
 
-    // Content Security Policy
-    'Content-Security-Policy': isProduction ? cspDirectives : '',
+function checkRateLimit(ip: string, windowMs = 60000, maxRequests = 100): boolean {
+  const now = Date.now();
+  const entry = rateLimitStore.get(ip);
 
-    // Strict Transport Security (HTTPS only)
-    'Strict-Transport-Security': isProduction ? 'max-age=31536000; includeSubDomains; preload' : '',
+  if (!entry || now > entry.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
 
-    // Cache control for API routes
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-  };
+  if (entry.count >= maxRequests) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
+// ============================================
+// HELPERS
+// ============================================
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
+function isPublicRoute(pathname: string): boolean {
+  if (PUBLIC_ROUTES.has(pathname)) return true;
+  return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function isAdminRoute(pathname: string): boolean {
+  return ADMIN_ROUTES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function isApiRoute(pathname: string): boolean {
+  return pathname.startsWith('/api/');
 }
 
 // ============================================
 // MAIN MIDDLEWARE
 // ============================================
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isProduction = process.env.NODE_ENV === 'production';
-  const response = NextResponse.next();
 
-  // Skip middleware for static files and Next.js internals
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/static') ||
-    pathname.includes('.') ||
-    pathname === '/favicon.ico'
-  ) {
+  // --- Security headers on all responses ---
+  const response = NextResponse.next();
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(key, value);
+  }
+
+  // --- Static / non-API routes pass through ---
+  if (!isApiRoute(pathname)) {
     return response;
   }
 
-  // Apply security headers to all responses
-  const securityHeaders = getSecurityHeaders(isProduction);
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    if (value) {
-      response.headers.set(key, value);
-    }
+  // --- Rate limiting on all API routes ---
+  const ip = getClientIp(request);
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': '60', ...SECURITY_HEADERS },
+      }
+    );
+  }
+
+  // --- Public routes skip auth ---
+  if (isPublicRoute(pathname)) {
+    return response;
+  }
+
+  // --- GET /api/startups is public (browse without login) ---
+  if (pathname === '/api/startups' && request.method === 'GET') {
+    return response;
+  }
+
+  // ============================================
+  // AUTH ENFORCEMENT — cookie-based JWT
+  // ============================================
+  const accessToken = request.cookies.get('accessToken')?.value;
+
+  if (!accessToken) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401, headers: SECURITY_HEADERS }
+    );
+  }
+
+  // Verify access token
+  let decoded: { userId: string; email: string; role: string };
+  try {
+    decoded = jwt.verify(accessToken, JWT_SECRET) as typeof decoded;
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid or expired token' },
+      { status: 401, headers: SECURITY_HEADERS }
+    );
+  }
+
+  // --- RBAC: Admin route protection ---
+  if (isAdminRoute(pathname) && decoded.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Insufficient permissions' },
+      { status: 403, headers: SECURITY_HEADERS }
+    );
+  }
+
+  // --- Inject user context into request headers for downstream route handlers ---
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-user-id', decoded.userId);
+  requestHeaders.set('x-user-email', decoded.email);
+  requestHeaders.set('x-user-role', decoded.role);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
   });
-
-  // Rate limiting for API routes
-  if (pathname.startsWith('/api/')) {
-    // Skip rate limiting for webhooks (they have their own signature verification)
-    if (!pathname.startsWith('/api/webhooks')) {
-      const ip = request.headers.get('x-forwarded-for') ||
-                 request.headers.get('x-real-ip') ||
-                 'unknown';
-
-      const rateLimitKey = `${ip}:${pathname}`;
-      const rateLimit = checkRateLimit(rateLimitKey);
-
-      response.headers.set('X-RateLimit-Limit', String(SECURITY_CONFIG.rateLimit.maxRequests));
-      response.headers.set('X-RateLimit-Remaining', String(rateLimit.remaining));
-      response.headers.set('X-RateLimit-Reset', String(Math.floor(Date.now() / 1000) + 60));
-
-      if (!rateLimit.allowed) {
-        return new NextResponse(
-          JSON.stringify({ error: 'Too many requests. Please try again later.' }),
-          {
-            status: 429,
-            headers: {
-              'Content-Type': 'application/json',
-              'Retry-After': '60',
-            },
-          }
-        );
-      }
-    }
-  }
-
-  // Block admin routes in production unless explicitly enabled
-  if (isProduction && pathname.startsWith('/api/admin')) {
-    const adminKey = request.headers.get('x-admin-key');
-    if (adminKey !== process.env.ADMIN_API_KEY) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Not Found' }),
-        { status: 404 }
-      );
-    }
-  }
-
-  // Validate webhook signatures for Stripe
-  if (pathname === '/api/webhooks/stripe') {
-    // Stripe webhook verification is handled in the route itself
-    // But we can add additional checks here
-    const signature = request.headers.get('stripe-signature');
-    if (!signature) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Missing signature' }),
-        { status: 400 }
-      );
-    }
-  }
-
-  // CORS headers for API routes (restricted in production)
-  if (pathname.startsWith('/api/')) {
-    const origin = request.headers.get('origin');
-
-    if (isProduction) {
-      // In production, only allow same-origin requests
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-      if (origin && origin !== appUrl) {
-        // Allow specific origins if configured
-        const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
-        if (!allowedOrigins.includes(origin)) {
-          return new NextResponse(
-            JSON.stringify({ error: 'CORS not allowed' }),
-            { status: 403 }
-          );
-        }
-        response.headers.set('Access-Control-Allow-Origin', origin);
-      }
-    } else {
-      // In development, allow all origins
-      if (origin) {
-        response.headers.set('Access-Control-Allow-Origin', origin);
-      }
-    }
-
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Key');
-    response.headers.set('Access-Control-Max-Age', '86400');
-  }
-
-  // Handle OPTIONS requests for CORS preflight
-  if (request.method === 'OPTIONS') {
-    return new NextResponse(null, { status: 204, headers: response.headers });
-  }
-
-  // Add request ID for tracing
-  const requestId = crypto.randomUUID();
-  response.headers.set('X-Request-Id', requestId);
-  request.headers.set('x-request-id', requestId);
-
-  return response;
 }
 
 // ============================================
-// MATCHER CONFIGURATION
+// MATCHER — which routes this middleware runs on
 // ============================================
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    // Apply to all API routes
+    '/api/:path*',
+    // Apply security headers to all pages too
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

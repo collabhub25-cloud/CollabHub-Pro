@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface VerificationLevel {
   level: number;
@@ -77,7 +78,7 @@ const typeIcons: Record<string, typeof FileText> = {
 };
 
 export function VerificationProgress() {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -93,11 +94,10 @@ export function VerificationProgress() {
   const [ndaSignature, setNdaSignature] = useState('');
 
   const fetchVerificationStatus = useCallback(async () => {
-    if (!token) return;
 
     try {
       const response = await fetch('/api/verification', {
-        headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
       });
 
       if (response.ok) {
@@ -109,22 +109,21 @@ export function VerificationProgress() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchVerificationStatus();
   }, [fetchVerificationStatus]);
 
   const submitVerification = async (type: string, data: Record<string, unknown>) => {
-    if (!token) return false;
 
     setSubmitting(true);
     try {
       const response = await fetch('/api/verification', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ type, ...data }),
       });
@@ -168,10 +167,10 @@ export function VerificationProgress() {
     setSubmitting(true);
     try {
       const response = await fetch('/api/verification/upload-resume', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           fileUrl: resumeUrl,
@@ -208,10 +207,10 @@ export function VerificationProgress() {
     setSubmitting(true);
     try {
       const response = await fetch('/api/verification/sign-nda', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ signature: ndaSignature }),
       });

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     // Rate limiting
     const rateLimitKey = getRateLimitKey(request, 'search');
     const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.search);
-    
+
     if (!rateLimitResult.allowed) {
       return rateLimitResponse(rateLimitResult.resetTime, RATE_LIMITS.search.message);
     }
@@ -18,16 +18,16 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const rawQuery = searchParams.get('q') || '';
-    
+
     // SECURITY FIX: Sanitize query to prevent ReDoS
     const query = sanitizeSearchQuery(rawQuery);
-    
+
     const skills = searchParams.get('skills');
     const verificationLevel = searchParams.get('verificationLevel');
     const minTrustScore = searchParams.get('minTrustScore');
     const maxTrustScore = searchParams.get('maxTrustScore');
     const experience = searchParams.get('experience');
-    
+
     // Validate and limit pagination
     const page = Math.min(Math.max(parseInt(searchParams.get('page') || '1'), 1), 1000);
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10'), 1), 100);
@@ -79,8 +79,8 @@ export async function GET(request: NextRequest) {
     // Build sort (validate sortBy to prevent injection)
     const validSortFields = ['trustScore', 'verificationLevel', 'createdAt', 'name'];
     const safeSortBy = validSortFields.includes(sortBy) ? sortBy : 'trustScore';
-    const sort: Record<string, number> = {};
-    sort[safeSortBy] = sortOrder;
+    const sort: Record<string, 1 | -1> = {};
+    sort[safeSortBy] = sortOrder as 1 | -1;
 
     // Execute query with pagination
     const [talents, total] = await Promise.all([

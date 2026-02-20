@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Startup, User, Subscription } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { validateInput, CreateStartupSchema, StartupUpdateSchema } from '@/lib/validation/schemas';
 import { checkPlanLimit, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('startups');
 
 // GET /api/startups - Get all startups or user's startups
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
-    
-    let userId = null;
+    const token = extractTokenFromCookies(request);
+
+    let userId: string | null = null;
     if (token) {
-      const payload = verifyToken(token);
+      const payload = verifyAccessToken(token);
       if (payload) {
         userId = payload.userId;
       }
@@ -36,14 +38,14 @@ export async function GET(request: NextRequest) {
       const startup = await Startup.findById(startupId)
         .populate('founderId', 'name email avatar trustScore verificationLevel')
         .populate('team', 'name email avatar skills');
-      
+
       if (!startup) {
         return NextResponse.json(
           { error: 'Startup not found' },
           { status: 404 }
         );
       }
-      
+
       return NextResponse.json({
         success: true,
         startup,
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const query: Record<string, unknown> = { isActive: true };
-    
+
     if (founderId) {
       query.founderId = founderId;
     } else if (userId && !searchParams.get('all')) {
@@ -95,7 +97,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Get startups error:', error);
+    log.error('Get startups error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -109,15 +111,14 @@ export async function POST(request: NextRequest) {
     // Rate limiting
     const rateLimitKey = getRateLimitKey(request, 'api');
     const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.api);
-    
+
     if (!rateLimitResult.allowed) {
       return rateLimitResponse(rateLimitResult.resetTime, RATE_LIMITS.api.message);
     }
 
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -146,10 +147,10 @@ export async function POST(request: NextRequest) {
     // Check plan limits
     const existingStartupCount = await Startup.countDocuments({ founderId: payload.userId, isActive: true });
     const limitCheck = await checkPlanLimit(payload.userId, 'maxProjects', existingStartupCount);
-    
+
     if (!limitCheck.allowed) {
       return NextResponse.json(
-        { 
+        {
           error: `You have reached the maximum number of projects (${limitCheck.limit}) for your ${limitCheck.plan} plan. Please upgrade to create more.`,
           currentPlan: limitCheck.plan,
           limit: limitCheck.limit
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Zod validation
     const validation = validateInput(CreateStartupSchema, body);
     if (!validation.success) {
@@ -169,18 +170,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { 
-      name, 
-      vision, 
-      description, 
-      stage, 
-      industry, 
-      fundingStage, 
-      fundingAmount, 
-      website, 
-      logo,
-      rolesNeeded 
+    const {
+      name,
+      vision,
+      description,
+      stage,
+      industry,
+      fundingStage,
+      fundingAmount,
+      website,
+      rolesNeeded
     } = validation.data;
+    const logo = body?.logo as string | undefined;
 
     // Create startup
     const startup = await Startup.create({
@@ -207,7 +208,7 @@ export async function POST(request: NextRequest) {
       { path: 'team', select: 'name email avatar' },
     ]);
 
-    console.log(`✅ New startup created: ${startup.name} by ${user.email}`);
+    log.info(`New startup created: ${startup.name} by ${user.email}`);
 
     return NextResponse.json({
       success: true,
@@ -215,7 +216,7 @@ export async function POST(request: NextRequest) {
       startup,
     });
   } catch (error) {
-    console.error('Create startup error:', error);
+    log.error('Create startup error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -228,8 +229,7 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -238,7 +238,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -282,10 +282,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // SECURITY: Only allow specific fields to be updated (whitelist pattern)
-    const allowedFields = ['name', 'vision', 'description', 'stage', 'industry', 
-                          'fundingStage', 'fundingAmount', 'revenue', 'website', 'isActive'];
+    const allowedFields = ['name', 'vision', 'description', 'stage', 'industry',
+      'fundingStage', 'fundingAmount', 'revenue', 'website', 'isActive'];
     const safeUpdateData: Record<string, unknown> = { updatedAt: new Date() };
-    
+
     for (const field of allowedFields) {
       if (validation.data && field in validation.data) {
         safeUpdateData[field] = validation.data[field as keyof typeof validation.data];
@@ -308,7 +308,7 @@ export async function PUT(request: NextRequest) {
       startup: updatedStartup,
     });
   } catch (error) {
-    console.error('Update startup error:', error);
+    log.error('Update startup error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -321,8 +321,7 @@ export async function DELETE(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
 
     if (!token) {
       return NextResponse.json(
@@ -331,7 +330,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -373,7 +372,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Startup deleted successfully',
     });
   } catch (error) {
-    console.error('Delete startup error:', error);
+    log.error('Delete startup error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

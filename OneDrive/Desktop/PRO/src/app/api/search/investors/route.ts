@@ -27,22 +27,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Build investor filter
-    const investorFilter: Record<string, unknown> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const investorFilter: Record<string, any> = {};
 
     if (minTicket || maxTicket) {
-      investorFilter['ticketSize.min'] = {};
-      investorFilter['ticketSize.max'] = {};
       if (minTicket) {
-        investorFilter['ticketSize.max'].$gte = parseInt(minTicket);
+        investorFilter['ticketSize.max'] = { $gte: parseInt(minTicket) };
       }
       if (maxTicket) {
-        investorFilter['ticketSize.min'].$lte = parseInt(maxTicket);
+        investorFilter['ticketSize.min'] = { $lte: parseInt(maxTicket) };
       }
     }
 
     if (industries) {
-      investorFilter.preferredIndustries = { 
-        $in: industries.split(',').map(i => new RegExp(i.trim(), 'i')) 
+      investorFilter.preferredIndustries = {
+        $in: industries.split(',').map(i => new RegExp(i.trim(), 'i'))
       };
     }
 
@@ -51,8 +50,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Build sort
-    const sort: Record<string, number> = {};
-    sort[sortBy] = sortOrder;
+    const sort: Record<string, 1 | -1> = {};
+    sort[sortBy] = sortOrder as 1 | -1;
 
     // Get investor user IDs first
     const investors = await Investor.find(investorFilter).lean();

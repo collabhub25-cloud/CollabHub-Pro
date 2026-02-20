@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User, Verification, Startup, Investor, Alliance } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 
 // Helper to generate conversation ID between two users
 function generateConversationId(userId1: string, userId2: string): string {
@@ -15,14 +15,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
     
     let currentUserId: string | null = null;
     let currentUserRole: string | null = null;
     
     if (token) {
-      const decoded = verifyToken(token);
+      const decoded = verifyAccessToken(token);
       if (decoded) {
         currentUserId = decoded.userId;
         currentUserRole = decoded.role;

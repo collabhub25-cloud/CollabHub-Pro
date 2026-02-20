@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface CreateMilestoneModalProps {
   startupId?: string;
@@ -34,7 +35,7 @@ interface Talent {
 }
 
 export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneModalProps) {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [startups, setStartups] = useState<Startup[]>([]);
@@ -50,12 +51,12 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
 
   // Fetch startups on mount
   useEffect(() => {
-    if (open && token) {
+    if (open ) {
       const fetchData = async () => {
         try {
           // Fetch founder's startups
           const startupsRes = await fetch('/api/startups', {
-            headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
           });
           if (startupsRes.ok) {
             const data = await startupsRes.json();
@@ -64,7 +65,7 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
 
           // Fetch available talents
           const talentsRes = await fetch('/api/search/talents?limit=50', {
-            headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
           });
           if (talentsRes.ok) {
             const data = await talentsRes.json();
@@ -76,15 +77,11 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
       };
       fetchData();
     }
-  }, [open, token]);
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!token) {
-      toast.error('Please login to create a milestone');
-      return;
-    }
 
     if (user?.role !== 'founder') {
       toast.error('Only founders can create milestones');
@@ -100,10 +97,10 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
 
     try {
       const response = await fetch('/api/milestones', {
+          credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           startupId: formData.startupId,

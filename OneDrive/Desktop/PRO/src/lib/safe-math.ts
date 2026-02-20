@@ -10,16 +10,18 @@
 /**
  * Safely parse a number with fallback
  */
-export function safeParseNumber(value: unknown, fallback = 0): number {
+export function safeParseNumber(value: unknown, fallback?: number): number;
+export function safeParseNumber(value: unknown, fallback: undefined): number | undefined;
+export function safeParseNumber(value: unknown, fallback: number | undefined = 0): number | undefined {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : fallback;
   }
-  
+
   if (typeof value === 'string') {
     const parsed = parseFloat(value);
     return Number.isFinite(parsed) ? parsed : fallback;
   }
-  
+
   return fallback;
 }
 
@@ -59,11 +61,11 @@ export function safeMultiply(a: unknown, b: unknown, fallback = 0): number {
 export function safeDivide(a: unknown, b: unknown, fallback = 0): number {
   const numA = safeParseNumber(a);
   const numB = safeParseNumber(b);
-  
+
   if (numB === 0) {
     return fallback;
   }
-  
+
   const result = numA / numB;
   return Number.isFinite(result) ? result : fallback;
 }
@@ -74,11 +76,11 @@ export function safeDivide(a: unknown, b: unknown, fallback = 0): number {
 export function safePercentage(part: unknown, total: unknown, fallback = 0): number {
   const numPart = safeParseNumber(part);
   const numTotal = safeParseNumber(total);
-  
+
   if (numTotal === 0) {
     return fallback;
   }
-  
+
   const result = (numPart / numTotal) * 100;
   return Number.isFinite(result) ? Math.round(result * 100) / 100 : fallback;
 }
@@ -90,15 +92,15 @@ export function safeAverage(values: unknown[], fallback = 0): number {
   if (!Array.isArray(values) || values.length === 0) {
     return fallback;
   }
-  
+
   const validNumbers = values
-    .map(v => safeParseNumber(v, null))
-    .filter((v): v is number => v !== null && Number.isFinite(v));
-  
+    .map(v => safeParseNumber(v, undefined))
+    .filter((v): v is number => v !== undefined && Number.isFinite(v));
+
   if (validNumbers.length === 0) {
     return fallback;
   }
-  
+
   const sum = validNumbers.reduce((acc, val) => acc + val, 0);
   const result = sum / validNumbers.length;
   return Number.isFinite(result) ? result : fallback;
@@ -111,15 +113,15 @@ export function safeSum(values: unknown[], fallback = 0): number {
   if (!Array.isArray(values)) {
     return fallback;
   }
-  
+
   const validNumbers = values
-    .map(v => safeParseNumber(v, null))
-    .filter((v): v is number => v !== null && Number.isFinite(v));
-  
+    .map(v => safeParseNumber(v, undefined))
+    .filter((v): v is number => v !== undefined && Number.isFinite(v));
+
   if (validNumbers.length === 0) {
     return fallback;
   }
-  
+
   const result = validNumbers.reduce((acc, val) => acc + val, 0);
   return Number.isFinite(result) ? result : fallback;
 }
@@ -141,15 +143,15 @@ export function safeMin(values: unknown[], fallback = 0): number {
   if (!Array.isArray(values) || values.length === 0) {
     return fallback;
   }
-  
+
   const validNumbers = values
-    .map(v => safeParseNumber(v, null))
-    .filter((v): v is number => v !== null && Number.isFinite(v));
-  
+    .map(v => safeParseNumber(v, undefined))
+    .filter((v): v is number => v !== undefined && Number.isFinite(v));
+
   if (validNumbers.length === 0) {
     return fallback;
   }
-  
+
   const result = Math.min(...validNumbers);
   return Number.isFinite(result) ? result : fallback;
 }
@@ -161,15 +163,15 @@ export function safeMax(values: unknown[], fallback = 0): number {
   if (!Array.isArray(values) || values.length === 0) {
     return fallback;
   }
-  
+
   const validNumbers = values
-    .map(v => safeParseNumber(v, null))
-    .filter((v): v is number => v !== null && Number.isFinite(v));
-  
+    .map(v => safeParseNumber(v, undefined))
+    .filter((v): v is number => v !== undefined && Number.isFinite(v));
+
   if (validNumbers.length === 0) {
     return fallback;
   }
-  
+
   const result = Math.max(...validNumbers);
   return Number.isFinite(result) ? result : fallback;
 }
@@ -183,7 +185,7 @@ export function safeMax(values: unknown[], fallback = 0): number {
  */
 export function formatCurrency(value: unknown, currency = 'USD'): string {
   const num = safeParseNumber(value, 0);
-  
+
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -217,7 +219,7 @@ export function formatPercentage(value: unknown, decimals = 1): string {
  */
 export function formatLargeNumber(value: unknown): string {
   const num = safeParseNumber(value, 0);
-  
+
   if (num >= 1e9) {
     return `${(num / 1e9).toFixed(1)}B`;
   }

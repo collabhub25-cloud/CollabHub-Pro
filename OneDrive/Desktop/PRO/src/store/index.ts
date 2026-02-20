@@ -5,7 +5,6 @@ import type { UserRole, PlanType } from '@/lib/models';
 // ============================================
 // TYPES
 // ============================================
-// Re-export for backward compatibility
 export type { UserRole, PlanType };
 
 export interface User {
@@ -20,22 +19,35 @@ export interface User {
   bio?: string;
   skills?: string[];
   isEmailVerified: boolean;
-  // Subscription info
+  githubUrl?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  location?: string;
   plan?: PlanType;
   subscriptionStatus?: 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing';
+  // Investor-specific fields
+  investmentThesis?: string;
+  preferredIndustries?: string[];
+  stagePreference?: string[];
+  ticketSize?: { min: number; max: number };
+  accreditationStatus?: string;
+  experience?: string;
+  // Talent-specific fields
+  title?: string;
+  hourlyRate?: number;
+  availability?: string;
 }
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  setToken: (token: string | null) => void;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  login: (user: User) => void;
+  logout: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   updateUser: (updates: Partial<User>) => void;
+  fetchUser: () => Promise<void>;
 }
 
 interface UIState {
@@ -69,30 +81,65 @@ interface NotificationState {
 }
 
 // ============================================
-// AUTH STORE
+// AUTH STORE — no token, no persist of sensitive data
 // ============================================
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      token: null,
       isAuthenticated: false,
       isLoading: true,
+
       setUser: (user) => set({ user, isAuthenticated: !!user }),
-      setToken: (token) => set({ token }),
-      login: (user, token) => set({ user, token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
+
+      login: (user) => set({ user, isAuthenticated: true }),
+
+      logout: async () => {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch {
+          // Best-effort
+        }
+        set({ user: null, isAuthenticated: false });
+      },
+
       setLoading: (isLoading) => set({ isLoading }),
-      updateUser: (updates) => set((state) => ({
-        user: state.user ? { ...state.user, ...updates } : null,
-      })),
+
+      updateUser: (updates) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...updates } : null,
+        })),
+
+      fetchUser: async () => {
+        try {
+          set({ isLoading: true });
+          const res = await fetch('/api/auth/me', {
+            credentials: 'include',
+          });
+          if (res.ok) {
+            const data = await res.json();
+            set({
+              user: data.user,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            set({ user: null, isAuthenticated: false, isLoading: false });
+          }
+        } catch {
+          set({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      },
     }),
     {
       name: 'collabhub-auth',
       storage: createJSONStorage(() => localStorage),
+      // Only persist the non-sensitive user info for instant hydration
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
     }

@@ -1,24 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Subscription, User } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2024-11-20.acacia',
-});
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error('STRIPE_SECRET_KEY is not configured');
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
 
 // POST /api/stripe/portal - Create Stripe billing portal session
 // ONLY FOUNDERS CAN ACCESS BILLING PORTAL
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
     // CRITICAL: Only founders can access billing portal
     if (user.role !== 'founder') {
       return NextResponse.json(
-        { 
+        {
           error: 'Billing is only available for founders. Talent and Investor accounts are free.',
           code: 'BILLING_FOUNDER_ONLY'
         },
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const portalSession = await stripe.billingPortal.sessions.create({
+    const portalSession = await getStripe().billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}`,
     });

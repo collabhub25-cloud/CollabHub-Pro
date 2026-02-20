@@ -125,7 +125,7 @@ export function captureError(error: Error | unknown, context?: ErrorContext): st
  * Capture a message with context
  */
 export function captureMessage(
-  message: string, 
+  message: string,
   level: 'info' | 'warning' | 'error' = 'info',
   context?: ErrorContext
 ): string {
@@ -182,16 +182,14 @@ export function addBreadcrumb(
 /**
  * Start a performance transaction
  */
-export function startTransaction(name: string, op: string) {
-  if (!SENTRY_DSN) {
-    return {
-      finish: () => {},
-      setStatus: () => {},
-      setData: () => {},
-    };
-  }
-
-  return Sentry.startTransaction({ name, op });
+export function startTransaction(_name: string, _op: string) {
+  // Note: Sentry.startTransaction was removed in newer SDK versions.
+  // Use Sentry.startSpan() for performance tracing in the future.
+  return {
+    finish: () => { },
+    setStatus: () => { },
+    setData: () => { },
+  };
 }
 
 // ============================================
@@ -203,7 +201,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export function withErrorTracking<T>(
   handler: (request: NextRequest) => Promise<NextResponse<T>>
 ) {
-  return async (request: NextRequest): Promise<NextResponse<T>> => {
+  return async (request: NextRequest): Promise<NextResponse> => {
     const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
     try {
@@ -219,9 +217,9 @@ export function withErrorTracking<T>(
 
       // Return a proper error response
       const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-      
+
       return NextResponse.json(
-        { 
+        {
           error: 'Internal server error',
           requestId,
           ...(process.env.NODE_ENV !== 'production' && { details: errorMessage })

@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuthStore, useUIStore } from '@/store';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Conversation {
   _id: string;
@@ -42,7 +43,7 @@ interface Message {
 }
 
 export function MessagingPage() {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -60,11 +61,10 @@ export function MessagingPage() {
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
-    if (!token) return;
 
     try {
       const response = await fetch('/api/messages/conversations', {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -80,16 +80,15 @@ export function MessagingPage() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (userId: string) => {
-    if (!token) return;
 
     setLoadingMessages(true);
     try {
       const response = await fetch(`/api/messages/conversation/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -102,14 +101,12 @@ export function MessagingPage() {
     } finally {
       setLoadingMessages(false);
     }
-  }, [token]);
+  }, []);
 
   // Initialize WebSocket
   useEffect(() => {
-    if (!token) return;
 
     const socketInstance = io('/?XTransformPort=3003', {
-      auth: { token },
       transports: ['websocket', 'polling'],
     });
 
@@ -165,7 +162,7 @@ export function MessagingPage() {
     return () => {
       socketInstance.disconnect();
     };
-  }, [token, selectedConversation?._id, fetchConversations]);
+  }, [selectedConversation?._id, fetchConversations]);
 
   // Fetch conversations on mount
   useEffect(() => {

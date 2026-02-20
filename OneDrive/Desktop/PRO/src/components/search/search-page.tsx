@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  Search, Filter, ChevronDown, X, Loader2, Users, Building2, 
+import {
+  Search, Filter, ChevronDown, X, Loader2, Users, Building2,
   TrendingUp, MapPin, Star, Briefcase, DollarSign, FileText, Send
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +27,7 @@ import { AllianceButton } from '@/components/alliances/alliance-button';
 import { ApplyModal } from '@/components/applications/apply-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
+import { apiFetch } from '@/lib/api-client';
 
 type SearchType = 'startups' | 'talents' | 'investors';
 
@@ -52,7 +53,7 @@ interface SearchResult {
   stage?: string;
   fundingStage?: string;
   trustScore?: number;
-  founderId?: { name: string; email: string };
+  founderId?: { _id: string; name: string; email: string };
   rolesNeeded?: Role[];
   isActive?: boolean;
   // Talent fields
@@ -90,7 +91,7 @@ const stages = ['idea', 'validation', 'mvp', 'growth', 'scaling'];
 const fundingStages = ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'];
 
 export function SearchPage() {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
   const [activeTab, setActiveTabState] = useState<SearchType>('startups');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -108,7 +109,7 @@ export function SearchPage() {
     trustScoreRange: [0, 100],
     ticketSizeRange: [0, 1000000],
   });
-  
+
   // Apply modal state
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [selectedStartup, setSelectedStartup] = useState<SearchResult | null>(null);
@@ -119,7 +120,6 @@ export function SearchPage() {
   };
 
   const searchResults = useCallback(async (pageNum: number = 1) => {
-    if (!token) return;
 
     setLoading(true);
     try {
@@ -135,7 +135,7 @@ export function SearchPage() {
       if (filters.trustScoreRange[1] < 100) params.set('maxTrustScore', filters.trustScoreRange[1].toString());
 
       const response = await fetch(`/api/search/${activeTab}?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -149,7 +149,7 @@ export function SearchPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, activeTab, filters]);
+  }, [activeTab, filters]);
 
   useEffect(() => {
     searchResults(1);
@@ -195,9 +195,9 @@ export function SearchPage() {
     searchResults(page);
   };
 
-  const activeFilterCount = 
-    filters.industry.length + 
-    filters.stage.length + 
+  const activeFilterCount =
+    filters.industry.length +
+    filters.stage.length +
     filters.fundingStage.length +
     (filters.trustScoreRange[0] > 0 || filters.trustScoreRange[1] < 100 ? 1 : 0);
 
@@ -391,13 +391,13 @@ export function SearchPage() {
                                 </Badge>
                               )}
                             </div>
-                            
+
                             {result.description && (
                               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                                 {result.description}
                               </p>
                             )}
-                            
+
                             {result.vision && (
                               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                                 {result.vision}
@@ -457,17 +457,17 @@ export function SearchPage() {
                             )}
                           </div>
                           <div className="flex flex-col gap-2">
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => viewProfile(result._id)}
                             >
                               View Profile
                             </Button>
-                            
+
                             {/* Apply button for Talent viewing Startups */}
                             {activeTab === 'startups' && isTalent && user?._id !== result.founderId?._id && (
-                              <Button 
+                              <Button
                                 size="sm"
                                 onClick={() => handleApply(result)}
                                 disabled={!result.isActive || !result.rolesNeeded?.length || result.hasApplied}
@@ -485,18 +485,18 @@ export function SearchPage() {
                                 )}
                               </Button>
                             )}
-                            
+
                             {/* Alliance button for Startups - connect with founder */}
                             {activeTab === 'startups' && result.founderId && user?._id !== result.founderId?._id && (
-                              <AllianceButton 
-                                targetUserId={result.founderId._id} 
+                              <AllianceButton
+                                targetUserId={result.founderId._id}
                                 compact={true}
                               />
                             )}
-                            
+
                             {(activeTab === 'talents' || activeTab === 'investors') && user?._id !== result._id && (
-                              <AllianceButton 
-                                targetUserId={result._id} 
+                              <AllianceButton
+                                targetUserId={result._id}
                                 compact={true}
                               />
                             )}
@@ -539,7 +539,7 @@ export function SearchPage() {
 
       {/* Apply Modal for Talent */}
       <ApplyModal
-        startup={selectedStartup}
+        startup={selectedStartup ? { ...selectedStartup, vision: selectedStartup.vision || '', industry: selectedStartup.industry || '', stage: selectedStartup.stage || '' } : null}
         open={applyModalOpen}
         onOpenChange={setApplyModalOpen}
         onSuccess={handleApplySuccess}

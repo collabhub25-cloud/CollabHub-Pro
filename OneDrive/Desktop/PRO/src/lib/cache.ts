@@ -33,14 +33,14 @@ export interface CacheInterface {
 // IN-MEMORY CACHE (Development)
 // ============================================
 
-class MemoryCache implements CacheInterface {
+export class MemoryCache implements CacheInterface {
   private cache = new Map<string, CacheEntry<unknown>>();
   private hits = 0;
   private misses = 0;
 
   async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
-    
+
     if (!entry) {
       this.misses++;
       return null;
@@ -78,13 +78,13 @@ class MemoryCache implements CacheInterface {
   async has(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     // Check if expired
     if (Date.now() - entry.timestamp > entry.ttl * 1000) {
       this.cache.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -147,8 +147,8 @@ class RedisCache implements CacheInterface {
 // Use memory cache in development, Redis in production
 const shouldUseRedis = process.env.NODE_ENV === 'production' && process.env.REDIS_URL;
 
-export const cache: CacheInterface = shouldUseRedis 
-  ? new RedisCache() 
+export const cache: CacheInterface = shouldUseRedis
+  ? new RedisCache()
   : new MemoryCache();
 
 // ============================================
@@ -158,22 +158,22 @@ export const cache: CacheInterface = shouldUseRedis
 export const CACHE_KEYS = {
   // Public profiles
   userProfile: (userId: string) => `user:profile:${userId}`,
-  
+
   // Startups
   startupList: (filters: string) => `startups:list:${filters}`,
   startupDetail: (startupId: string) => `startups:detail:${startupId}`,
-  
+
   // Trust scores
   trustScore: (userId: string) => `trust:score:${userId}`,
   trustLog: (userId: string) => `trust:log:${userId}`,
-  
+
   // Dashboard metrics
   dashboardStats: (userId: string, role: string) => `dashboard:stats:${role}:${userId}`,
-  
+
   // Subscriptions
   subscriptionFeatures: (plan: string) => `subscription:features:${plan}`,
   userSubscription: (userId: string) => `subscription:user:${userId}`,
-  
+
   // Search results
   searchResults: (query: string, filters: string) => `search:${query}:${filters}`,
 } as const;

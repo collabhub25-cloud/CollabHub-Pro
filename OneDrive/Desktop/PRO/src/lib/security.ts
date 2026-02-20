@@ -9,13 +9,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, extractTokenFromHeader, TokenPayload } from './auth';
+import { verifyAccessToken, extractTokenFromCookies, TokenPayload } from './auth';
 import { connectDB } from './mongodb';
-import { Subscription, User } from './models';
-import { 
-  getPlanFeatures, 
-  PlanType, 
-  hasFeature as checkHasFeature, 
+import { Subscription, User, IUser, ISubscription } from './models';
+import {
+  getPlanFeatures,
+  PlanType,
+  hasFeature as checkHasFeature,
   FeatureKey,
   roleRequiresSubscription,
   FOUNDER_PLAN_FEATURES
@@ -33,19 +33,21 @@ interface RateLimitEntry {
 // In-memory rate limit store (use Redis in production)
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
-// Clean up expired entries every minute
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (now > entry.resetTime) {
-      rateLimitStore.delete(key);
+// Clean up expired entries every minute (guard for Edge runtime)
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of rateLimitStore.entries()) {
+      if (now > entry.resetTime) {
+        rateLimitStore.delete(key);
+      }
     }
-  }
-}, 60000);
+  }, 60000);
+}
 
 export interface RateLimitConfig {
-  windowMs: number; // Time window in milliseconds
-  maxRequests: number; // Maximum requests per window
+  windowMs: number;
+  maxRequests: number;
   message?: string;
 }
 
@@ -66,7 +68,6 @@ export function checkRateLimit(
   const entry = rateLimitStore.get(identifier);
 
   if (!entry || now > entry.resetTime) {
-    // New window
     rateLimitStore.set(identifier, {
       count: 1,
       resetTime: now + config.windowMs,
@@ -95,10 +96,9 @@ export function checkRateLimit(
 }
 
 export function getRateLimitKey(request: NextRequest, suffix?: string): string {
-  // Use IP address or forwarded header
   const ip = request.headers.get('x-forwarded-for') ||
-             request.headers.get('x-real-ip') ||
-             'unknown';
+    request.headers.get('x-real-ip') ||
+    'unknown';
   return `rate_limit:${ip}${suffix ? `:${suffix}` : ''}`;
 }
 
@@ -122,11 +122,10 @@ export interface AuthError {
 }
 
 /**
- * Require authentication - verifies JWT token
+ * Require authentication - verifies JWT token from httpOnly cookies
  */
 export async function requireAuth(request: NextRequest): Promise<AuthResult | AuthError> {
-  const authHeader = request.headers.get('authorization');
-  const token = extractTokenFromHeader(authHeader);
+  const token = extractTokenFromCookies(request);
 
   if (!token) {
     return {
@@ -136,7 +135,7 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Au
     };
   }
 
-  const decoded = verifyToken(token);
+  const decoded = verifyAccessToken(token);
   if (!decoded) {
     return {
       success: false,
@@ -148,9 +147,9 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Au
   // Get user's subscription (only matters for founders)
   try {
     await connectDB();
-    const user = await User.findById(decoded.userId).lean();
-    const subscription = await Subscription.findOne({ userId: decoded.userId }).lean();
-    
+    const user = await User.findById(decoded.userId).lean() as IUser | null;
+    const subscription = await Subscription.findOne({ userId: decoded.userId }).lean() as ISubscription | null;
+
     // Non-founders don't need subscription plans
     if (user && user.role !== 'founder') {
       return {
@@ -162,13 +161,13 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Au
         },
       };
     }
-    
+
     return {
       success: true,
       user: decoded,
       subscription: subscription ? {
         plan: subscription.plan as PlanType,
-        status: subscription.status,
+        status: subscription.status as string,
       } : {
         plan: 'free_founder' as PlanType,
         status: 'active',
@@ -195,7 +194,7 @@ export async function requireRole(
   allowedRoles: string[]
 ): Promise<AuthResult | AuthError> {
   const authResult = await requireAuth(request);
-  
+
   if (!authResult.success) {
     return authResult;
   }
@@ -229,7 +228,7 @@ export async function requirePlan(
   feature: FeatureKey
 ): Promise<AuthResult | AuthError> {
   const authResult = await requireAuth(request);
-  
+
   if (!authResult.success) {
     return authResult;
   }
@@ -241,7 +240,7 @@ export async function requirePlan(
 
   // Only founders need plan checks
   const plan = authResult.subscription?.plan || 'free_founder';
-  
+
   if (!checkHasFeature('founder', plan, feature)) {
     return {
       success: false,
@@ -265,15 +264,15 @@ export async function checkPlanLimit(
   currentCount: number
 ): Promise<{ allowed: boolean; limit: number; plan: PlanType }> {
   await connectDB();
-  
-  const user = await User.findById(userId).lean();
-  
+
+  const user = await User.findById(userId).lean() as IUser | null;
+
   // Non-founders have no limits
   if (!user || user.role !== 'founder') {
     return { allowed: true, limit: -1, plan: 'free' as PlanType };
   }
-  
-  const subscription = await Subscription.findOne({ userId }).lean();
+
+  const subscription = await Subscription.findOne({ userId }).lean() as ISubscription | null;
   const plan = (subscription?.plan as PlanType) || 'free_founder';
   const features = getPlanFeatures(plan);
   const limit = features[limitType];
@@ -294,24 +293,24 @@ export async function checkPlanLimit(
 // RESPONSE HELPERS
 // ============================================
 
-export function unauthorizedResponse(message: string = 'Authentication required') {
+export function unauthorizedResponse(message: string = 'Authentication required'): NextResponse {
   return NextResponse.json(
     { error: message },
     { status: 401 }
   );
 }
 
-export function forbiddenResponse(message: string = 'Insufficient permissions') {
+export function forbiddenResponse(message: string = 'Insufficient permissions'): NextResponse {
   return NextResponse.json(
     { error: message },
     { status: 403 }
   );
 }
 
-export function rateLimitResponse(resetTime: number, message: string = 'Too many requests') {
+export function rateLimitResponse(resetTime: number, message: string = 'Too many requests'): NextResponse {
   return NextResponse.json(
     { error: message, retryAfter: Math.ceil((resetTime - Date.now()) / 1000) },
-    { 
+    {
       status: 429,
       headers: {
         'Retry-After': String(Math.ceil((resetTime - Date.now()) / 1000)),
@@ -320,7 +319,7 @@ export function rateLimitResponse(resetTime: number, message: string = 'Too many
   );
 }
 
-export function validationErrorResponse(errors: string[]) {
+export function validationErrorResponse(errors: string[]): NextResponse {
   return NextResponse.json(
     { error: 'Validation failed', details: errors },
     { status: 400 }

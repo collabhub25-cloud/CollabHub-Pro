@@ -8,7 +8,6 @@ export type VerificationLevel = 0 | 1 | 2 | 3;
 export type KYCStatus = 'pending' | 'verified' | 'rejected';
 
 export interface IUser extends Document {
-  _id: string;
   email: string;
   passwordHash: string;
   name: string;
@@ -65,7 +64,6 @@ export type StartupStage = 'idea' | 'validation' | 'mvp' | 'growth' | 'scaling';
 export type FundingStage = 'pre-seed' | 'seed' | 'series-a' | 'series-b' | 'series-c' | 'ipo';
 
 export interface IStartup extends Document {
-  _id: string;
   founderId: mongoose.Types.ObjectId;
   name: string;
   vision: string;
@@ -141,7 +139,6 @@ StartupSchema.index({ stage: 1 });
 export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'accepted' | 'rejected';
 
 export interface IApplication extends Document {
-  _id: string;
   startupId: mongoose.Types.ObjectId;
   talentId: mongoose.Types.ObjectId;
   roleId: string;
@@ -182,7 +179,6 @@ export type AgreementType = 'NDA' | 'Work' | 'Equity' | 'SAFE';
 export type AgreementStatus = 'draft' | 'pending_signature' | 'signed' | 'expired' | 'terminated';
 
 export interface IAgreement extends Document {
-  _id: string;
   type: AgreementType;
   startupId: mongoose.Types.ObjectId;
   parties: mongoose.Types.ObjectId[];
@@ -247,7 +243,6 @@ export type MilestoneStatus = 'pending' | 'in_progress' | 'completed' | 'dispute
 export type EscrowStatus = 'unfunded' | 'funded' | 'released' | 'refunded';
 
 export interface IMilestone extends Document {
-  _id: string;
   startupId: mongoose.Types.ObjectId;
   assignedTo: mongoose.Types.ObjectId;
   agreementId?: mongoose.Types.ObjectId;
@@ -297,7 +292,6 @@ MilestoneSchema.index({ status: 1 });
 // INVESTOR SCHEMA
 // ============================================
 export interface IInvestor extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
   ticketSize: {
     min: number;
@@ -343,7 +337,6 @@ InvestorSchema.index({ userId: 1 });
 export type RoundStatus = 'open' | 'closing' | 'closed' | 'cancelled';
 
 export interface IFundingRound extends Document {
-  _id: string;
   startupId: mongoose.Types.ObjectId;
   roundName: string;
   targetAmount: number;
@@ -394,7 +387,6 @@ FundingRoundSchema.index({ status: 1 });
 // TRUST SCORE LOG SCHEMA
 // ============================================
 export interface ITrustScoreLog extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
   startupId?: mongoose.Types.ObjectId;
   scoreChange: number;
@@ -420,7 +412,6 @@ const TrustScoreLogSchema = new Schema<ITrustScoreLog>(
 export type DisputeStatus = 'open' | 'under_review' | 'resolved' | 'escalated';
 
 export interface IDispute extends Document {
-  _id: string;
   milestoneId: mongoose.Types.ObjectId;
   raisedBy: mongoose.Types.ObjectId;
   againstUser: mongoose.Types.ObjectId;
@@ -456,7 +447,6 @@ export type PaymentType = 'milestone' | 'investment' | 'subscription' | 'commiss
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
 
 export interface IPayment extends Document {
-  _id: string;
   type: PaymentType;
   amount: number;
   currency: string;
@@ -495,7 +485,6 @@ const PaymentSchema = new Schema<IPayment>(
 // SKILL TEST SCHEMA
 // ============================================
 export interface ISkillTest extends Document {
-  _id: string;
   name: string;
   category: string;
   questions: {
@@ -528,7 +517,6 @@ const SkillTestSchema = new Schema<ISkillTest>(
 // USER TEST RESULT SCHEMA
 // ============================================
 export interface IUserTestResult extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
   testId: mongoose.Types.ObjectId;
   score: number;
@@ -551,7 +539,7 @@ const UserTestResultSchema = new Schema<IUserTestResult>(
 // ============================================
 // NOTIFICATION SCHEMA
 // ============================================
-export type NotificationType = 
+export type NotificationType =
   | 'application_received'
   | 'application_status'
   | 'agreement_signed'
@@ -568,7 +556,6 @@ export type NotificationType =
   | 'message_received';
 
 export interface INotification extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
   type: NotificationType;
   title: string;
@@ -625,7 +612,6 @@ export const VERIFICATION_LEVELS = {
 };
 
 export interface IVerification extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
   role: UserRole;
   type: VerificationType;
@@ -693,7 +679,6 @@ export type FounderPlanType = 'free_founder' | 'pro_founder' | 'scale_founder' |
 export type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing';
 
 export interface ISubscription extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
   role: UserRole;
   plan: PlanType;
@@ -751,7 +736,6 @@ SubscriptionSchema.index({ status: 1 });
 // MESSAGE SCHEMA
 // ============================================
 export interface IMessage extends Document {
-  _id: string;
   senderId: mongoose.Types.ObjectId;
   receiverId: mongoose.Types.ObjectId;
   conversationId: string;
@@ -781,7 +765,6 @@ MessageSchema.index({ createdAt: -1 });
 // CONVERSATION SCHEMA
 // ============================================
 export interface IConversation extends Document {
-  _id: string;
   participants: mongoose.Types.ObjectId[];
   lastMessage?: string;
   lastMessageAt?: Date;
@@ -819,9 +802,7 @@ export const Payment = mongoose.models.Payment || mongoose.model<IPayment>('Paym
 export const SkillTest = mongoose.models.SkillTest || mongoose.model<ISkillTest>('SkillTest', SkillTestSchema);
 export const UserTestResult = mongoose.models.UserTestResult || mongoose.model<IUserTestResult>('UserTestResult', UserTestResultSchema);
 export const Notification = mongoose.models.Notification || mongoose.model<INotification>('Notification', NotificationSchema);
-// Force re-registration of Verification model to pick up new enum values
-delete mongoose.models.Verification;
-export const Verification = mongoose.model<IVerification>('Verification', VerificationSchema);
+export const Verification = mongoose.models.Verification || mongoose.model<IVerification>('Verification', VerificationSchema);
 export const Subscription = mongoose.models.Subscription || mongoose.model<ISubscription>('Subscription', SubscriptionSchema);
 // ============================================
 // ALLIANCE SCHEMA
@@ -829,7 +810,6 @@ export const Subscription = mongoose.models.Subscription || mongoose.model<ISubs
 export type AllianceStatus = 'pending' | 'accepted' | 'rejected';
 
 export interface IAlliance extends Document {
-  _id: string;
   requesterId: mongoose.Types.ObjectId;
   receiverId: mongoose.Types.ObjectId;
   status: AllianceStatus;
@@ -856,18 +836,14 @@ AllianceSchema.index({ requesterId: 1, receiverId: 1 }, { unique: true });
 // ============================================
 // EXPORT MODELS
 // ============================================
-delete mongoose.models.Message;
-export const Message = mongoose.model<IMessage>('Message', MessageSchema);
-delete mongoose.models.Conversation;
-export const Conversation = mongoose.model<IConversation>('Conversation', ConversationSchema);
-delete mongoose.models.Alliance;
-export const Alliance = mongoose.model<IAlliance>('Alliance', AllianceSchema);
+export const Message = mongoose.models.Message || mongoose.model<IMessage>('Message', MessageSchema);
+export const Conversation = mongoose.models.Conversation || mongoose.model<IConversation>('Conversation', ConversationSchema);
+export const Alliance = mongoose.models.Alliance || mongoose.model<IAlliance>('Alliance', AllianceSchema);
 
 // ============================================
 // FAVORITE SCHEMA
 // ============================================
 export interface IFavorite extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
   startupId: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -889,7 +865,6 @@ FavoriteSchema.index({ userId: 1, startupId: 1 }, { unique: true });
 export type AccessRequestStatus = 'pending' | 'approved' | 'rejected';
 
 export interface IAccessRequest extends Document {
-  _id: string;
   investorId: mongoose.Types.ObjectId;
   startupId: mongoose.Types.ObjectId;
   founderId: mongoose.Types.ObjectId;
@@ -919,7 +894,6 @@ AccessRequestSchema.index({ founderId: 1, status: 1 });
 export type InvestmentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
 
 export interface IInvestment extends Document {
-  _id: string;
   investorId: mongoose.Types.ObjectId;
   startupId: mongoose.Types.ObjectId;
   fundingRoundId: mongoose.Types.ObjectId;
@@ -954,18 +928,14 @@ InvestmentSchema.index({ status: 1 });
 // ============================================
 // EXPORT ADDITIONAL MODELS
 // ============================================
-delete mongoose.models.Favorite;
-export const Favorite = mongoose.model<IFavorite>('Favorite', FavoriteSchema);
-delete mongoose.models.AccessRequest;
-export const AccessRequest = mongoose.model<IAccessRequest>('AccessRequest', AccessRequestSchema);
-delete mongoose.models.Investment;
-export const Investment = mongoose.model<IInvestment>('Investment', InvestmentSchema);
+export const Favorite = mongoose.models.Favorite || mongoose.model<IFavorite>('Favorite', FavoriteSchema);
+export const AccessRequest = mongoose.models.AccessRequest || mongoose.model<IAccessRequest>('AccessRequest', AccessRequestSchema);
+export const Investment = mongoose.models.Investment || mongoose.model<IInvestment>('Investment', InvestmentSchema);
 
 // ============================================
 // WEBHOOK EVENT SCHEMA (for deduplication)
 // ============================================
 export interface IWebhookEvent extends Document {
-  _id: string;
   eventId: string;
   eventType: string;
   processedAt: Date;

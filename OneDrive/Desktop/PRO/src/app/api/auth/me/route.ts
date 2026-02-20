@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/lib/models';
-import { verifyToken, extractTokenFromHeader, sanitizeUser } from '@/lib/auth';
+import {
+  extractTokenFromCookies,
+  verifyAccessToken,
+  sanitizeUser,
+} from '@/lib/auth';
 import { validateInput, ProfileUpdateSchema } from '@/lib/validation/schemas';
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
-
+    // Read token from cookie (middleware will also enforce this, but defense-in-depth)
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -18,7 +21,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -51,9 +54,7 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
 
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
-
+    const token = extractTokenFromCookies(request);
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -61,7 +62,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -81,14 +82,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // SECURITY: Only allow specific fields to be updated (whitelist pattern)
-    const allowedFields = ['name', 'bio', 'skills', 'githubUrl', 'linkedinUrl', 
-                          'portfolioUrl', 'location', 'avatar'];
+    const allowedFields = ['name', 'bio', 'skills', 'githubUrl', 'linkedinUrl',
+      'portfolioUrl', 'location', 'avatar'];
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
-    
+
     for (const field of allowedFields) {
       if (validation.data && field in validation.data && validation.data[field as keyof typeof validation.data] !== undefined) {
         const value = validation.data[field as keyof typeof validation.data];
-        // Trim string values
         if (typeof value === 'string') {
           updateData[field] = value.trim();
         } else if (Array.isArray(value)) {
