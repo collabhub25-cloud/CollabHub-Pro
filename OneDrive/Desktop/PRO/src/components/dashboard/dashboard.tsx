@@ -24,6 +24,7 @@ import { SearchPage } from '@/components/search/search-page';
 import { PricingPage } from '@/components/pricing/pricing-page';
 import { ProfilePage } from '@/components/profile/profile-page';
 import { MessagingPage } from '@/components/messaging/messaging-page';
+import { SettingsPage } from '@/components/settings/settings-page';
 import { CreateStartupModal } from '@/components/startups/create-startup-modal';
 import { CreateMilestoneModal } from '@/components/milestones/create-milestone-modal';
 import { AlliancePage } from '@/components/alliances/alliance-page';
@@ -170,6 +171,9 @@ export function Dashboard({ onLogout }: DashboardProps) {
     if (activeTab === 'alliances') {
       return <AlliancePage />;
     }
+    if (activeTab === 'settings') {
+      return <SettingsPage />;
+    }
 
     // Handle role-specific dashboards
     // SECURITY FIX: Return AccessDenied for unknown roles instead of defaulting to Founder
@@ -223,8 +227,8 @@ export function Dashboard({ onLogout }: DashboardProps) {
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === item.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                       }`}
                   >
                     <item.icon className="h-5 w-5 flex-shrink-0" />

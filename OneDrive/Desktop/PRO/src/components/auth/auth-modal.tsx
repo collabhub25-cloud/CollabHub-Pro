@@ -120,6 +120,9 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] p-0 gap-0">
+        <DialogTitle className="sr-only">
+          {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
+        </DialogTitle>
         <div className="p-6 border-b">
           <div className="flex items-center gap-2 mb-2">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
@@ -204,8 +207,8 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
                       type="button"
                       onClick={() => setSelectedRole(role.id)}
                       className={`flex flex-col items-center p-3 rounded-lg border transition-all ${selectedRole === role.id
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border hover:border-primary/50'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-border hover:border-primary/50'
                         }`}
                     >
                       {role.icon}
