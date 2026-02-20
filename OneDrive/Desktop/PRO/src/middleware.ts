@@ -203,6 +203,8 @@ export async function middleware(request: NextRequest) {
 // MATCHER — which routes this middleware runs on
 // ============================================
 
+export const runtime = 'nodejs';
+
 export const config = {
   matcher: [
     // Apply to all API routes
