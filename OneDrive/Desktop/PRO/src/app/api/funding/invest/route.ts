@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Investment, FundingRound, Startup, User, Notification, Payment } from '@/lib/models';
+import { Investment, FundingRound, Startup, User, Notification } from '@/lib/models';
 import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
 import Stripe from 'stripe';
 import { createLogger } from '@/lib/logger';
@@ -126,20 +126,6 @@ export async function POST(request: NextRequest) {
     // Update investment with checkout session ID
     investment.stripeCheckoutSessionId = checkoutSession.id;
     await investment.save();
-
-    // Create pending payment record
-    await Payment.create({
-      type: 'investment',
-      amount,
-      currency: 'USD',
-      status: 'pending',
-      fromUserId: decoded.userId,
-      startupId: round.startupId._id,
-      metadata: {
-        investmentId: investment._id.toString(),
-        checkoutSessionId: checkoutSession.id,
-      },
-    });
 
     return NextResponse.json({
       success: true,
