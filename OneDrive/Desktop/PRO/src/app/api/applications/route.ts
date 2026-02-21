@@ -244,6 +244,13 @@ export async function PUT(request: NextRequest) {
       { path: 'talentId', select: 'name email avatar skills trustScore verificationLevel' },
     ]);
 
+    // If accepted, add the talent to the startup's team
+    if (status === 'accepted') {
+      await Startup.findByIdAndUpdate(startup._id, {
+        $addToSet: { team: application.talentId }
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Application updated successfully',

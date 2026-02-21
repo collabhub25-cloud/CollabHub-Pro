@@ -102,7 +102,11 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
         toast.success('Welcome to CollabHub!');
         onClose();
       } else {
-        toast.error(data.error || 'Registration failed');
+        if (data.details && Array.isArray(data.details) && data.details.length > 0) {
+          toast.error(data.details[0].message || 'Validation failed');
+        } else {
+          toast.error(data.error || 'Registration failed');
+        }
       }
     } catch {
       toast.error('Something went wrong');
