@@ -37,9 +37,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Explicitly fetch subscription to assure frontend has accurate plan
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    const sub = await db.collection('subscriptions').findOne({ userId: user._id });
+    const userPlan = sub ? sub.plan : 'free';
+
+    const sanitizedUser = sanitizeUser(user);
+    (sanitizedUser as any).plan = userPlan;
+
     return NextResponse.json({
       success: true,
-      user: sanitizeUser(user),
+      user: sanitizedUser,
     });
   } catch (error) {
     console.error('Get user error:', error);

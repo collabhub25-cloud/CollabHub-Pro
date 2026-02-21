@@ -39,11 +39,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Explicitly fetch subscription to ensure frontend has accurate plan
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    const sub = await db.collection('subscriptions').findOne({ userId: result.user._id });
+    const userPlan = sub ? sub.plan : 'free';
+
+    const sanitizedUser = sanitizeUser(result.user);
+    (sanitizedUser as any).plan = userPlan;
+
     // Set cookies — no token in response body
     const response = NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: sanitizeUser(result.user),
+      user: sanitizedUser,
     });
 
     return setAuthCookies(response, result.accessToken, result.refreshToken);
