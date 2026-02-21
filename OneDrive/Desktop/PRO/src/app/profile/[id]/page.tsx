@@ -36,9 +36,9 @@ interface Startup {
 }
 
 export default function ProfilePage() {
-    const params = useParams();
+    const params = useParams<{ id: string }>();
     const router = useRouter();
-    const id = params.id as string;
+    const id = params?.id as string;
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [startups, setStartups] = useState<Startup[]>([]);
