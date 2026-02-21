@@ -111,7 +111,11 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
         });
         onSuccess?.();
       } else {
-        toast.error(data.error || 'Failed to create startup');
+        if (data.details && Array.isArray(data.details) && data.details.length > 0) {
+          toast.error(data.details[0].message || 'Validation failed');
+        } else {
+          toast.error(data.error || 'Failed to create startup');
+        }
       }
     } catch (error) {
       console.error('Error creating startup:', error);
