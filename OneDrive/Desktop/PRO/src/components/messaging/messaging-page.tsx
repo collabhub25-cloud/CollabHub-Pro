@@ -157,10 +157,19 @@ export function MessagingPage() {
       setUnreadTotal(data.count);
     });
 
+    // Polling fallback for messages since WebSockets might drop on Vercel
+    const pollingInterval = setInterval(() => {
+      fetchConversations();
+    }, 5000);
+
+    // Also attach the interval to the cleanup
+    (socketInstance as any)._pollingInterval = pollingInterval;
+
     setSocket(socketInstance);
 
     return () => {
       socketInstance.disconnect();
+      if ((socketInstance as any)._pollingInterval) clearInterval((socketInstance as any)._pollingInterval);
     };
   }, [selectedConversation?._id, fetchConversations]);
 
