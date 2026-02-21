@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     const validation = validateInput(CreateStartupSchema, body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.errors },
+        { error: 'Validation failed', details: validation.errors, fields: validation.fields },
         { status: 400 }
       );
     }
@@ -276,7 +276,7 @@ export async function PUT(request: NextRequest) {
     const validation = validateInput(StartupUpdateSchema, updateData);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.errors },
+        { error: 'Validation failed', details: validation.errors, fields: validation.fields },
         { status: 400 }
       );
     }

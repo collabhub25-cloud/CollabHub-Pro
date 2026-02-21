@@ -40,6 +40,7 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
   const [loading, setLoading] = useState(false);
   const [startups, setStartups] = useState<Startup[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     startupId: startupId || '',
     assignedTo: '',
@@ -199,9 +200,11 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
             <Input
               id="title"
               placeholder="Design Landing Page"
+              className={fieldErrors.title ? "border-red-500" : ""}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
+            {fieldErrors.title && <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p>}
           </div>
 
           <div className="space-y-2">
@@ -222,9 +225,11 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
                 id="amount"
                 type="number"
                 placeholder="500"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              />
+                className={fieldErrors.amount ? "border-red-500" : ""}
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            />
+            {fieldErrors.amount && <p className="text-xs text-red-500 mt-1">{fieldErrors.amount}</p>}
             </div>
 
             <div className="space-y-2">
@@ -232,9 +237,11 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
               <Input
                 id="dueDate"
                 type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              />
+                className={fieldErrors.dueDate ? "border-red-500" : ""}
+              value={formData.dueDate}
+              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+            />
+            {fieldErrors.dueDate && <p className="text-xs text-red-500 mt-1">{fieldErrors.dueDate}</p>}
             </div>
           </div>
 

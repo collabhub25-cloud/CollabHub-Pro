@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -141,6 +142,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     fundingStage: '',
   });
 
+  const [fundingRoundErrors, setFundingRoundErrors] = useState<Record<string, string>>({});
   const [newFundingRound, setNewFundingRound] = useState({
     startupId: '',
     roundName: '',
@@ -511,7 +513,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                         <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{app.talentId?.name}</p>
+                        <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><p className="text-sm font-medium truncate">{app.talentId?.name}</p></Link>
                         <p className="text-xs text-muted-foreground">{app.startupId?.name}</p>
                       </div>
                       <Badge variant={app.status === 'pending' ? 'secondary' : 'default'}>{app.status}</Badge>
@@ -976,7 +978,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                         <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <h3 className="font-semibold">{app.talentId?.name}</h3>
+                        <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
                         <p className="text-sm text-muted-foreground">Applied to {app.startupId?.name}</p>
                         {app.talentId?.skills && (
                           <div className="flex gap-1 mt-1">
@@ -1005,7 +1007,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <h3 className="font-semibold">{app.talentId?.name}</h3>
+                      <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
                       <p className="text-sm text-muted-foreground">{app.startupId?.name}</p>
                     </div>
                     <Badge>Reviewed</Badge>
@@ -1023,7 +1025,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <h3 className="font-semibold">{app.talentId?.name}</h3>
+                      <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
                       <p className="text-sm text-muted-foreground">{app.startupId?.name}</p>
                     </div>
                     <Badge className="bg-green-500">Accepted</Badge>
@@ -1041,7 +1043,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <h3 className="font-semibold">{app.talentId?.name}</h3>
+                      <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
                       <p className="text-sm text-muted-foreground">{app.startupId?.name}</p>
                     </div>
                     <Badge variant="destructive">Rejected</Badge>
@@ -1151,26 +1153,31 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               <div className="space-y-2">
                 <Label>Round Name</Label>
                 <Input 
+                    className={fundingRoundErrors.roundName ? "border-red-500" : ""}
                   placeholder="e.g., Seed Round" 
                   value={newFundingRound.roundName}
                   onChange={(e) => setNewFundingRound({ ...newFundingRound, roundName: e.target.value })}
                   required
                 />
+                  {fundingRoundErrors.roundName && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.roundName}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Target Amount ($)</Label>
                   <Input 
+                    className={fundingRoundErrors.targetAmount ? "border-red-500" : ""}
                     type="number"
                     placeholder="500000"
                     value={newFundingRound.targetAmount || ''}
                     onChange={(e) => setNewFundingRound({ ...newFundingRound, targetAmount: parseFloat(e.target.value) || 0 })}
                     required
                   />
+                  {fundingRoundErrors.targetAmount && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.targetAmount}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Equity Offered (%)</Label>
                   <Input 
+                    className={fundingRoundErrors.equityOffered ? "border-red-500" : ""}
                     type="number"
                     step="0.01"
                     placeholder="10"
@@ -1178,37 +1185,44 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                     onChange={(e) => setNewFundingRound({ ...newFundingRound, equityOffered: parseFloat(e.target.value) || 0 })}
                     required
                   />
+                  {fundingRoundErrors.equityOffered && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.equityOffered}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Valuation ($)</Label>
                   <Input 
+                    className={fundingRoundErrors.valuation ? "border-red-500" : ""}
                     type="number"
                     placeholder="5000000"
                     value={newFundingRound.valuation || ''}
                     onChange={(e) => setNewFundingRound({ ...newFundingRound, valuation: parseFloat(e.target.value) || 0 })}
                     required
                   />
+                  {fundingRoundErrors.valuation && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.valuation}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Min Investment ($)</Label>
                   <Input 
+                    className={fundingRoundErrors.minInvestment ? "border-red-500" : ""}
                     type="number"
                     placeholder="1000"
                     value={newFundingRound.minInvestment || ''}
                     onChange={(e) => setNewFundingRound({ ...newFundingRound, minInvestment: parseFloat(e.target.value) || 0 })}
                     required
                   />
+                  {fundingRoundErrors.minInvestment && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.minInvestment}</p>}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Closes At (Optional)</Label>
                 <Input 
+                    className={fundingRoundErrors.closesAt ? "border-red-500" : ""}
                   type="date"
                   value={newFundingRound.closesAt}
                   onChange={(e) => setNewFundingRound({ ...newFundingRound, closesAt: e.target.value })}
                 />
+                  {fundingRoundErrors.closesAt && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.closesAt}</p>}
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setShowCreateFundingRound(false)}>

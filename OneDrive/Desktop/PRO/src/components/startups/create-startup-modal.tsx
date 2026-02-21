@@ -48,6 +48,7 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
   const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
     vision: '',
@@ -150,9 +151,11 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
             <Input
               id="name"
               placeholder="My Awesome Startup"
+              className={fieldErrors.name ? "border-red-500" : ""}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
+            {fieldErrors.name && <p className="text-xs text-red-500 mt-1">{fieldErrors.name}</p>}
           </div>
 
           <div className="space-y-2">
@@ -181,7 +184,7 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
             <div className="space-y-2">
               <Label>Stage *</Label>
               <Select value={formData.stage} onValueChange={(v) => setFormData({ ...formData, stage: v })}>
-                <SelectTrigger>
+                <SelectTrigger className={fieldErrors.stage ? "border-red-500" : ""}>
                   <SelectValue placeholder="Select stage" />
                 </SelectTrigger>
                 <SelectContent>
@@ -195,7 +198,7 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
             <div className="space-y-2">
               <Label>Funding Stage *</Label>
               <Select value={formData.fundingStage} onValueChange={(v) => setFormData({ ...formData, fundingStage: v })}>
-                <SelectTrigger>
+                <SelectTrigger className={fieldErrors.stage ? "border-red-500" : ""}>
                   <SelectValue placeholder="Select funding stage" />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,7 +214,7 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
             <div className="space-y-2">
               <Label>Industry *</Label>
               <Select value={formData.industry} onValueChange={(v) => setFormData({ ...formData, industry: v })}>
-                <SelectTrigger>
+                <SelectTrigger className={fieldErrors.stage ? "border-red-500" : ""}>
                   <SelectValue placeholder="Select industry" />
                 </SelectTrigger>
                 <SelectContent>
@@ -228,10 +231,12 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
                 id="fundingAmount"
                 type="number"
                 placeholder="100000"
-                value={formData.fundingAmount}
-                onChange={(e) => setFormData({ ...formData, fundingAmount: e.target.value })}
-              />
-            </div>
+                className={fieldErrors.fundingAmount ? "border-red-500" : ""}
+              value={formData.fundingAmount}
+              onChange={(e) => setFormData({ ...formData, fundingAmount: e.target.value })}
+            />
+            {fieldErrors.fundingAmount && <p className="text-xs text-red-500 mt-1">{fieldErrors.fundingAmount}</p>}
+          </div>
           </div>
 
           <div className="space-y-2">
@@ -239,9 +244,11 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
             <Input
               id="website"
               placeholder="https://mystartup.com"
+              className={fieldErrors.website ? "border-red-500" : ""}
               value={formData.website}
               onChange={(e) => setFormData({ ...formData, website: e.target.value })}
             />
+            {fieldErrors.website && <p className="text-xs text-red-500 mt-1">{fieldErrors.website}</p>}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

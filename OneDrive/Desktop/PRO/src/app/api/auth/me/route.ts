@@ -85,7 +85,7 @@ export async function PUT(request: NextRequest) {
     const validation = validateInput(ProfileUpdateSchema, body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.errors },
+        { error: 'Validation failed', details: validation.errors, fields: validation.fields },
         { status: 400 }
       );
     }

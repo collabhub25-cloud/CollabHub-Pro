@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     const validation = validateInput(AllianceRequestSchema, body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.errors },
+        { error: 'Validation failed', details: validation.errors, fields: validation.fields },
         { status: 400 }
       );
     }

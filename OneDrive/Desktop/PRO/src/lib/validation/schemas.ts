@@ -107,11 +107,11 @@ export const CreateStartupSchema = z.object({
   fundingStage: z.enum(['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'] as const, {
     error: 'Invalid funding stage',
   }),
-  fundingAmount: z.number()
+  fundingAmount: z.coerce.number()
     .min(0, 'Funding amount must be non-negative')
     .max(100000000000, 'Funding amount exceeds maximum')
     .optional(),
-  revenue: z.number()
+  revenue: z.coerce.number()
     .min(0, 'Revenue must be non-negative')
     .optional(),
   website: z.string()
@@ -124,8 +124,8 @@ export const CreateStartupSchema = z.object({
     description: z.string().max(500),
     skills: z.array(z.string().max(50)).max(20),
     compensationType: z.enum(['equity', 'cash', 'mixed']),
-    equityPercent: z.number().min(0).max(100).optional(),
-    cashAmount: z.number().min(0).optional(),
+    equityPercent: z.coerce.number().min(0).max(100).optional(),
+    cashAmount: z.coerce.number().min(0).optional(),
   })).max(10, 'Maximum 10 roles allowed').optional(),
 });
 
@@ -141,8 +141,8 @@ export const StartupUpdateSchema = z.object({
   stage: z.enum(['idea', 'validation', 'mvp', 'growth', 'scaling']).optional(),
   industry: z.string().min(1).max(50).optional(),
   fundingStage: z.enum(['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo']).optional(),
-  fundingAmount: z.number().min(0).max(100000000000).optional(),
-  revenue: z.number().min(0).optional(),
+  fundingAmount: z.coerce.number().min(0).max(100000000000).optional(),
+  revenue: z.coerce.number().min(0).optional(),
   website: z.string().url().max(200).optional().or(z.literal('')),
   isActive: z.boolean().optional(),
 });
@@ -161,7 +161,7 @@ export const CreateMilestoneSchema = z.object({
   description: z.string()
     .min(10, 'Description must be at least 10 characters')
     .max(2000, 'Description must be at most 2000 characters'),
-  amount: z.number()
+  amount: z.coerce.number()
     .min(1, 'Amount must be at least 1')
     .max(10000000, 'Amount exceeds maximum'),
   dueDate: z.string()
@@ -176,7 +176,7 @@ export type CreateMilestoneInput = z.infer<typeof CreateMilestoneSchema>;
 export const MilestoneUpdateSchema = z.object({
   title: z.string().min(2).max(200).optional(),
   description: z.string().min(10).max(2000).optional(),
-  amount: z.number().min(1).max(10000000).optional(),
+  amount: z.coerce.number().min(1).max(10000000).optional(),
   dueDate: z.string().refine((val) => !isNaN(Date.parse(val))).optional(),
   status: z.enum(['pending', 'in_progress', 'completed', 'disputed']).optional(),
   notes: z.string().max(1000).optional(),
@@ -229,10 +229,10 @@ export const SearchQuerySchema = z.object({
   industry: z.string().max(50).optional(),
   stage: z.string().max(50).optional(),
   skills: z.array(z.string().max(50)).max(20).optional(),
-  minTicket: z.number().min(0).optional(),
-  maxTicket: z.number().max(100000000000).optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  minTicket: z.coerce.number().min(0).optional(),
+  maxTicket: z.coerce.number().max(100000000000).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export type SearchQueryInput = z.infer<typeof SearchQuerySchema>;
@@ -259,8 +259,8 @@ export const CreateApplicationSchema = z.object({
   coverLetter: z.string()
     .min(50, 'Cover letter must be at least 50 characters')
     .max(2000, 'Cover letter must be at most 2000 characters'),
-  proposedEquity: z.number().min(0).max(100).optional(),
-  proposedCash: z.number().min(0).optional(),
+  proposedEquity: z.coerce.number().min(0).max(100).optional(),
+  proposedCash: z.coerce.number().min(0).optional(),
 });
 
 export type CreateApplicationInput = z.infer<typeof CreateApplicationSchema>;
@@ -277,11 +277,11 @@ export const NotificationIdSchema = z.object({
  */
 export const CreateFundingRoundSchema = z.object({
   startupId: z.string().min(1, 'Startup ID is required'),
-  roundName: z.string().min(1, 'Round name is required').max(100),
-  targetAmount: z.number().min(1000, 'Minimum target is $1,000').max(100000000000, 'Amount exceeds maximum'),
-  equityOffered: z.number().min(0.01, 'Minimum equity is 0.01%').max(100, 'Maximum equity is 100%'),
-  valuation: z.number().min(10000, 'Minimum valuation is $10,000').max(1000000000000, 'Valuation exceeds maximum'),
-  minInvestment: z.number().min(100, 'Minimum investment is $100').max(100000000, 'Investment exceeds maximum'),
+  roundName: z.string().min(1, 'Round name is required').max(100).trim(),
+  targetAmount: z.coerce.number().min(1000, 'Minimum target is $1,000').max(100000000000, 'Amount exceeds maximum'),
+  equityOffered: z.coerce.number().min(0.01, 'Minimum equity is 0.01%').max(100, 'Maximum equity is 100%'),
+  valuation: z.coerce.number().min(10000, 'Minimum valuation is $10,000').max(1000000000000, 'Valuation exceeds maximum'),
+  minInvestment: z.coerce.number().min(100, 'Minimum investment is $100').max(100000000, 'Investment exceeds maximum'),
   closesAt: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid date').optional(),
 });
 
@@ -292,7 +292,7 @@ export type CreateFundingRoundInput = z.infer<typeof CreateFundingRoundSchema>;
  */
 export const CreateInvestmentSchema = z.object({
   roundId: z.string().min(1, 'Round ID is required'),
-  amount: z.number().min(100, 'Minimum investment is $100').max(100000000, 'Investment exceeds maximum'),
+  amount: z.coerce.number().min(100, 'Minimum investment is $100').max(100000000, 'Investment exceeds maximum'),
 });
 
 export type CreateInvestmentInput = z.infer<typeof CreateInvestmentSchema>;
@@ -360,16 +360,27 @@ export function sanitizeString(str: string): string {
 /**
  * Validate and sanitize input
  */
-export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[] } {
+export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[]; fields: Record<string, string> } {
   const result = schema.safeParse(data);
 
   if (result.success) {
     return { success: true, data: result.data };
   }
 
-  const errors = result.error.issues.map(err =>
-    `${err.path.join('.')}: ${err.message}`
-  );
+  const errors: string[] = [];
+  const fields: Record<string, string> = {};
 
-  return { success: false, errors };
+  result.error.issues.forEach(err => {
+    const errorStr = `${err.path.join('.')}: ${err.message}`;
+    errors.push(errorStr);
+
+    // For structured field errors
+    const fieldName = err.path.join('.') || 'general';
+    // Don't overwrite if there's already an error for this field
+    if (!fields[fieldName]) {
+      fields[fieldName] = err.message;
+    }
+  });
+
+  return { success: false, errors, fields };
 }
