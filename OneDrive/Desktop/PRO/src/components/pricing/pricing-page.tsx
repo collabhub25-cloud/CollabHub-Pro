@@ -84,6 +84,18 @@ const founderPlans: Record<string, Plan> = {
   },
 };
 
+
+  // Load Razorpay Script dynamically
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
 export function PricingPage() {
   const { user } = useAuthStore();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
