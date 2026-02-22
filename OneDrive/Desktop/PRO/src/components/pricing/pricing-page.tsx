@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { Check, Zap, Building2, Loader2, Crown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
+
+// Load Razorpay Script dynamically
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 interface Plan {
   name: string;
@@ -45,7 +54,7 @@ const founderPlans: Record<string, Plan> = {
   },
   pro_founder: {
     name: 'Pro',
-    price: 2900, // $29
+    price: 2900, // $29 -> will display properly format wise. Real charge is ₹499 in INR
     priceId: 'price_pro_founder_monthly',
     features: {
       maxProjects: 5,
@@ -84,18 +93,6 @@ const founderPlans: Record<string, Plan> = {
   },
 };
 
-
-  // Load Razorpay Script dynamically
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
 export function PricingPage() {
   const { user } = useAuthStore();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -106,7 +103,7 @@ export function PricingPage() {
 
     try {
       const response = await fetch('/api/subscriptions', {
-          credentials: 'include',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -125,28 +122,71 @@ export function PricingPage() {
   }, [fetchSubscription]);
 
   const handleUpgrade = async (planKey: string) => {
-    if ( planKey === 'free_founder') return;
-
+    if (planKey === 'free_founder') return;
     setProcessing(planKey);
-    try {
-      const response = await fetch('/api/stripe/checkout', {
-          credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ plan: planKey }),
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        window.location.href = data.checkoutUrl;
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to create checkout session');
+    const res = await loadRazorpayScript();
+    if (!res) {
+      toast.error('Razorpay SDK failed to load. Are you online?');
+      setProcessing(null);
+      return;
+    }
+
+    try {
+      const orderResp = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const orderData = await orderResp.json();
+
+      if (!orderData.success) {
+        toast.error(orderData.error || 'Failed to initialize payment');
+        setProcessing(null);
+        return;
       }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "CollabHub",
+        description: "PRO Subscription",
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            const verifyResp = await fetch('/api/payments/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+            const verifyData = await verifyResp.json();
+
+            if (verifyData.success) {
+              toast.success('Subscription upgraded successfully!');
+              fetchSubscription();
+              window.location.reload();
+            } else {
+              toast.error(verifyData.error || 'Payment verification failed');
+            }
+          } catch (err) {
+            toast.error('Error verifying payment');
+          }
+        },
+        theme: { color: "#10b981" }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        toast.error(response.error?.description || 'Payment Failed');
+      });
+      rzp.open();
+
     } catch (error) {
-      console.error('Error creating checkout:', error);
+      console.error('Checkout error:', error);
       toast.error('Failed to start checkout process');
     } finally {
       setProcessing(null);
@@ -154,31 +194,11 @@ export function PricingPage() {
   };
 
   const handleManageSubscription = async () => {
-
-    setProcessing('manage');
-    try {
-      const response = await fetch('/api/stripe/portal', {
-          credentials: 'include',
-        method: 'POST',
-        
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        window.location.href = data.portalUrl;
-      } else {
-        toast.error('Failed to open billing portal');
-      }
-    } catch (error) {
-      console.error('Error opening portal:', error);
-      toast.error('Failed to open billing portal');
-    } finally {
-      setProcessing(null);
-    }
+    toast.error('Account portal management is currently being migrated.');
   };
 
   const formatPrice = (cents: number) => {
-    return `$${(cents / 100).toFixed(0)}`;
+    return '$' + (cents / 100).toFixed(0);
   };
 
   // Non-founders see a free account message
@@ -188,11 +208,11 @@ export function PricingPage() {
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-bold">Free Account</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            {user.role === 'talent' 
+            {user.role === 'talent'
               ? 'Talent accounts are completely free with full access to apply for jobs, message founders, and build alliances.'
               : user.role === 'investor'
-              ? 'Investor accounts are completely free with full access to deal flow, messaging, and alliance features.'
-              : 'Your account has full access to all features for free.'}
+                ? 'Investor accounts are completely free with full access to deal flow, messaging, and alliance features.'
+                : 'Your account has full access to all features for free.'}
           </p>
         </div>
 
@@ -302,93 +322,93 @@ export function PricingPage() {
       {/* Plan Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Object.entries(founderPlans).map(([key, plan]) => {
-          const isCurrentPlan = subscription?.plan === key;
+          const isCurrentPlan = subscription?.plan === key || subscription?.plan === 'pro';
           const isPopular = key === 'pro_founder';
 
           return (
-            <Card 
-              key={key} 
-              className={`relative ${isPopular ? 'border-primary shadow-lg' : ''} ${isCurrentPlan ? 'ring-2 ring-primary' : ''}`}
+            <Card
+              key={key}
+              className={`relative \${isPopular ? 'border-primary shadow-lg' : ''} \${isCurrentPlan ? 'ring-2 ring-primary' : ''}`}
             >
-              {isPopular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  Most Popular
-                </Badge>
+        {isPopular && (
+          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+            Most Popular
+          </Badge>
+        )}
+        {isCurrentPlan && (
+          <Badge variant="secondary" className="absolute -top-3 right-4">
+            Current Plan
+          </Badge>
+        )}
+        <CardHeader>
+          <CardTitle>{plan.name}</CardTitle>
+          <CardDescription>
+            <span className="text-3xl font-bold">{formatPrice(plan.price)}</span>
+            <span className="text-muted-foreground">/month</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Check className={`h-4 w-4 \${plan.features.maxProjects > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <span className="text-sm">
+                {plan.features.maxProjects === -1 ? 'Unlimited' : plan.features.maxProjects} active projects
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className={`h-4 w-4 \${plan.features.maxTeamMembers > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <span className="text-sm">
+                {plan.features.maxTeamMembers === -1 ? 'Unlimited' : plan.features.maxTeamMembers} team members
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className={`h-4 w-4 \${plan.features.profileBoost ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <span className="text-sm">Profile boost</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className={`h-4 w-4 \${plan.features.advancedAnalytics ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <span className="text-sm">Advanced analytics</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className={`h-4 w-4 \${plan.features.earlyDealAccess ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <span className="text-sm">Early deal access</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className={`h-4 w-4 \${plan.features.prioritySupport ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <span className="text-sm">Priority support</span>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          {isCurrentPlan ? (
+            <Button variant="outline" className="w-full" disabled>
+              Current Plan
+            </Button>
+          ) : key === 'free_founder' ? (
+            <Button variant="outline" className="w-full" disabled={subscription?.plan !== 'free_founder' && subscription?.plan !== 'pro'}>
+              {subscription?.plan === 'free_founder' ? 'Current Plan' : 'Downgrade'}
+            </Button>
+          ) : (
+            <Button
+              className="w-full"
+              onClick={() => handleUpgrade(key)}
+              disabled={processing === key}
+            >
+              {processing === key ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Upgrade
+                </>
               )}
-              {isCurrentPlan && (
-                <Badge variant="secondary" className="absolute -top-3 right-4">
-                  Current Plan
-                </Badge>
-              )}
-              <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <CardDescription>
-                  <span className="text-3xl font-bold">{formatPrice(plan.price)}</span>
-                  <span className="text-muted-foreground">/month</span>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Check className={`h-4 w-4 ${plan.features.maxProjects > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    <span className="text-sm">
-                      {plan.features.maxProjects === -1 ? 'Unlimited' : plan.features.maxProjects} active projects
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className={`h-4 w-4 ${plan.features.maxTeamMembers > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    <span className="text-sm">
-                      {plan.features.maxTeamMembers === -1 ? 'Unlimited' : plan.features.maxTeamMembers} team members
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className={`h-4 w-4 ${plan.features.profileBoost ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    <span className="text-sm">Profile boost</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className={`h-4 w-4 ${plan.features.advancedAnalytics ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    <span className="text-sm">Advanced analytics</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className={`h-4 w-4 ${plan.features.earlyDealAccess ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    <span className="text-sm">Early deal access</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className={`h-4 w-4 ${plan.features.prioritySupport ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    <span className="text-sm">Priority support</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                {isCurrentPlan ? (
-                  <Button variant="outline" className="w-full" disabled>
-                    Current Plan
-                  </Button>
-                ) : key === 'free_founder' ? (
-                  <Button variant="outline" className="w-full" disabled={subscription?.plan !== 'free_founder'}>
-                    {subscription?.plan === 'free_founder' ? 'Current Plan' : 'Downgrade'}
-                  </Button>
-                ) : (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleUpgrade(key)}
-                    disabled={processing === key}
-                  >
-                    {processing === key ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Zap className="h-4 w-4 mr-2" />
-                        Upgrade
-                      </>
-                    )}
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          );
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+      );
         })}
-      </div>
     </div>
+    </div >
   );
 }

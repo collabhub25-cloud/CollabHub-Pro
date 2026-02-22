@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Investment, FundingRound, Startup, User, Notification } from '@/lib/models';
 import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
+import Razorpay from 'razorpay';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('funding-invest');
@@ -85,8 +86,29 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      log.error('Razorpay keys not configured');
+      return NextResponse.json({ error: 'Payment gateway not configured' }, { status: 500 });
+    }
+
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    const orderOptions = {
+      amount: Math.round(amount * 100), // amount in cents/paise
+      currency: 'USD',
+      receipt: `inv_${investment._id.toString()}`,
+    };
+
+    const order = await razorpay.orders.create(orderOptions);
+
     return NextResponse.json({
       success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
       investment: {
         _id: investment._id,
         amount: investment.amount,
