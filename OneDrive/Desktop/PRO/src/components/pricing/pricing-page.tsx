@@ -328,7 +328,7 @@ export function PricingPage() {
           return (
             <Card
               key={key}
-              className={`relative \${isPopular ? 'border-primary shadow-lg' : ''} \${isCurrentPlan ? 'ring-2 ring-primary' : ''}`}
+              className={`relative const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${isPopular ? 'border-primary shadow-lg' : ''} const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${isCurrentPlan ? 'ring-2 ring-primary' : ''}`}
             >
         {isPopular && (
           <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -350,31 +350,31 @@ export function PricingPage() {
         <CardContent className="space-y-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Check className={`h-4 w-4 \${plan.features.maxProjects > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <Check className={`h-4 w-4 const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${plan.features.maxProjects > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
               <span className="text-sm">
                 {plan.features.maxProjects === -1 ? 'Unlimited' : plan.features.maxProjects} active projects
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className={`h-4 w-4 \${plan.features.maxTeamMembers > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <Check className={`h-4 w-4 const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${plan.features.maxTeamMembers > 0 ? 'text-green-500' : 'text-muted-foreground'}`} />
               <span className="text-sm">
                 {plan.features.maxTeamMembers === -1 ? 'Unlimited' : plan.features.maxTeamMembers} team members
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className={`h-4 w-4 \${plan.features.profileBoost ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <Check className={`h-4 w-4 const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${plan.features.profileBoost ? 'text-green-500' : 'text-muted-foreground'}`} />
               <span className="text-sm">Profile boost</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className={`h-4 w-4 \${plan.features.advancedAnalytics ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <Check className={`h-4 w-4 const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${plan.features.advancedAnalytics ? 'text-green-500' : 'text-muted-foreground'}`} />
               <span className="text-sm">Advanced analytics</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className={`h-4 w-4 \${plan.features.earlyDealAccess ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <Check className={`h-4 w-4 const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${plan.features.earlyDealAccess ? 'text-green-500' : 'text-muted-foreground'}`} />
               <span className="text-sm">Early deal access</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className={`h-4 w-4 \${plan.features.prioritySupport ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <Check className={`h-4 w-4 const isCurrentPlan = subscription?.plan === key || (subscription?.plan === \'pro\' && key === \'pro_founder\');${plan.features.prioritySupport ? 'text-green-500' : 'text-muted-foreground'}`} />
               <span className="text-sm">Priority support</span>
             </div>
           </div>
