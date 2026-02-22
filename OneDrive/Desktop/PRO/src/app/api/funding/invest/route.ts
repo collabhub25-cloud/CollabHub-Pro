@@ -2,20 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Investment, FundingRound, Startup, User, Notification } from '@/lib/models';
 import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
-import Stripe from 'stripe';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('funding-invest');
-
-let _stripe: Stripe | null = null;
-function getStripe(): Stripe {
-  if (!_stripe) {
-    const key = process.env.STRIPE_SECRET_KEY;
-    if (!key) throw new Error('STRIPE_SECRET_KEY is not configured');
-    _stripe = new Stripe(key);
-  }
-  return _stripe;
-}
 
 // POST /api/funding/invest - Create investment with Stripe checkout
 export async function POST(request: NextRequest) {
@@ -96,40 +85,8 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    // Create Stripe checkout session
-    const checkoutSession = await getStripe().checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Investment in ${(round.startupId as any).name}`,
-              description: `${round.roundName} - ${equityPercent.toFixed(4)}% equity`,
-            },
-            unit_amount: Math.round(amount * 100), // Convert to cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/dashboard?investment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/dashboard?investment=cancelled`,
-      metadata: {
-        investmentId: investment._id.toString(),
-        roundId,
-        startupId: round.startupId._id.toString(),
-        investorId: decoded.userId,
-      },
-    });
-
-    // Update investment with checkout session ID
-    investment.stripeCheckoutSessionId = checkoutSession.id;
-    await investment.save();
-
     return NextResponse.json({
       success: true,
-      checkoutUrl: checkoutSession.url,
       investment: {
         _id: investment._id,
         amount: investment.amount,

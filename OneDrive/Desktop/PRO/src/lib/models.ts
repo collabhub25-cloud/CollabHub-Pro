@@ -455,8 +455,6 @@ export interface IPayment extends Document {
   toUserId?: mongoose.Types.ObjectId;
   startupId?: mongoose.Types.ObjectId;
   milestoneId?: mongoose.Types.ObjectId;
-  stripePaymentId?: string;
-  stripeTransferId?: string;
   platformFee: number;
   metadata?: Record<string, unknown>;
   createdAt: Date;
@@ -473,8 +471,6 @@ const PaymentSchema = new Schema<IPayment>(
     toUserId: { type: Schema.Types.ObjectId, ref: 'User' },
     startupId: { type: Schema.Types.ObjectId, ref: 'Startup' },
     milestoneId: { type: Schema.Types.ObjectId, ref: 'Milestone' },
-    stripePaymentId: { type: String },
-    stripeTransferId: { type: String },
     platformFee: { type: Number, default: 0 },
     metadata: { type: Schema.Types.Mixed },
   },
@@ -683,9 +679,6 @@ export interface ISubscription extends Document {
   role: UserRole;
   plan: PlanType;
   status: SubscriptionStatus;
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
-  stripePriceId?: string;
   currentPeriodStart?: Date;
   currentPeriodEnd?: Date;
   cancelAtPeriodEnd: boolean;
@@ -710,9 +703,6 @@ const SubscriptionSchema = new Schema<ISubscription>(
     role: { type: String, enum: ['founder', 'talent', 'investor', 'admin'], required: true },
     plan: { type: String, enum: ALL_PLANS, default: 'free_founder' },
     status: { type: String, enum: ['active', 'past_due', 'canceled', 'incomplete', 'trialing'], default: 'active' },
-    stripeCustomerId: { type: String },
-    stripeSubscriptionId: { type: String },
-    stripePriceId: { type: String },
     currentPeriodStart: { type: Date },
     currentPeriodEnd: { type: Date },
     cancelAtPeriodEnd: { type: Boolean, default: false },
@@ -900,8 +890,6 @@ export interface IInvestment extends Document {
   amount: number;
   equityPercent: number;
   status: InvestmentStatus;
-  stripePaymentId?: string;
-  stripeCheckoutSessionId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -914,8 +902,6 @@ const InvestmentSchema = new Schema<IInvestment>(
     amount: { type: Number, required: true },
     equityPercent: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'processing', 'completed', 'failed', 'refunded'], default: 'pending' },
-    stripePaymentId: { type: String },
-    stripeCheckoutSessionId: { type: String },
   },
   { timestamps: true }
 );

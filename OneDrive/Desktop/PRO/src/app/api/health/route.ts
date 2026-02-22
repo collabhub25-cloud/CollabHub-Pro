@@ -22,9 +22,7 @@ interface HealthStatus {
       status: 'up' | 'down';
       type: 'memory' | 'redis';
     };
-    stripe: {
-      status: 'configured' | 'not_configured';
-    };
+
   };
 }
 
@@ -41,7 +39,7 @@ export async function GET() {
     checks: {
       database: { status: 'down' },
       cache: { status: 'down', type: 'memory' },
-      stripe: { status: 'not_configured' },
+
     },
   };
 
@@ -88,11 +86,6 @@ export async function GET() {
     health.status = 'degraded';
   }
 
-  // Check Stripe - don't expose key status
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
-  health.checks.stripe = {
-    status: stripeKey ? 'configured' : 'not_configured',
-  };
 
   // Calculate response time
   const responseTime = Date.now() - startTime;
