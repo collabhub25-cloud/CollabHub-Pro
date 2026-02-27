@@ -12,12 +12,14 @@ import {
   Settings, LogOut, Menu, ChevronLeft, Award, BarChart3,
   UserCheck, DollarSign, AlertTriangle, CheckCircle2,
   Search, Shield, CreditCard as SubscriptionIcon, MessageSquare,
-  User, Handshake, Sparkles
+  User, Handshake, Sparkles, ShieldCheck
 } from 'lucide-react';
+import KycDashboard from '@/components/kyc/kyc-dashboard';
 import { FounderDashboard } from './founder-dashboard';
 import { TalentDashboard } from './talent-dashboard';
 import { InvestorDashboard } from './investor-dashboard';
 import { AdminDashboard } from './admin-dashboard';
+import AgreementsDashboardWithBoundary from '@/components/agreements/agreements-dashboard';
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
 import { VerificationProgress } from '@/components/verification/verification-progress';
 import { SearchPage } from '@/components/search/search-page';
@@ -51,6 +53,7 @@ const navigation = {
     { id: 'search', label: 'Search', icon: Search },
     { id: 'alliances', label: 'Alliances', icon: Handshake },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
+    { id: 'kyc', label: 'KYC & Compliance', icon: ShieldCheck },
     { id: 'verification', label: 'Verification', icon: Shield },
     { id: 'subscription', label: 'Subscription', icon: CreditCard },
     { id: 'profile', label: 'My Profile', icon: User },
@@ -80,6 +83,7 @@ const navigation = {
     { id: 'search', label: 'Discover', icon: Search },
     { id: 'alliances', label: 'Alliances', icon: Handshake },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
+    { id: 'kyc', label: 'KYC & Compliance', icon: ShieldCheck },
     { id: 'verification', label: 'Verification', icon: Shield },
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -158,6 +162,12 @@ export function Dashboard({ onLogout }: DashboardProps) {
     }
     if (activeTab === 'verification') {
       return <VerificationProgress />;
+    }
+    if (activeTab === 'kyc') {
+      return <KycDashboard />;
+    }
+    if (activeTab === 'agreements') {
+      return <AgreementsDashboardWithBoundary />;
     }
     if (activeTab === 'subscription') {
       return <PricingPage />;

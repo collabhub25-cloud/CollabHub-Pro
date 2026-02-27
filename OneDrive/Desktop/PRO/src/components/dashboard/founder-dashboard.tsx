@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,12 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Plus, Building2, Users, CheckCircle2, Clock, 
+import {
+  Plus, Building2, Users, CheckCircle2, Clock,
   Briefcase, Target, Zap, Loader2, Edit, Trash2,
-  FileText, AlertCircle
+  FileText, AlertCircle, DollarSign, Lock
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ import {
 import { toast } from 'sonner';
 import { CreateMilestoneModal } from '@/components/milestones/create-milestone-modal';
 import { apiFetch } from '@/lib/api-client';
+import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
 
 interface Startup {
   _id: string;
@@ -79,6 +81,9 @@ interface Milestone {
   dueDate: string;
   startupId: { _id: string; name: string };
   assignedTo: { _id: string; name: string };
+  paymentStatus?: string;
+  paymentProofUrl?: string;
+  disputeReason?: string;
 }
 
 interface FundingRound {
@@ -123,6 +128,9 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const [showCreateFundingRound, setShowCreateFundingRound] = useState(false);
   const [stats, setStats] = useState({ startups: 0, teamMembers: 0, activeMilestones: 0 });
 
+  const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
   // Form states
   const [newStartup, setNewStartup] = useState({
     name: '',
@@ -159,7 +167,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     try {
       // Fetch startups
       const startupsRes = await fetch('/api/startups', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
@@ -169,7 +177,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
       // Fetch applications
       const appsRes = await fetch('/api/applications/received', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (appsRes.ok) {
         const data = await appsRes.json();
@@ -178,7 +186,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
       // Fetch milestones
       const milestonesRes = await fetch('/api/milestones', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (milestonesRes.ok) {
         const data = await milestonesRes.json();
@@ -206,7 +214,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const fetchFundingRounds = useCallback(async () => {
     try {
       const res = await fetch('/api/funding/create-round?status=open', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();
@@ -221,7 +229,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const fetchAgreements = useCallback(async () => {
     try {
       const res = await fetch('/api/agreements', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();
@@ -246,7 +254,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     setSubmitting(true);
     try {
       const res = await fetch('/api/startups', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -280,11 +288,11 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const handleEditStartup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showEditStartup) return;
-    
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/startups', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -312,13 +320,13 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   const handleDeleteStartup = async () => {
     if (!showDeleteStartup) return;
-    
+
     setSubmitting(true);
     try {
       const res = await fetch(`/api/startups?id=${showDeleteStartup._id}`, {
-          credentials: 'include',
+        credentials: 'include',
         method: 'DELETE',
-        
+
       });
 
       const data = await res.json();
@@ -351,7 +359,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const handleUpdateApplication = async (id: string, status: string) => {
     try {
       const res = await fetch('/api/applications', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -378,11 +386,11 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       toast.error('Please select a startup');
       return;
     }
-    
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/funding/create-round', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -434,22 +442,57 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   // Dashboard Overview
   if (activeTab === 'dashboard') {
+    const pendingApplications = applications.filter(a => a.status === 'pending');
+    const totalFundingTarget = fundingRounds.filter(r => r.status === 'active').reduce((sum, r) => sum + r.targetAmount, 0);
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 page-enter">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Welcome back, {user?.name?.split(' ')[0]}!</h1>
             <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your startups</p>
           </div>
-          <Button onClick={() => setShowCreateStartup(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Startup
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button onClick={() => setShowCreateStartup(true)} disabled={(user?.verificationLevel || 0) < 2}>
+                    {(user?.verificationLevel || 0) < 2 ? <Lock className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                    New Startup
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {(user?.verificationLevel || 0) < 2 && (
+                <TooltipContent>
+                  <p>You need Verification Level 2 to create a startup.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="card-elevated">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Pending Apps</CardTitle>
+              <Clock className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pendingApplications.length}</div>
+              <p className="text-xs text-muted-foreground">Awaiting review</p>
+            </CardContent>
+          </Card>
+          <Card className="card-elevated">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Active Pursuits</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${(totalFundingTarget / 1000).toFixed(0)}k</div>
+              <p className="text-xs text-muted-foreground">Target capital</p>
+            </CardContent>
+          </Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Startups</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -459,7 +502,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               <p className="text-xs text-muted-foreground">Active ventures</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Team Members</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -469,7 +512,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               <p className="text-xs text-muted-foreground">Across all startups</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Active Milestones</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
@@ -479,7 +522,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               <p className="text-xs text-muted-foreground">In progress</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
               <Zap className="h-4 w-4 text-primary" />
@@ -707,18 +750,18 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                   </div>
                   <Separator />
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
                       onClick={() => openEditStartup(startup)}
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="text-destructive hover:bg-destructive/10"
                       onClick={() => setShowDeleteStartup(startup)}
                     >
@@ -1061,6 +1104,33 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   if (activeTab === 'milestones') {
     return (
       <div className="space-y-6">
+        {selectedMilestone && (
+          <MilestonePaymentModal
+            milestone={selectedMilestone}
+            isOpen={isPaymentModalOpen}
+            onClose={() => setIsPaymentModalOpen(false)}
+            onSuccess={fetchData}
+          />
+        )}
+        {/* Unsigned Agreement Warning */}
+        {milestones.length > 0 && agreements.filter(a => a.status === 'active').length === 0 && (
+          <Card className="border-yellow-500/50 bg-yellow-500/5">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                <div>
+                  <p className="font-medium">No Active Agreements</p>
+                  <p className="text-sm text-muted-foreground">
+                    You have milestones without a signed agreement. Sign an agreement for legal protection.
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => useUIStore.getState().setActiveTab('agreements')}>
+                View Agreements
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Milestones</h1>
           <CreateMilestoneModal onSuccess={fetchData} />
@@ -1087,23 +1157,34 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                        milestone.status === 'completed' ? 'bg-green-500/10 text-green-500' :
+                      <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${milestone.status === 'completed' ? 'bg-green-500/10 text-green-500' :
                         milestone.status === 'in_progress' ? 'bg-blue-500/10 text-blue-500' :
-                        'bg-gray-500/10 text-gray-500'
-                      }`}>
+                          'bg-gray-500/10 text-gray-500'
+                        }`}>
                         {milestone.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> :
-                         milestone.status === 'in_progress' ? <Clock className="h-5 w-5" /> :
-                         <Target className="h-5 w-5" />}
+                          milestone.status === 'in_progress' ? <Clock className="h-5 w-5" /> :
+                            <Target className="h-5 w-5" />}
                       </div>
                       <div>
                         <h3 className="font-semibold">{milestone.title}</h3>
                         <p className="text-sm text-muted-foreground">{milestone.startupId?.name}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">${milestone.amount.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">Due: {new Date(milestone.dueDate).toLocaleDateString()}</p>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="text-right">
+                        <p className="font-semibold">${milestone.amount.toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">Due: {new Date(milestone.dueDate).toLocaleDateString()}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedMilestone(milestone);
+                          setIsPaymentModalOpen(true);
+                        }}
+                      >
+                        Manage Payment
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -1121,10 +1202,23 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Funding</h1>
-          <Button onClick={() => setShowCreateFundingRound(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Funding Round
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button onClick={() => setShowCreateFundingRound(true)} disabled={(user?.verificationLevel || 0) < 3}>
+                    {(user?.verificationLevel || 0) < 3 ? <Lock className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                    Create Funding Round
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {(user?.verificationLevel || 0) < 3 && (
+                <TooltipContent>
+                  <p>You need Verification Level 3 to raise capital.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Create Funding Round Modal */}
@@ -1136,8 +1230,8 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             <form onSubmit={handleCreateFundingRound} className="space-y-4">
               <div className="space-y-2">
                 <Label>Select Startup</Label>
-                <Select 
-                  value={newFundingRound.startupId} 
+                <Select
+                  value={newFundingRound.startupId}
                   onValueChange={(v) => setNewFundingRound({ ...newFundingRound, startupId: v })}
                 >
                   <SelectTrigger>
@@ -1152,19 +1246,19 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               </div>
               <div className="space-y-2">
                 <Label>Round Name</Label>
-                <Input 
-                    className={fundingRoundErrors.roundName ? "border-red-500" : ""}
-                  placeholder="e.g., Seed Round" 
+                <Input
+                  className={fundingRoundErrors.roundName ? "border-red-500" : ""}
+                  placeholder="e.g., Seed Round"
                   value={newFundingRound.roundName}
                   onChange={(e) => setNewFundingRound({ ...newFundingRound, roundName: e.target.value })}
                   required
                 />
-                  {fundingRoundErrors.roundName && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.roundName}</p>}
+                {fundingRoundErrors.roundName && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.roundName}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Target Amount ($)</Label>
-                  <Input 
+                  <Input
                     className={fundingRoundErrors.targetAmount ? "border-red-500" : ""}
                     type="number"
                     placeholder="500000"
@@ -1176,7 +1270,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Equity Offered (%)</Label>
-                  <Input 
+                  <Input
                     className={fundingRoundErrors.equityOffered ? "border-red-500" : ""}
                     type="number"
                     step="0.01"
@@ -1191,7 +1285,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Valuation ($)</Label>
-                  <Input 
+                  <Input
                     className={fundingRoundErrors.valuation ? "border-red-500" : ""}
                     type="number"
                     placeholder="5000000"
@@ -1203,7 +1297,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Min Investment ($)</Label>
-                  <Input 
+                  <Input
                     className={fundingRoundErrors.minInvestment ? "border-red-500" : ""}
                     type="number"
                     placeholder="1000"
@@ -1216,13 +1310,13 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               </div>
               <div className="space-y-2">
                 <Label>Closes At (Optional)</Label>
-                <Input 
-                    className={fundingRoundErrors.closesAt ? "border-red-500" : ""}
+                <Input
+                  className={fundingRoundErrors.closesAt ? "border-red-500" : ""}
                   type="date"
                   value={newFundingRound.closesAt}
                   onChange={(e) => setNewFundingRound({ ...newFundingRound, closesAt: e.target.value })}
                 />
-                  {fundingRoundErrors.closesAt && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.closesAt}</p>}
+                {fundingRoundErrors.closesAt && <p className="text-xs text-red-500 mt-1">{fundingRoundErrors.closesAt}</p>}
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setShowCreateFundingRound(false)}>

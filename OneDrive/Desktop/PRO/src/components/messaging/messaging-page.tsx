@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { 
-  MessageSquare, Send, Loader2, Search, User, 
-  ChevronRight, ArrowLeft, Check, CheckCheck
+import {
+  MessageSquare, Send, Loader2, Search, User,
+  ChevronRight, ArrowLeft, Check, CheckCheck, Paperclip, Image as ImageIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ interface Message {
   createdAt: string;
   read?: boolean;
   isMine: boolean;
+  attachments?: string[];
 }
 
 export function MessagingPage() {
@@ -70,7 +71,7 @@ export function MessagingPage() {
       if (response.ok) {
         const data = await response.json();
         setConversations(data.conversations);
-        
+
         // Calculate total unread
         const total = data.conversations.reduce((sum: number, c: Conversation) => sum + c.unreadCount, 0);
         setUnreadTotal(total);
@@ -253,11 +254,11 @@ export function MessagingPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!messageInput.trim() || !selectedConversation?.otherUser || !socket) return;
 
     setSending(true);
-    
+
     // Emit via WebSocket
     socket.emit('message:send', {
       receiverId: selectedConversation.otherUser._id,
@@ -278,7 +279,7 @@ export function MessagingPage() {
     const date = new Date(dateString);
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else if (diffDays < 7) {
@@ -333,9 +334,8 @@ export function MessagingPage() {
                   <div
                     key={conv._id}
                     onClick={() => handleSelectConversation(conv)}
-                    className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
-                      selectedConversation?._id === conv._id ? 'bg-muted' : ''
-                    }`}
+                    className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors ${selectedConversation?._id === conv._id ? 'bg-muted' : ''
+                      }`}
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={conv.otherUser?.avatar} />
@@ -421,35 +421,58 @@ export function MessagingPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message._id}
-                        className={`flex ${message.isMine ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[70%] px-4 py-2 rounded-lg ${
-                            message.isMine
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          <p className="text-sm">{message.content}</p>
-                          <div className={`flex items-center gap-1 mt-1 ${
-                            message.isMine ? 'justify-end' : 'justify-start'
-                          }`}>
-                            <span className="text-xs opacity-70">
-                              {formatTime(message.createdAt)}
-                            </span>
-                            {message.isMine && (
-                              message.read ? (
-                                <CheckCheck className="h-3 w-3 opacity-70" />
-                              ) : (
-                                <Check className="h-3 w-3 opacity-70" />
-                              )
-                            )}
-                          </div>
+                  <div className="space-y-6">
+                    {Object.entries(
+                      messages.reduce((groups, message) => {
+                        const date = new Date(message.createdAt).toLocaleDateString(undefined, {
+                          weekday: 'long', month: 'short', day: 'numeric'
+                        });
+                        if (!groups[date]) groups[date] = [];
+                        groups[date].push(message);
+                        return groups;
+                      }, {} as Record<string, Message[]>)
+                    ).map(([date, dateMessages]) => (
+                      <div key={date} className="space-y-4">
+                        <div className="flex justify-center sticky top-0 z-10 py-1">
+                          <span className="bg-background/80 backdrop-blur-sm border shadow-sm px-3 py-1 rounded-full text-xs font-medium text-muted-foreground">
+                            {date}
+                          </span>
                         </div>
+                        {dateMessages.map((message) => (
+                          <div
+                            key={message._id}
+                            className={`flex ${message.isMine ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${message.isMine
+                                  ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                                  : 'bg-muted rounded-tl-sm'
+                                }`}
+                            >
+                              {message.attachments && message.attachments.length > 0 && (
+                                <div className="flex gap-2 mb-2 flex-wrap">
+                                  {message.attachments.map((url, i) => (
+                                    <img key={i} src={url} alt="attachment" className="max-w-[200px] h-auto rounded-lg border border-primary-foreground/20" />
+                                  ))}
+                                </div>
+                              )}
+                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                              <div className={`flex items-center gap-1.5 mt-1.5 ${message.isMine ? 'justify-end' : 'justify-start'
+                                }`}>
+                                <span className={`text-[10px] ${message.isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                                  {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                                {message.isMine && (
+                                  message.read ? (
+                                    <CheckCheck className="h-3 w-3 text-primary-foreground/70" />
+                                  ) : (
+                                    <Check className="h-3 w-3 text-primary-foreground/70" />
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ))}
                     {typing && (
@@ -465,8 +488,14 @@ export function MessagingPage() {
               </ScrollArea>
 
               {/* Message Input */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t">
-                <div className="flex gap-2">
+              <form onSubmit={handleSendMessage} className="p-4 border-t bg-card">
+                <div className="flex gap-2 items-center">
+                  <Button type="button" variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+                    <Paperclip className="h-5 w-5" />
+                  </Button>
+                  <Button type="button" variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground hidden sm:inline-flex">
+                    <ImageIcon className="h-5 w-5" />
+                  </Button>
                   <Input
                     placeholder="Type a message..."
                     value={messageInput}
@@ -474,10 +503,10 @@ export function MessagingPage() {
                       setMessageInput(e.target.value);
                       handleTyping();
                     }}
-                    className="flex-1"
+                    className="flex-1 rounded-full px-4 bg-muted/50 border-transparent focus-visible:ring-1"
                     disabled={sending}
                   />
-                  <Button type="submit" disabled={!messageInput.trim() || sending}>
+                  <Button type="submit" disabled={!messageInput.trim() || sending} className="rounded-full h-10 w-10 p-0 shrink-0">
                     {sending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (

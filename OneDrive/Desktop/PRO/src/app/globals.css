@@ -120,3 +120,183 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ===============================
+   PREMIUM VISUAL SYSTEM — Part 9
+   =============================== */
+
+/* Card Elevations */
+@layer utilities {
+  .card-elevated {
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.04),
+      0 4px 12px -2px rgb(0 0 0 / 0.06);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .card-elevated:hover {
+    box-shadow:
+      0 4px 8px 0 rgb(0 0 0 / 0.06),
+      0 12px 28px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+  }
+
+  .dark .card-elevated {
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.2),
+      0 4px 12px -2px rgb(0 0 0 / 0.25);
+  }
+  .dark .card-elevated:hover {
+    box-shadow:
+      0 4px 8px 0 rgb(0 0 0 / 0.3),
+      0 12px 28px -4px rgb(0 0 0 / 0.4);
+  }
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: oklch(1 0 0 / 60%);
+  backdrop-filter: blur(16px) saturate(1.8);
+  border: 1px solid oklch(1 0 0 / 20%);
+}
+.dark .glass {
+  background: oklch(0.205 0 0 / 60%);
+  border-color: oklch(1 0 0 / 8%);
+}
+
+/* Gradient Helpers */
+.gradient-primary {
+  background: linear-gradient(135deg, oklch(0.55 0.2 145), oklch(0.45 0.22 200));
+}
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.55 0.2 145), oklch(0.50 0.25 270));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading Skeleton */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.skeleton {
+  background: oklch(0.92 0 0);
+  border-radius: var(--radius);
+  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.dark .skeleton {
+  background: oklch(0.27 0 0);
+}
+
+/* Shimmer overlay for skeletons */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.92 0 0) 25%,
+    oklch(0.96 0 0) 50%,
+    oklch(0.92 0 0) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius);
+}
+.dark .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.27 0 0) 25%,
+    oklch(0.32 0 0) 50%,
+    oklch(0.27 0 0) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Hover Micro-Animations */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+.hover-glow:hover {
+  box-shadow: 0 0 20px oklch(0.55 0.2 145 / 30%);
+}
+.dark .hover-glow:hover {
+  box-shadow: 0 0 20px oklch(0.65 0.2 145 / 25%);
+}
+
+.hover-scale {
+  transition: transform 0.15s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.03);
+}
+
+/* Smooth Page Transitions */
+.page-enter {
+  animation: pageEnter 0.3s ease-out;
+}
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse Dot (for status indicators) */
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+}
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Premium Badge Styling */
+.badge-premium {
+  background: linear-gradient(135deg, oklch(0.78 0.15 85), oklch(0.68 0.2 50));
+  color: oklch(0.2 0 0);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+/* Smooth scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.75 0 0);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0 0);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0 0);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0 0);
+}

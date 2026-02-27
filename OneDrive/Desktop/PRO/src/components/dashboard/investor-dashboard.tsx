@@ -28,12 +28,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
+import {
   TrendingUp, Building2, DollarSign, Users, Zap, Star,
   Filter, ExternalLink, Loader2, Heart, CheckCircle2,
   Target, Briefcase, Clock, FileText, Send, Edit, Save, X,
-  Shield, Bell, Settings as SettingsIcon, Award, Search
+  Shield, Bell, Settings as SettingsIcon, Award, Search, Lock
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { safeLocalStorage, STORAGE_KEYS } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
@@ -121,7 +122,7 @@ const stages = ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'];
 export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   const { user, setUser } = useAuthStore();
   const { setActiveTab: setGlobalTab } = useUIStore();
-  
+
   // State
   const [loading, setLoading] = useState(true);
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
@@ -129,18 +130,18 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [startups, setStartups] = useState<Startup[]>([]);
-  
+
   // Modal states
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [selectedRound, setSelectedRound] = useState<FundingRound | null>(null);
   const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null);
-  
+
   // Form states
   const [investAmount, setInvestAmount] = useState('');
   const [accessMessage, setAccessMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  
+
   // Profile editing
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -154,7 +155,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     ticketSizeMax: user?.ticketSize?.max || 100000,
     accreditationStatus: user?.accreditationStatus || 'pending',
   });
-  
+
   // Settings
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -165,13 +166,13 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
   // Fetch all data
   const fetchData = useCallback(async () => {
-    
+
     setLoading(true);
-    
+
     try {
       // Fetch funding rounds
       const roundsRes = await fetch('/api/funding/create-round?status=open', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (roundsRes.ok) {
         const data = await roundsRes.json();
@@ -180,7 +181,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch user investments
       const investmentsRes = await fetch('/api/funding/invest', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (investmentsRes.ok) {
         const data = await investmentsRes.json();
@@ -189,7 +190,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch access requests (investor's own requests)
       const accessRes = await fetch('/api/funding/request-access', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (accessRes.ok) {
         const data = await accessRes.json();
@@ -198,7 +199,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch favorites
       const favoritesRes = await fetch('/api/favorites', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (favoritesRes.ok) {
         const data = await favoritesRes.json();
@@ -207,7 +208,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
       // Fetch startups for deal flow
       const startupsRes = await fetch('/api/search/startups?limit=20', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
@@ -217,7 +218,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       console.error('Error fetching investor data:', error);
       toast.error('Failed to load data');
     }
-    
+
     setLoading(false);
   }, []);
 
@@ -239,7 +240,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   const toggleFavorite = async (startupId: string) => {
     try {
       const res = await fetch('/api/favorites', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -269,7 +270,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
     try {
       const res = await fetch('/api/funding/request-access', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +301,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   // Handle invest
   const handleInvest = async () => {
     if (!selectedRound || !investAmount) return;
-    
+
     const amount = parseFloat(investAmount);
     if (isNaN(amount) || amount < selectedRound.minInvestment) {
       toast.error(`Minimum investment is $${selectedRound.minInvestment.toLocaleString()}`);
@@ -311,7 +312,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
     try {
       const res = await fetch('/api/funding/invest', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -339,11 +340,11 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   // Handle profile update
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     setSaving(true);
     try {
       const res = await fetch('/api/auth/me', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -402,8 +403,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
   // Dashboard Overview
   if (activeTab === 'dashboard') {
+    const dueDiligenceCount = accessRequests.filter(r => r.status === 'approved' || r.status === 'pending').length;
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 page-enter">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Investor Dashboard</h1>
@@ -415,9 +418,49 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
           </Button>
         </div>
 
+        {/* KYC/Accreditation Warning */}
+        {(user?.verificationLevel || 0) < 3 && (
+          <Card className="border-orange-500/50 bg-orange-500/5">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-orange-500" />
+                <div>
+                  <p className="font-medium">Verification Required</p>
+                  <p className="text-sm text-muted-foreground">
+                    Complete Verification Level 3 to unlock investing capabilities.
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setGlobalTab('settings')}>
+                Verify Now
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="card-elevated">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Active Due Diligence</CardTitle>
+              <FileText className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dueDiligenceCount}</div>
+              <p className="text-xs text-muted-foreground">Approve or pending access</p>
+            </CardContent>
+          </Card>
+          <Card className="card-elevated">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Average Equity</CardTitle>
+              <Target className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{(portfolioStats.totalEquity / Math.max(portfolioStats.activeInvestments, 1)).toFixed(2)}%</div>
+              <p className="text-xs text-muted-foreground">Per investment</p>
+            </CardContent>
+          </Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Invested</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-500" />
@@ -427,7 +470,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <p className="text-xs text-muted-foreground">{portfolioStats.activeInvestments} investments</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Portfolio Equity</CardTitle>
               <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -437,7 +480,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <p className="text-xs text-muted-foreground">Across all investments</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Open Rounds</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -447,7 +490,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <p className="text-xs text-muted-foreground">Available for investment</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
               <Zap className="h-4 w-4 text-primary" />
@@ -532,16 +575,31 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                         <Zap className="h-4 w-4 text-primary" />
                         <span className="text-sm">{round.startupId.trustScore || 50}</span>
                       </div>
-                      <Button 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRound(round);
-                          setInvestAmount(round.minInvestment.toString());
-                          setShowInvestModal(true);
-                        }}
-                      >
-                        Invest
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedRound(round);
+                                  setInvestAmount(round.minInvestment.toString());
+                                  setShowInvestModal(true);
+                                }}
+                                disabled={(user?.verificationLevel || 0) < 3}
+                              >
+                                {(user?.verificationLevel || 0) < 3 ? <Lock className="h-4 w-4 mr-1" /> : null}
+                                Invest
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          {(user?.verificationLevel || 0) < 3 && (
+                            <TooltipContent>
+                              <p>Complete Level 3 verification to invest.</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 ))}
@@ -655,7 +713,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {startups.map((startup) => {
               const accessStatus = getAccessStatus(startup._id);
-              
+
               return (
                 <Card key={startup._id} className="hover:border-primary/50 transition-colors">
                   <CardHeader>
@@ -693,16 +751,16 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                       </div>
                       <Progress value={startup.trustScore} className="h-2" />
                       <div className="flex gap-2 pt-2">
-                        <Button 
-                          className="flex-1" 
+                        <Button
+                          className="flex-1"
                           size="sm"
                           variant="outline"
                           onClick={() => viewStartup(startup._id)}
                         >
                           View Profile
                         </Button>
-                        <Button 
-                          variant={accessStatus === 'approved' ? 'default' : 'outline'} 
+                        <Button
+                          variant={accessStatus === 'approved' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => {
                             if (!accessStatus || accessStatus === 'rejected') {
@@ -720,8 +778,8 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                             'Request Access'
                           )}
                         </Button>
-                        <Button 
-                          variant={favorites.includes(startup._id) ? 'default' : 'outline'} 
+                        <Button
+                          variant={favorites.includes(startup._id) ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => toggleFavorite(startup._id)}
                         >
@@ -776,7 +834,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Portfolio</h1>
-        
+
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
@@ -846,9 +904,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                       </div>
                       <Badge className={
                         inv.status === 'completed' ? 'bg-green-500' :
-                        inv.status === 'pending' ? 'bg-yellow-500' :
-                        inv.status === 'processing' ? 'bg-blue-500' :
-                        'bg-red-500'
+                          inv.status === 'pending' ? 'bg-yellow-500' :
+                            inv.status === 'processing' ? 'bg-blue-500' :
+                              'bg-red-500'
                       }>
                         {inv.status}
                       </Badge>
@@ -872,14 +930,14 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Investments</h1>
-        
+
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active">Active Rounds ({openRounds.length})</TabsTrigger>
             <TabsTrigger value="pending">Pending ({pendingInvestments.length})</TabsTrigger>
             <TabsTrigger value="history">History ({completedInvestments.length})</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="active" className="space-y-4 mt-4">
             {loading ? (
               <div className="flex justify-center py-8">
@@ -916,15 +974,15 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="w-32">
-                          <Progress 
-                            value={(round.raisedAmount / round.targetAmount) * 100} 
-                            className="h-2" 
+                          <Progress
+                            value={(round.raisedAmount / round.targetAmount) * 100}
+                            className="h-2"
                           />
                           <p className="text-xs text-muted-foreground mt-1 text-center">
                             {((round.raisedAmount / round.targetAmount) * 100).toFixed(0)}%
                           </p>
                         </div>
-                        <Button 
+                        <Button
                           size="sm"
                           onClick={() => {
                             setSelectedRound(round);
@@ -941,7 +999,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               ))
             )}
           </TabsContent>
-          
+
           <TabsContent value="pending" className="space-y-4 mt-4">
             {pendingInvestments.length === 0 ? (
               <Card>
@@ -973,7 +1031,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               ))
             )}
           </TabsContent>
-          
+
           <TabsContent value="history" className="space-y-4 mt-4">
             {completedInvestments.length === 0 ? (
               <Card>
@@ -1083,7 +1141,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
             </Button>
           )}
         </div>
-        
+
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-1">
             <CardContent className="pt-6 text-center">
@@ -1106,7 +1164,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Investment Profile</CardTitle>
@@ -1124,7 +1182,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     disabled={!isEditing}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Investment Thesis</Label>
                   <Textarea
@@ -1135,7 +1193,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     disabled={!isEditing}
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Location</Label>
@@ -1148,8 +1206,8 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                   </div>
                   <div className="space-y-2">
                     <Label>Accreditation Status</Label>
-                    <Select 
-                      value={profile.accreditationStatus} 
+                    <Select
+                      value={profile.accreditationStatus}
                       onValueChange={(v) => setProfile({ ...profile, accreditationStatus: v })}
                       disabled={!isEditing}
                     >
@@ -1164,7 +1222,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     </Select>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Ticket Size Range</Label>
                   <div className="grid grid-cols-2 gap-4">
@@ -1190,7 +1248,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Preferred Industries</Label>
                   <div className="flex flex-wrap gap-2">
@@ -1214,7 +1272,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Preferred Stages</Label>
                   <div className="flex flex-wrap gap-2">
@@ -1238,7 +1296,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     ))}
                   </div>
                 </div>
-                
+
                 {isEditing && (
                   <div className="flex gap-2 pt-4">
                     <Button type="submit" disabled={saving}>
@@ -1279,18 +1337,18 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 }
 
 // Agreements Section Component
-function AgreementsSection({}) {
+function AgreementsSection({ }) {
   const [agreements, setAgreements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [signingId, setSigningId] = useState<string | null>(null);
 
   const fetchAgreements = useCallback(async () => {
-    
+
     setLoading(true);
-    
+
     try {
       const res = await fetch('/api/agreements', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();
@@ -1299,7 +1357,7 @@ function AgreementsSection({}) {
     } catch (error) {
       console.error('Error fetching agreements:', error);
     }
-    
+
     setLoading(false);
   }, []);
 
@@ -1310,10 +1368,10 @@ function AgreementsSection({}) {
 
   const handleSign = async (agreementId: string) => {
     setSigningId(agreementId);
-    
+
     try {
       const res = await fetch('/api/agreements/sign', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1349,7 +1407,7 @@ function AgreementsSection({}) {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Agreements</h1>
-      
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
@@ -1370,7 +1428,7 @@ function AgreementsSection({}) {
             const isSigned = agreement.signedBy?.some(
               (s: any) => s.userId?._id === s.userId || s.userId
             );
-            
+
             return (
               <Card key={agreement._id}>
                 <CardContent className="p-4">

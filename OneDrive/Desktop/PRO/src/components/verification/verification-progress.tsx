@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  CheckCircle2, Circle, Clock, Upload, ExternalLink, 
+import {
+  CheckCircle2, Circle, Clock, Upload, ExternalLink,
   FileText, AlertCircle, ChevronRight, Loader2, FileCheck,
   PenTool, Award
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,7 +86,25 @@ export function VerificationProgress() {
   const [selectedLevel, setSelectedLevel] = useState<VerificationLevel | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<string>('');
-  
+
+  // Gamification states
+  const [prevLevel, setPrevLevel] = useState<number>(-1);
+
+  const triggerConfetti = useCallback(() => {
+    const duration = 2500;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      const particleCount = 40 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  }, []);
+
   // Form states
   const [documentType, setDocumentType] = useState('id_front');
   const [documentUrl, setDocumentUrl] = useState('');
@@ -97,12 +116,19 @@ export function VerificationProgress() {
 
     try {
       const response = await fetch('/api/verification', {
-          credentials: 'include',
+        credentials: 'include',
       });
 
       if (response.ok) {
         const data = await response.json();
         setVerificationStatus(data);
+
+        setPrevLevel((currentPrev) => {
+          if (currentPrev !== -1 && data.currentLevel > currentPrev) {
+            triggerConfetti();
+          }
+          return data.currentLevel;
+        });
       }
     } catch (error) {
       console.error('Error fetching verification status:', error);
@@ -120,7 +146,7 @@ export function VerificationProgress() {
     setSubmitting(true);
     try {
       const response = await fetch('/api/verification', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,11 +189,11 @@ export function VerificationProgress() {
       toast.error('Please provide both file URL and file name');
       return;
     }
-    
+
     setSubmitting(true);
     try {
       const response = await fetch('/api/verification/upload-resume', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,11 +229,11 @@ export function VerificationProgress() {
       toast.error('Please enter your full name as signature');
       return;
     }
-    
+
     setSubmitting(true);
     try {
       const response = await fetch('/api/verification/sign-nda', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -355,10 +381,10 @@ export function VerificationProgress() {
             return (
               <div
                 key={level.level}
-                className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
-                  active ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
-                } ${locked ? 'opacity-50' : ''}`}
+                className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-500 relative overflow-hidden ${active ? 'bg-primary/5 border-primary/40 shadow-[0_0_20px_-5px_hsl(var(--primary))] ring-1 ring-primary/20 scale-[1.01]' : 'bg-muted/30 border-transparent hover:border-primary/20'
+                  } ${locked ? 'opacity-50 grayscale select-none cursor-not-allowed' : ''}`}
               >
+                {active && <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent pointer-events-none opacity-50 animate-pulse" />}
                 {/* Status Indicator */}
                 <div className={`flex-shrink-0 mt-1 ${statusColors[level.status]}`}>
                   {completed ? (
@@ -396,9 +422,9 @@ export function VerificationProgress() {
                   {level.resumeUrl && (
                     <div className="flex items-center gap-2 mt-2">
                       <FileCheck className="h-4 w-4 text-green-500" />
-                      <a 
-                        href={level.resumeUrl} 
-                        target="_blank" 
+                      <a
+                        href={level.resumeUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-primary hover:underline"
                       >
@@ -430,12 +456,12 @@ export function VerificationProgress() {
                     size="sm"
                     onClick={() => openDialog(level, level.type)}
                   >
-                    {level.status === 'rejected' ? 'Resubmit' : 
-                     level.status === 'submitted' || level.status === 'under_review' ? 'View' : 
-                     level.type === 'skill_test' ? 'Take Test' :
-                     level.type === 'resume' ? 'Upload' :
-                     level.type === 'kyc' ? 'Upload' :
-                     level.type === 'nda' ? 'Sign' : 'Start'}
+                    {level.status === 'rejected' ? 'Resubmit' :
+                      level.status === 'submitted' || level.status === 'under_review' ? 'View' :
+                        level.type === 'skill_test' ? 'Take Test' :
+                          level.type === 'resume' ? 'Upload' :
+                            level.type === 'kyc' ? 'Upload' :
+                              level.type === 'nda' ? 'Sign' : 'Start'}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 )}
@@ -542,7 +568,7 @@ export function VerificationProgress() {
           {dialogType === 'skill_test' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Complete a skill assessment test to verify your abilities. 
+                Complete a skill assessment test to verify your abilities.
                 You need to score at least 70% to pass.
               </p>
               <Button className="w-full" onClick={handleSkillTestStart}>
@@ -558,7 +584,7 @@ export function VerificationProgress() {
               <div className="p-4 border rounded-lg bg-muted/50 text-sm">
                 <h4 className="font-medium mb-2">Non-Disclosure Agreement</h4>
                 <p className="text-muted-foreground">
-                  By signing this NDA, you agree to keep all confidential information shared 
+                  By signing this NDA, you agree to keep all confidential information shared
                   through the CollabHub platform private and not disclose it to any third parties.
                 </p>
               </div>

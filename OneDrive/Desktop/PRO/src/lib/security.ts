@@ -54,6 +54,10 @@ export interface RateLimitConfig {
 export const RATE_LIMITS = {
   login: { windowMs: 60000, maxRequests: 5, message: 'Too many login attempts. Please try again later.' },
   register: { windowMs: 3600000, maxRequests: 3, message: 'Too many registration attempts. Please try again later.' },
+  verifyEmail: { windowMs: 60000, maxRequests: 5, message: 'Too many verification attempts. Please try again later.' },
+  resendOtp: { windowMs: 300000, maxRequests: 3, message: 'Too many resend requests. Please wait before trying again.' },
+  forgotPassword: { windowMs: 300000, maxRequests: 3, message: 'Too many password reset requests.' },
+  resetPassword: { windowMs: 60000, maxRequests: 5, message: 'Too many reset attempts.' },
   api: { windowMs: 60000, maxRequests: 100, message: 'Too many requests. Please slow down.' },
   search: { windowMs: 60000, maxRequests: 30, message: 'Too many search requests.' },
   message: { windowMs: 60000, maxRequests: 20, message: 'Too many messages sent.' },

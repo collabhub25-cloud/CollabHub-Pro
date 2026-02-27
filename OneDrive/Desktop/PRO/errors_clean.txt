@@ -1,0 +1,12 @@
+src/app/api/alliances/accept/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Alliance'.
+src/app/api/alliances/mutual/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Alliance'.
+src/app/api/alliances/reject/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Alliance'.
+src/app/api/alliances/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Alliance'.
+src/app/api/alliances/status/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Alliance'.
+src/app/api/favorites/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Favorite'.
+src/app/api/funding/invest/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Investment'.
+src/app/api/funding/request-access/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'AccessRequest'.
+src/app/api/funding/verify/route.ts(3,10): error TS2305: Module '"@/lib/models"' has no exported member 'Investment'.
+src/app/api/users/profile/[id]/route.ts(3,49): error TS2305: Module '"@/lib/models"' has no exported member 'Alliance'.
+src/app/api/verification/skill-test/route.ts(3,44): error TS2305: Module '"@/lib/models"' has no exported member 'SkillTest'.
+src/app/api/verification/skill-test/route.ts(3,55): error TS2305: Module '"@/lib/models"' has no exported member 'UserTestResult'.

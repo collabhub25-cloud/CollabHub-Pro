@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
+import { TrustBadge } from '@/components/profile/trust-badge';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
 import { toast } from 'sonner';
@@ -285,11 +286,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                   <Shield className="h-3 w-3 mr-1" />
                   Level {profile.verificationLevel} - {verificationBadge.label}
                 </Badge>
-                <div className="flex items-center gap-1 text-sm">
-                  <Star className="h-4 w-4 text-yellow-500" />
-                  <span className="font-medium">{profile.trustScore}</span>
-                  <span className="text-muted-foreground">Trust Score</span>
-                </div>
+                <TrustBadge score={profile.trustScore || 0} />
                 {profile.allianceCount !== undefined && profile.allianceCount > 0 && (
                   <div className="flex items-center gap-1 text-sm">
                     <Users className="h-4 w-4 text-primary" />
@@ -369,6 +366,59 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                 </div>
               )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Trust Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Recent Trust Activity
+          </CardTitle>
+          <CardDescription>What affects this trust score</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {profile.verificationLevel >= 1 && (
+              <div className="flex items-center gap-3 text-sm">
+                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                <span className="text-muted-foreground">Email verified</span>
+                <span className="ml-auto text-green-600 font-medium">+5</span>
+              </div>
+            )}
+            {profile.verificationLevel >= 2 && (
+              <div className="flex items-center gap-3 text-sm">
+                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                <span className="text-muted-foreground">Identity verified (Level 2)</span>
+                <span className="ml-auto text-green-600 font-medium">+10</span>
+              </div>
+            )}
+            {profile.verificationLevel >= 3 && (
+              <div className="flex items-center gap-3 text-sm">
+                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                <span className="text-muted-foreground">Full KYC cleared (Level 3+)</span>
+                <span className="ml-auto text-green-600 font-medium">+15</span>
+              </div>
+            )}
+            {(profile.allianceCount || 0) > 0 && (
+              <div className="flex items-center gap-3 text-sm">
+                <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                <span className="text-muted-foreground">{profile.allianceCount} alliance{(profile.allianceCount || 0) > 1 ? 's' : ''} formed</span>
+                <span className="ml-auto text-blue-600 font-medium">+{(profile.allianceCount || 0) * 2}</span>
+              </div>
+            )}
+            {(profile.trustScore || 0) >= 50 && (
+              <div className="flex items-center gap-3 text-sm">
+                <div className="h-2 w-2 rounded-full bg-purple-500 shrink-0" />
+                <span className="text-muted-foreground">Agreements & milestones completed</span>
+                <span className="ml-auto text-purple-600 font-medium">+{Math.max(0, (profile.trustScore || 0) - 30)}</span>
+              </div>
+            )}
+            {(profile.trustScore || 0) === 0 && profile.verificationLevel === 0 && (
+              <p className="text-sm text-muted-foreground">No trust activity yet. Verify your email to start building trust.</p>
+            )}
           </div>
         </CardContent>
       </Card>

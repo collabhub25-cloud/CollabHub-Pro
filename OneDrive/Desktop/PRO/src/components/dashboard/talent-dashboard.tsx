@@ -13,13 +13,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { 
+import {
   Briefcase, CheckCircle2, Clock, DollarSign, Award, Zap,
   Search, Building2, Users, Loader2, ExternalLink, FileText,
-  Edit, Save, X, Settings, Bell, Shield, Trash2
+  Edit, Save, X, Settings, Bell, Shield, Trash2, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
+import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
 
 interface Application {
   _id: string;
@@ -39,6 +40,9 @@ interface Milestone {
   status: string;
   dueDate: string;
   startupId: { _id: string; name: string };
+  paymentStatus?: string;
+  paymentProofUrl?: string;
+  disputeReason?: string;
 }
 
 interface Agreement {
@@ -91,6 +95,9 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
   const verificationSteps = [
     { level: 0, title: 'Profile Complete', completed: true },
     { level: 1, title: 'Skill Test', completed: user?.verificationLevel && user.verificationLevel >= 1 },
@@ -103,7 +110,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
     try {
       // Fetch applications
       const appsRes = await fetch('/api/applications', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (appsRes.ok) {
         const data = await appsRes.json();
@@ -112,7 +119,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
       // Fetch milestones
       const milestonesRes = await fetch('/api/milestones?assigned=true', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (milestonesRes.ok) {
         const data = await milestonesRes.json();
@@ -121,7 +128,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
       // Fetch agreements
       const agreementsRes = await fetch('/api/agreements', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (agreementsRes.ok) {
         const data = await agreementsRes.json();
@@ -130,7 +137,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
       // Fetch startups for browsing
       const startupsRes = await fetch('/api/startups?all=true&limit=10', {
-          credentials: 'include',
+        credentials: 'include',
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
@@ -151,11 +158,11 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     setSaving(true);
     try {
       const res = await fetch('/api/auth/me', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -213,9 +220,15 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
     const pendingApplications = applications.filter(a => a.status === 'pending');
     const acceptedApplications = applications.filter(a => a.status === 'accepted');
     const activeAgreements = agreements.filter(a => a.status === 'active');
-    
+
+    // Intelligence Widgets Data
+    const totalEarnings = completedMilestones.reduce((sum, m) => sum + (m.amount || 0), 0);
+    const nextDeadline = activeMilestones.length > 0
+      ? new Date(Math.min(...activeMilestones.map(m => new Date(m.dueDate).getTime()))).toLocaleDateString()
+      : 'No assignments';
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 page-enter">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Welcome back, {user?.name?.split(' ')[0]}!</h1>
@@ -224,8 +237,8 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
               <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -257,6 +270,26 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${totalEarnings.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">From completed tasks</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Next Deadline</CardTitle>
+              <Calendar className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold truncate">{nextDeadline}</div>
+              <p className="text-xs text-muted-foreground">Upcoming milestone</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
               <Zap className="h-4 w-4 text-primary" />
             </CardHeader>
@@ -281,9 +314,8 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               {verificationSteps.map((step, index) => (
                 <div key={step.level} className="flex items-center">
                   <div className="flex flex-col items-center">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      step.completed ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    }`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${step.completed ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}>
                       {step.completed ? <CheckCircle2 className="h-5 w-5" /> : step.level}
                     </div>
                     <span className="text-xs mt-2 text-center">{step.title}</span>
@@ -353,8 +385,8 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                           <Zap className="h-3 w-3" />
                           {startup.trustScore}
                         </Badge>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => {
                             setGlobalTab('search');
@@ -387,7 +419,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
             </Button>
           )}
         </div>
-        
+
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-1">
             <CardContent className="pt-6 text-center">
@@ -410,7 +442,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Profile Details</CardTitle>
@@ -487,7 +519,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                     />
                   </div>
                 </div>
-                
+
                 {isEditing && (
                   <div className="flex gap-2 pt-4">
                     <Button type="submit" disabled={saving}>
@@ -632,6 +664,14 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Active Tasks</h1>
+        {selectedMilestone && (
+          <MilestonePaymentModal
+            milestone={selectedMilestone}
+            isOpen={isPaymentModalOpen}
+            onClose={() => setIsPaymentModalOpen(false)}
+            onSuccess={fetchData}
+          />
+        )}
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active">In Progress ({activeMilestones.length})</TabsTrigger>
@@ -663,11 +703,23 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                           <span className="text-sm text-muted-foreground">Due: {new Date(milestone.dueDate).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-green-600">${milestone.amount.toLocaleString()}</p>
-                        <Badge variant={milestone.status === 'in_progress' ? 'default' : 'secondary'}>
-                          {milestone.status === 'in_progress' ? 'In Progress' : 'Pending'}
-                        </Badge>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-green-600">${milestone.amount.toLocaleString()}</p>
+                          <Badge variant={milestone.status === 'in_progress' ? 'default' : 'secondary'}>
+                            {milestone.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                          </Badge>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMilestone(milestone);
+                            setIsPaymentModalOpen(true);
+                          }}
+                        >
+                          Manage Payment
+                        </Button>
                       </div>
                     </div>
                   </CardContent>

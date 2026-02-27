@@ -45,6 +45,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate OTP for email verification
+    const { randomInt, createHash } = await import('crypto');
+    const otp = randomInt(100000, 999999).toString();
+    const otpHash = createHash('sha256').update(otp).digest('hex');
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     // SECURITY: Create user with only allowed fields (no mass assignment)
     const passwordHash = await hashPassword(password);
     const user = await User.create({
@@ -56,8 +62,20 @@ export async function POST(request: NextRequest) {
       trustScore: 50,
       kycStatus: 'pending',
       isEmailVerified: false,
+      verificationOtpHash: otpHash,
+      verificationOtpExpires: otpExpires,
+      verificationOtpAttempts: 0,
       skills: [],
     });
+
+    // Send verification email
+    try {
+      const { sendVerificationEmail } = await import('@/lib/mailer');
+      await sendVerificationEmail(user.email, otp);
+    } catch (err) {
+      console.error('Failed to send verification email:', err);
+      // Proceed without failing registration; user can hit resend later
+    }
 
     // Generate tokens
     const tokenPayload = {

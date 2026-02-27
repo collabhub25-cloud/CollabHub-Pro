@@ -104,7 +104,9 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
         onClose();
       } else {
         if (data.details && Array.isArray(data.details) && data.details.length > 0) {
-          toast.error(data.details[0].message || 'Validation failed');
+          toast.error(typeof data.details[0] === 'string' ? data.details[0] : (data.details[0].message || 'Validation failed'));
+        } else if (data.fields && Object.keys(data.fields).length > 0) {
+          toast.error(Object.values(data.fields)[0] as string);
         } else {
           toast.error(data.error || 'Registration failed');
         }

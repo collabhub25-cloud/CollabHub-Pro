@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Search, Filter, ChevronDown, X, Loader2, Users, Building2,
-  TrendingUp, MapPin, Star, Briefcase, DollarSign, FileText, Send
+  TrendingUp, MapPin, Star, Briefcase, DollarSign, FileText, Send, Lock
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,8 @@ import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
 import { ApplyModal } from '@/components/applications/apply-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { TrustBadge } from '@/components/profile/trust-badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 
@@ -375,10 +377,7 @@ export function SearchPage() {
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold">{result.name}</h3>
                               {result.trustScore !== undefined && (
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                  <Star className="h-3 w-3" />
-                                  {result.trustScore}
-                                </Badge>
+                                <TrustBadge score={result.trustScore} />
                               )}
                               {result.verificationLevel !== undefined && result.verificationLevel > 0 && (
                                 <Badge variant="outline" className="text-xs">
@@ -467,23 +466,41 @@ export function SearchPage() {
 
                             {/* Apply button for Talent viewing Startups */}
                             {activeTab === 'startups' && isTalent && user?._id !== result.founderId?._id && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleApply(result)}
-                                disabled={!result.isActive || !result.rolesNeeded?.length || result.hasApplied}
-                              >
-                                {result.hasApplied ? (
-                                  <>
-                                    <FileText className="h-4 w-4 mr-1" />
-                                    Applied
-                                  </>
-                                ) : (
-                                  <>
-                                    <Send className="h-4 w-4 mr-1" />
-                                    Apply
-                                  </>
-                                )}
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleApply(result)}
+                                        disabled={!result.isActive || !result.rolesNeeded?.length || result.hasApplied || (user?.verificationLevel || 0) < 2}
+                                      >
+                                        {(user?.verificationLevel || 0) < 2 ? (
+                                          <>
+                                            <Lock className="h-4 w-4 mr-1" />
+                                            Lv.2 Required
+                                          </>
+                                        ) : result.hasApplied ? (
+                                          <>
+                                            <FileText className="h-4 w-4 mr-1" />
+                                            Applied
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Send className="h-4 w-4 mr-1" />
+                                            Apply
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </TooltipTrigger>
+                                  {(user?.verificationLevel || 0) < 2 && (
+                                    <TooltipContent>
+                                      <p>You need Verification Level 2 to apply to startups.</p>
+                                    </TooltipContent>
+                                  )}
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
 
                             {/* Alliance button for Startups - connect with founder */}

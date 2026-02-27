@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  UserPlus, UserCheck, Clock, X, Check, Loader2, Users
+  UserPlus, UserCheck, Clock, X, Check, Loader2, Users, Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store';
 import { apiFetch } from '@/lib/api-client';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AllianceButtonProps {
   targetUserId: string;
@@ -318,28 +319,42 @@ export function AllianceButton({
 
     case 'none':
     default:
+      const isLocked = (user?.verificationLevel || 0) < 2;
       return (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="default"
-            className="gap-2"
-            onClick={sendRequest}
-            disabled={actionLoading}
-          >
-            {actionLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <UserPlus className="h-4 w-4" />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="default"
+                  className="gap-2"
+                  onClick={sendRequest}
+                  disabled={actionLoading || isLocked}
+                >
+                  {actionLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isLocked ? (
+                    <Lock className="h-4 w-4" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+                  {!compact && (isLocked ? 'Lv.2 Required' : 'Send Alliance Request')}
+                </Button>
+                {showMutualCount && mutualCount > 0 && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Users className="h-3 w-3" />
+                    {mutualCount} mutual
+                  </Badge>
+                )}
+              </div>
+            </TooltipTrigger>
+            {isLocked && (
+              <TooltipContent>
+                <p>You need Verification Level 2 to send alliance requests.</p>
+              </TooltipContent>
             )}
-            {!compact && 'Send Alliance Request'}
-          </Button>
-          {showMutualCount && mutualCount > 0 && (
-            <Badge variant="secondary" className="gap-1">
-              <Users className="h-3 w-3" />
-              {mutualCount} mutual
-            </Badge>
-          )}
-        </div>
+          </Tooltip>
+        </TooltipProvider>
       );
   }
 }
