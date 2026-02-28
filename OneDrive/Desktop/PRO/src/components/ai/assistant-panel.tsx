@@ -31,11 +31,15 @@ export function AssistantPanel() {
         }
     }, [isOpen]);
 
+    const sendingRef = useRef(false);
+
     if (!user) return null;
 
     const handleSend = async () => {
         const msg = input.trim();
-        if (!msg || isLoading) return;
+        if (!msg || isLoading || sendingRef.current) return;
+
+        sendingRef.current = true;
 
         const userMessage: Message = {
             id: `user-${Date.now()}`,
@@ -57,13 +61,18 @@ export function AssistantPanel() {
 
             const data = await response.json();
 
-            const assistantMessage: Message = {
-                id: `assistant-${Date.now()}`,
-                role: 'assistant',
-                content: data.response || data.error || 'Could not generate a response.',
-            };
-
-            setMessages((prev) => [...prev, assistantMessage]);
+            setMessages((prev) => {
+                // Guard against duplicate assistant responses
+                const lastMsg = prev[prev.length - 1];
+                if (lastMsg?.role === 'assistant' && lastMsg?.content === (data.response || data.error)) {
+                    return prev;
+                }
+                return [...prev, {
+                    id: `assistant-${Date.now()}`,
+                    role: 'assistant' as const,
+                    content: data.response || data.error || 'Could not generate a response.',
+                }];
+            });
         } catch {
             setMessages((prev) => [
                 ...prev,
@@ -71,6 +80,7 @@ export function AssistantPanel() {
             ]);
         } finally {
             setIsLoading(false);
+            sendingRef.current = false;
         }
     };
 

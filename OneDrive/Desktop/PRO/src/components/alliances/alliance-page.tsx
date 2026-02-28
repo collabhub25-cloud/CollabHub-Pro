@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
-import { 
+import {
   Users, UserPlus, Clock, Check, X, MessageSquare, Loader2, UserCheck,
   Building2, Briefcase, TrendingUp
 } from 'lucide-react';
@@ -57,6 +57,7 @@ const roleIcons: Record<string, React.ReactNode> = {
 
 export function AlliancePage() {
   const { user } = useAuthStore();
+  const { setActiveTab: setGlobalTab } = useUIStore();
   const [activeTab, setActiveTab] = useState('accepted');
   const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [counts, setCounts] = useState<AllianceCounts>({ accepted: 0, received: 0, sent: 0 });
@@ -64,24 +65,24 @@ export function AlliancePage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchAlliances = useCallback(async (type: string) => {
-    if (!user ) {
+    if (!user) {
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     try {
       const res = await fetch(
         `/api/alliances?type=${type}`, {
-          credentials: 'include' }
+        credentials: 'include'
+      }
       );
-      
+
       if (res.ok) {
         const data = await res.json();
         setAlliances(data.alliances || []);
         setCounts(data.counts || { accepted: 0, received: 0, sent: 0 });
       } else if (res.status === 401) {
-        // Token expired or invalid - show re-login prompt
         console.error('Authentication expired for alliances');
         toast.error('Session expired. Please log in again.');
       } else {
@@ -96,12 +97,10 @@ export function AlliancePage() {
     }
   }, [user]);
 
-  // Fetch on mount
   useEffect(() => {
     fetchAlliances(activeTab);
   }, [fetchAlliances, activeTab]);
 
-  // Handle tab changes
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     fetchAlliances(tab);
@@ -111,16 +110,14 @@ export function AlliancePage() {
     setActionLoading(allianceId);
     try {
       const res = await fetch('/api/alliances/accept', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ allianceId }),
       });
 
       const data = await res.json();
-      
+
       if (res.ok) {
         toast.success('Alliance accepted! Trust score +2');
         fetchAlliances(activeTab);
@@ -138,16 +135,14 @@ export function AlliancePage() {
     setActionLoading(allianceId);
     try {
       const res = await fetch('/api/alliances/reject', {
-          credentials: 'include',
+        credentials: 'include',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ allianceId }),
       });
 
       const data = await res.json();
-      
+
       if (res.ok) {
         toast.success('Request declined');
         fetchAlliances(activeTab);
@@ -162,17 +157,17 @@ export function AlliancePage() {
   };
 
   const removeAlliance = async (allianceId: string) => {
-    if (!confirm('Remove this alliance?') ) return;
-    
+    if (!confirm('Remove this alliance?')) return;
+
     setActionLoading(allianceId);
     try {
       const res = await fetch(`/api/alliances?id=${allianceId}`, {
-          credentials: 'include',
+        credentials: 'include',
         method: 'DELETE',
       });
 
       const data = await res.json();
-      
+
       if (res.ok) {
         toast.success('Alliance removed');
         fetchAlliances(activeTab);
@@ -187,8 +182,8 @@ export function AlliancePage() {
   };
 
   const startMessage = (partnerId: string) => {
-    // Navigate to messages with this user
     safeLocalStorage.setItem(STORAGE_KEYS.MESSAGE_USER, partnerId);
+    setGlobalTab('messages');
     window.dispatchEvent(new CustomEvent('navigateToMessages'));
   };
 
@@ -283,7 +278,7 @@ export function AlliancePage() {
                 {alliances.map((alliance) => {
                   const partner = getPartner(alliance);
                   const verificationBadge = getVerificationBadge(partner.verificationLevel);
-                  
+
                   return (
                     <Card key={alliance._id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
@@ -304,8 +299,8 @@ export function AlliancePage() {
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge 
-                                  variant="secondary" 
+                                <Badge
+                                  variant="secondary"
                                   className={`text-xs ${verificationBadge.color} text-white`}
                                 >
                                   {verificationBadge.label}
@@ -321,7 +316,7 @@ export function AlliancePage() {
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             {alliance.type === 'accepted' && (
                               <>
@@ -349,7 +344,7 @@ export function AlliancePage() {
                                 </Button>
                               </>
                             )}
-                            
+
                             {alliance.type === 'received' && (
                               <>
                                 <Button
@@ -378,7 +373,7 @@ export function AlliancePage() {
                                 </Button>
                               </>
                             )}
-                            
+
                             {alliance.type === 'sent' && (
                               <Badge variant="secondary" className="gap-1">
                                 <Clock className="h-3 w-3" />

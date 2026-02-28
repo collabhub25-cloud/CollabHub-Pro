@@ -186,9 +186,10 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
   };
 
   const handleMessage = () => {
-    if (profile?.conversationId) {
+    if (profile?._id) {
+      safeLocalStorage.setItem(STORAGE_KEYS.MESSAGE_USER, profile._id);
       setActiveTab('messages');
-      safeLocalStorage.setItem(STORAGE_KEYS.OPEN_CONVERSATION, profile.conversationId);
+      window.dispatchEvent(new CustomEvent('navigateToMessages'));
     }
   };
 
