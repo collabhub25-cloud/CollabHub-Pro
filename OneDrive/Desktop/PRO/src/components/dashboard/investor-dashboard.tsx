@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -395,10 +396,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     return request?.status || null;
   };
 
-  // View startup profile
+  // View startup detail page
+  const router = useRouter();
   const viewStartup = (startupId: string) => {
-    safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, startupId);
-    setGlobalTab('profile');
+    router.push(`/startup/${startupId}`);
   };
 
   // Dashboard Overview

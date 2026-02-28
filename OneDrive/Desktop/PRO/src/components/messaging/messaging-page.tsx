@@ -255,18 +255,58 @@ export function MessagingPage() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!messageInput.trim() || !selectedConversation?.otherUser || !socket) return;
+    if (!messageInput.trim() || !selectedConversation?.otherUser || sending) return;
 
+    const tempId = `temp-${Date.now()}`;
+    const content = messageInput.trim();
+
+    // Optimistic: add message immediately
+    const tempMessage: Message = {
+      _id: tempId,
+      senderId: user?._id || '',
+      receiverId: selectedConversation.otherUser._id,
+      content,
+      createdAt: new Date().toISOString(),
+      isMine: true,
+    };
+
+    setMessages(prev => [...prev, tempMessage]);
+    setMessageInput('');
     setSending(true);
 
-    // Emit via WebSocket
-    socket.emit('message:send', {
-      receiverId: selectedConversation.otherUser._id,
-      content: messageInput.trim(),
-    });
+    try {
+      const response = await fetch('/api/messages/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          receiverId: selectedConversation.otherUser._id,
+          content,
+        }),
+      });
 
-    setMessageInput('');
-    setSending(false);
+      if (response.ok) {
+        const data = await response.json();
+        // Replace optimistic message with real one
+        setMessages(prev =>
+          prev.map(m => m._id === tempId ? { ...data.data, isMine: true } : m)
+        );
+        // Refresh conversation list for updated lastMessage
+        fetchConversations();
+      } else {
+        const err = await response.json();
+        console.error('Message send failed:', err.error);
+        toast.error(err.error || 'Failed to send message');
+        // Remove optimistic message
+        setMessages(prev => prev.filter(m => m._id !== tempId));
+      }
+    } catch (error) {
+      console.error('Message send error:', error);
+      toast.error('Failed to send message');
+      setMessages(prev => prev.filter(m => m._id !== tempId));
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleTyping = () => {
@@ -445,8 +485,8 @@ export function MessagingPage() {
                           >
                             <div
                               className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${message.isMine
-                                  ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                                  : 'bg-muted rounded-tl-sm'
+                                ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                                : 'bg-muted rounded-tl-sm'
                                 }`}
                             >
                               {message.attachments && message.attachments.length > 0 && (
