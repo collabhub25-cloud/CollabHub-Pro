@@ -4,7 +4,7 @@ export default function TalentSignup() {
     return (
         <RoleSignupPage
             role="talent"
-            accent="text-[#6D33D6]"
+            accent="#8A6C8F"
             title="Talent"
             subtitle="Create your account to join verified startups."
         />

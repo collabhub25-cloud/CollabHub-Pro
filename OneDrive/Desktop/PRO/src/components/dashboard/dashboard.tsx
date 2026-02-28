@@ -233,26 +233,30 @@ export function Dashboard({ onLogout }: DashboardProps) {
           <div className="flex flex-col h-full">
             {/* Logo */}
             <div className="flex items-center gap-2 p-4 border-b">
-              <div className="h-8 w-8 rounded-md bg-foreground flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-background">C·H</span>
-              </div>
-              {sidebarOpen && <span className="text-base font-semibold tracking-wide">Collab·Hub</span>}
+              {sidebarOpen ? (
+                <span className="text-base font-medium" style={{ letterSpacing: '0.3px' }}>
+                  Collab<span className="role-accent-text">·</span>Hub
+                </span>
+              ) : (
+                <span className="text-sm font-medium mx-auto">C<span className="role-accent-text">·</span>H</span>
+              )}
             </div>
 
             {/* Navigation */}
             <ScrollArea className="flex-1 py-4">
-              <nav className="space-y-1 px-2">
+              <nav className="space-y-0.5 px-2">
                 {navItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${activeTab === item.id
-                      ? 'bg-muted text-foreground'
-                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    className={`w-full flex items-center gap-3 px-3 py-2 transition-colors ${activeTab === item.id
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                       }`}
+                    style={activeTab === item.id ? { borderLeft: '2px solid var(--role-accent)', paddingLeft: '10px' } : { borderLeft: '2px solid transparent', paddingLeft: '10px' }}
                   >
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
-                    {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    {sidebarOpen && <span className="text-sm">{item.label}</span>}
                   </button>
                 ))}
               </nav>
