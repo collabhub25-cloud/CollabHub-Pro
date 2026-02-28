@@ -233,10 +233,10 @@ export function Dashboard({ onLogout }: DashboardProps) {
           <div className="flex flex-col h-full">
             {/* Logo */}
             <div className="flex items-center gap-2 p-4 border-b">
-              <div className="h-8 w-8 rounded-lg role-accent-bg flex items-center justify-center flex-shrink-0">
-                <Building2 className="h-5 w-5 text-white" />
+              <div className="h-8 w-8 rounded-md bg-foreground flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-bold text-background">C·H</span>
               </div>
-              {sidebarOpen && <span className="text-xl font-bold">CollabHub</span>}
+              {sidebarOpen && <span className="text-base font-semibold tracking-wide">Collab·Hub</span>}
             </div>
 
             {/* Navigation */}
@@ -246,9 +246,9 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === item.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${activeTab === item.id
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                       }`}
                   >
                     <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -260,16 +260,16 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
             {/* Subscription Upgrade CTA - ONLY FOR FOUNDERS */}
             {sidebarOpen && user.role === 'founder' && (userPlan === 'free' || userPlan === 'free_founder') && (
-              <div className="mx-4 mb-2 p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+              <div className="mx-4 mb-2 p-3 rounded-md border border-border">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Upgrade Plan</span>
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Upgrade plan</span>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Unlock more features with a premium plan
+                  Unlock more features
                 </p>
-                <Button size="sm" className="w-full" onClick={handleUpgradeClick}>
-                  View Plans
+                <Button size="sm" variant="outline" className="w-full" onClick={handleUpgradeClick}>
+                  View plans
                 </Button>
               </div>
             )}

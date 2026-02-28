@@ -4,10 +4,9 @@ export default function FounderSignup() {
     return (
         <RoleSignupPage
             role="founder"
-            accent="text-blue-600"
-            accentBg="bg-blue-50"
+            accent="text-[#2B5FD9]"
             title="Founder"
-            subtitle="Create your founder account to start building with verified talent."
+            subtitle="Create your account to start building with verified collaborators."
         />
     );
 }

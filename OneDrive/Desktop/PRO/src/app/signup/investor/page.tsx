@@ -4,10 +4,9 @@ export default function InvestorSignup() {
     return (
         <RoleSignupPage
             role="investor"
-            accent="text-emerald-600"
-            accentBg="bg-emerald-50"
+            accent="text-[#1FA463]"
             title="Investor"
-            subtitle="Create your investor account to discover verified deal flow."
+            subtitle="Create your account to discover verified deal flow."
         />
     );
 }

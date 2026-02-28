@@ -4,10 +4,9 @@ export default function TalentSignup() {
     return (
         <RoleSignupPage
             role="talent"
-            accent="text-violet-600"
-            accentBg="bg-violet-50"
+            accent="text-[#6D33D6]"
             title="Talent"
-            subtitle="Create your talent account to join high-trust projects."
+            subtitle="Create your account to join verified startups."
         />
     );
 }

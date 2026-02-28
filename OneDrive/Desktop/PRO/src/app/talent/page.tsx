@@ -1,126 +1,84 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, Code2, DollarSign, Award, FileCheck, ArrowRight, Zap } from 'lucide-react';
-
-const features = [
-    {
-        icon: Code2,
-        title: 'Skill Validation',
-        description: 'Complete skill assessments and get verified badges that founders trust.',
-    },
-    {
-        icon: DollarSign,
-        title: 'Milestone Payments',
-        description: 'Get paid per milestone. No chasing invoices — payments tracked and verified on-platform.',
-    },
-    {
-        icon: Award,
-        title: 'Trust Score Growth',
-        description: 'Build your professional trust score with every project, verification, and signed agreement.',
-    },
-    {
-        icon: FileCheck,
-        title: 'Legal Protection',
-        description: 'Every engagement starts with a signed agreement. Dispute resolution built in.',
-    },
-];
 
 export default function TalentLanding() {
     return (
-        <div className="min-h-screen bg-white text-gray-900">
-            {/* Nav */}
-            <header className="border-b border-gray-200">
-                <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-violet-600" />
-                        <span className="text-lg font-semibold">CollabHub</span>
-                    </Link>
-                    <div className="flex items-center gap-4">
-                        <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900">Sign In</Link>
-                        <Link href="/signup/talent" className="text-sm font-medium bg-violet-600 text-white px-4 py-2 rounded-md hover:bg-violet-700 transition-colors">
-                            Join Now
+        <div className="min-h-screen bg-white text-[#111827]">
+            <header className="border-b border-[#E5E7EB]">
+                <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+                    <Link href="/" className="text-base font-semibold tracking-wide">Collab·Hub</Link>
+                    <div className="flex items-center gap-5">
+                        <Link href="/login" className="text-sm text-[#6B7280] hover:text-[#111827]">Sign in</Link>
+                        <Link href="/signup/talent" className="text-sm font-medium bg-[#6D33D6] text-white px-3.5 py-2 rounded-md hover:bg-[#5F2BBF] transition-colors">
+                            Get started
                         </Link>
                     </div>
                 </div>
             </header>
 
-            {/* Hero */}
-            <section className="py-24 px-6">
-                <div className="max-w-4xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 text-violet-600 text-sm font-medium bg-violet-50 px-4 py-1.5 rounded-full mb-6">
-                        <Zap className="h-3.5 w-3.5" />
-                        For Talent
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 leading-tight">
-                        Join High-Trust
-                        <br />Projects
-                    </h1>
-                    <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        Work with verified founders, get paid per milestone, and build an unshakeable professional reputation through trust scores and verified credentials.
+            <main>
+                <section className="max-w-5xl mx-auto px-6 pt-24 pb-20">
+                    <p className="text-sm text-[#6D33D6] font-medium mb-4">For Talent</p>
+                    <h1 className="mb-4 max-w-xl">Work with verified founders. Get paid per milestone.</h1>
+                    <p className="text-[#6B7280] max-w-lg mb-8" style={{ fontSize: '16px', lineHeight: '1.7' }}>
+                        Join startups that have passed verification. Every engagement starts with a signed agreement. Every payment is tracked and transparent.
                     </p>
-                    <div className="flex items-center justify-center gap-4">
-                        <Link href="/signup/talent" className="inline-flex items-center gap-2 bg-violet-600 text-white font-medium px-6 py-3 rounded-md hover:bg-violet-700 transition-colors">
-                            Join High-Trust Projects <ArrowRight className="h-4 w-4" />
+                    <div className="flex items-center gap-4">
+                        <Link href="/signup/talent" className="text-sm font-medium bg-[#6D33D6] text-white px-4 py-2.5 rounded-md hover:bg-[#5F2BBF] transition-colors">
+                            Create talent account
                         </Link>
-                        <Link href="/login" className="text-sm text-gray-500 font-medium hover:text-gray-900">
+                        <Link href="/login" className="text-sm text-[#6B7280] hover:text-[#111827]">
                             Already have an account?
                         </Link>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Features */}
-            <section className="py-20 px-6 bg-gray-50">
-                <div className="max-w-5xl mx-auto">
-                    <h2 className="text-2xl font-bold text-center mb-12">Why Talent Chooses CollabHub</h2>
-                    <div className="grid gap-8 md:grid-cols-2">
-                        {features.map((f, i) => (
-                            <div key={i} className="flex gap-4 p-6 bg-white rounded-lg border border-gray-200">
-                                <f.icon className="h-6 w-6 text-violet-600 shrink-0 mt-0.5" />
-                                <div>
-                                    <h3 className="font-semibold mb-1">{f.title}</h3>
-                                    <p className="text-sm text-gray-500 leading-relaxed">{f.description}</p>
-                                </div>
-                            </div>
-                        ))}
+                <hr className="border-[#E5E7EB] max-w-5xl mx-auto" />
+
+                <section className="max-w-5xl mx-auto px-6 py-20">
+                    <h2 className="mb-8">What talent uses CollabHub for</h2>
+                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-6">
+                        <div>
+                            <p className="font-medium mb-1">Verified startups</p>
+                            <p className="text-sm text-[#6B7280]">Only apply to startups with verified founders. Trust scores and KYC status are visible upfront.</p>
+                        </div>
+                        <div>
+                            <p className="font-medium mb-1">Milestone payments</p>
+                            <p className="text-sm text-[#6B7280]">Get paid per deliverable. Payment tracking and receipt management built into the platform.</p>
+                        </div>
+                        <div>
+                            <p className="font-medium mb-1">Skill verification</p>
+                            <p className="text-sm text-[#6B7280]">Complete assessments to earn verified skill badges. Stand out to founders looking for specific expertise.</p>
+                        </div>
+                        <div>
+                            <p className="font-medium mb-1">Legal protection</p>
+                            <p className="text-sm text-[#6B7280]">Every engagement starts with a signed agreement. Dispute resolution is built in.</p>
+                        </div>
+                        <div>
+                            <p className="font-medium mb-1">Trust score</p>
+                            <p className="text-sm text-[#6B7280]">Build your professional reputation through completed milestones, signed agreements, and verified credentials.</p>
+                        </div>
+                        <div>
+                            <p className="font-medium mb-1">Direct messaging</p>
+                            <p className="text-sm text-[#6B7280]">Communicate with founders directly through the platform. No external tools needed.</p>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Trust progression */}
-            <section className="py-20 px-6">
-                <div className="max-w-3xl mx-auto text-center">
-                    <h2 className="text-2xl font-bold mb-12">Grow Your Trust Level</h2>
-                    <div className="flex items-center justify-center gap-3 flex-wrap">
-                        {['Bronze', 'Silver', 'Gold', 'Platinum'].map((tier, i) => {
-                            const colors = ['bg-orange-100 text-orange-700', 'bg-blue-100 text-blue-700', 'bg-yellow-100 text-yellow-700', 'bg-purple-100 text-purple-700'];
-                            return (
-                                <div key={tier} className={`px-4 py-2 rounded-full text-sm font-semibold ${colors[i]}`}>
-                                    {tier}
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <p className="text-sm text-gray-500 mt-6 max-w-lg mx-auto">
-                        Complete verifications, deliver milestones, and maintain agreements to climb trust tiers and unlock premium opportunities.
-                    </p>
-                </div>
-            </section>
+                <hr className="border-[#E5E7EB] max-w-5xl mx-auto" />
 
-            {/* CTA */}
-            <section className="py-20 px-6 bg-violet-600 text-white">
-                <div className="max-w-3xl mx-auto text-center">
-                    <h2 className="text-3xl font-bold mb-4">Your skills deserve trust.</h2>
-                    <p className="text-violet-100 mb-8">Join CollabHub and start building your verified professional profile.</p>
-                    <Link href="/signup/talent" className="inline-flex items-center gap-2 bg-white text-violet-700 font-medium px-8 py-3 rounded-md hover:bg-violet-50 transition-colors">
-                        Create Talent Account <ArrowRight className="h-4 w-4" />
+                <section className="max-w-5xl mx-auto px-6 py-20">
+                    <h2 className="mb-3">Start building your profile.</h2>
+                    <p className="text-[#6B7280] mb-6" style={{ fontSize: '15px' }}>Free to join. Apply to verified startups immediately.</p>
+                    <Link href="/signup/talent" className="text-sm font-medium bg-[#6D33D6] text-white px-4 py-2.5 rounded-md hover:bg-[#5F2BBF] transition-colors">
+                        Create talent account
                     </Link>
-                </div>
-            </section>
+                </section>
+            </main>
 
-            <footer className="border-t border-gray-200 py-6 text-center text-sm text-gray-400">
-                © {new Date().getFullYear()} CollabHub. All rights reserved.
+            <footer className="border-t border-[#E5E7EB] py-5 text-center text-sm text-[#9CA3AF]">
+                © {new Date().getFullYear()} CollabHub
             </footer>
         </div>
     );
