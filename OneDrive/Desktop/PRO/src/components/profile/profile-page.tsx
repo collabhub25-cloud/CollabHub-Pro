@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Mail, MapPin, ExternalLink, Briefcase,
-  Building2, TrendingUp, Star, Shield, FileText,
+  Building2, TrendingUp, Star, Shield, FileText, ShieldCheck, CreditCard, DollarSign,
   MessageSquare, Loader2, Download, Github, Linkedin, Globe, Users,
   Edit, Save, X, Plus
 } from 'lucide-react';
@@ -19,6 +19,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
 import { TrustBadge } from '@/components/profile/trust-badge';
+import { VerificationProgress } from '@/components/verification/verification-progress';
+import { KycDashboard } from '@/components/kyc/kyc-dashboard';
+import { PricingPage } from '@/components/pricing/pricing-page';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
 import { toast } from 'sonner';
@@ -73,6 +76,8 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [profileTab, setProfileTab] = useState('overview');
+  const [investmentData, setInvestmentData] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     name: '',
     bio: '',
@@ -371,313 +376,438 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         </CardContent>
       </Card>
 
-      {/* Recent Trust Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            Recent Trust Activity
-          </CardTitle>
-          <CardDescription>What affects this trust score</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {profile.verificationLevel >= 1 && (
-              <div className="flex items-center gap-3 text-sm">
-                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-                <span className="text-muted-foreground">Email verified</span>
-                <span className="ml-auto text-green-600 font-medium">+5</span>
-              </div>
-            )}
-            {profile.verificationLevel >= 2 && (
-              <div className="flex items-center gap-3 text-sm">
-                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-                <span className="text-muted-foreground">Identity verified (Level 2)</span>
-                <span className="ml-auto text-green-600 font-medium">+10</span>
-              </div>
-            )}
-            {profile.verificationLevel >= 3 && (
-              <div className="flex items-center gap-3 text-sm">
-                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-                <span className="text-muted-foreground">Full KYC cleared (Level 3+)</span>
-                <span className="ml-auto text-green-600 font-medium">+15</span>
-              </div>
-            )}
-            {(profile.allianceCount || 0) > 0 && (
-              <div className="flex items-center gap-3 text-sm">
-                <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
-                <span className="text-muted-foreground">{profile.allianceCount} alliance{(profile.allianceCount || 0) > 1 ? 's' : ''} formed</span>
-                <span className="ml-auto text-blue-600 font-medium">+{(profile.allianceCount || 0) * 2}</span>
-              </div>
-            )}
-            {(profile.trustScore || 0) >= 50 && (
-              <div className="flex items-center gap-3 text-sm">
-                <div className="h-2 w-2 rounded-full bg-purple-500 shrink-0" />
-                <span className="text-muted-foreground">Agreements & milestones completed</span>
-                <span className="ml-auto text-purple-600 font-medium">+{Math.max(0, (profile.trustScore || 0) - 30)}</span>
-              </div>
-            )}
-            {(profile.trustScore || 0) === 0 && profile.verificationLevel === 0 && (
-              <p className="text-sm text-muted-foreground">No trust activity yet. Verify your email to start building trust.</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Social Links Section (Editable) */}
+      {/* Profile Tabs — own profile only */}
       {isOwnProfile && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Social Links</CardTitle>
-            <CardDescription>Add your social profiles to showcase your work</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="github" className="flex items-center gap-2">
-                  <Github className="h-4 w-4" />
-                  GitHub
-                </Label>
-                <Input
-                  id="github"
-                  value={editForm.githubUrl}
-                  onChange={(e) => setEditForm({ ...editForm, githubUrl: e.target.value })}
-                  placeholder="https://github.com/username"
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="linkedin" className="flex items-center gap-2">
-                  <Linkedin className="h-4 w-4" />
-                  LinkedIn
-                </Label>
-                <Input
-                  id="linkedin"
-                  value={editForm.linkedinUrl}
-                  onChange={(e) => setEditForm({ ...editForm, linkedinUrl: e.target.value })}
-                  placeholder="https://linkedin.com/in/username"
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="portfolio" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Portfolio Website
-              </Label>
-              <Input
-                id="portfolio"
-                value={editForm.portfolioUrl}
-                onChange={(e) => setEditForm({ ...editForm, portfolioUrl: e.target.value })}
-                placeholder="https://yourwebsite.com"
-                disabled={!isEditing}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex gap-0 border-b" style={{ borderColor: '#D8D2C8' }}>
+          {[
+            { id: 'overview', label: 'Overview', icon: Building2 },
+            { id: 'verification', label: 'Verification', icon: Shield },
+            { id: 'compliance', label: 'KYC & Compliance', icon: ShieldCheck },
+            ...(profile.role === 'founder' ? [{ id: 'subscription', label: 'Subscription', icon: CreditCard }] : []),
+            ...(profile.role === 'investor' ? [{ id: 'investment', label: 'Investment Profile', icon: DollarSign }] : []),
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setProfileTab(tab.id)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm transition-colors"
+              style={{
+                borderBottom: profileTab === tab.id ? '2px solid #2A2623' : '2px solid transparent',
+                color: profileTab === tab.id ? '#2A2623' : '#6C635C',
+                fontWeight: profileTab === tab.id ? 500 : 400,
+              }}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       )}
 
-      {/* Public Social Links View */}
-      {!isOwnProfile && (profile.githubUrl || profile.linkedinUrl || profile.portfolioUrl) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Links</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              {profile.githubUrl && (
-                <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-primary hover:underline">
-                  <Github className="h-4 w-4" />
-                  GitHub
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              {profile.linkedinUrl && (
-                <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-primary hover:underline">
-                  <Linkedin className="h-4 w-4" />
-                  LinkedIn
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              {profile.portfolioUrl && (
-                <a href={profile.portfolioUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-primary hover:underline">
-                  <Globe className="h-4 w-4" />
-                  Portfolio
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Verification Tab */}
+      {profileTab === 'verification' && isOwnProfile && (
+        <VerificationProgress />
       )}
 
-      {/* Talent-specific sections */}
-      {profile.role === 'talent' && (
+      {/* Compliance / KYC Tab */}
+      {profileTab === 'compliance' && isOwnProfile && (
+        <KycDashboard />
+      )}
+
+      {/* Subscription Tab (Founder only) */}
+      {profileTab === 'subscription' && isOwnProfile && profile.role === 'founder' && (
+        <PricingPage />
+      )}
+
+      {/* Investment Tab (Investor only) */}
+      {profileTab === 'investment' && isOwnProfile && profile.role === 'investor' && (
+        <InvestmentProfileSection userId={profile._id} />
+      )}
+
+      {/* Overview Tab Content */}
+      {(profileTab === 'overview' || !isOwnProfile) && (
         <>
-          {/* Skills */}
-          {(isOwnProfile || (profile.skills && profile.skills.length > 0)) && (
+          {/* Recent Trust Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Recent Trust Activity
+              </CardTitle>
+              <CardDescription>What affects this trust score</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {profile.verificationLevel >= 1 && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                    <span className="text-muted-foreground">Email verified</span>
+                    <span className="ml-auto text-green-600 font-medium">+5</span>
+                  </div>
+                )}
+                {profile.verificationLevel >= 2 && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                    <span className="text-muted-foreground">Identity verified (Level 2)</span>
+                    <span className="ml-auto text-green-600 font-medium">+10</span>
+                  </div>
+                )}
+                {profile.verificationLevel >= 3 && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                    <span className="text-muted-foreground">Full KYC cleared (Level 3+)</span>
+                    <span className="ml-auto text-green-600 font-medium">+15</span>
+                  </div>
+                )}
+                {(profile.allianceCount || 0) > 0 && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                    <span className="text-muted-foreground">{profile.allianceCount} alliance{(profile.allianceCount || 0) > 1 ? 's' : ''} formed</span>
+                    <span className="ml-auto text-blue-600 font-medium">+{(profile.allianceCount || 0) * 2}</span>
+                  </div>
+                )}
+                {(profile.trustScore || 0) >= 50 && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="h-2 w-2 rounded-full bg-purple-500 shrink-0" />
+                    <span className="text-muted-foreground">Agreements & milestones completed</span>
+                    <span className="ml-auto text-purple-600 font-medium">+{Math.max(0, (profile.trustScore || 0) - 30)}</span>
+                  </div>
+                )}
+                {(profile.trustScore || 0) === 0 && profile.verificationLevel === 0 && (
+                  <p className="text-sm text-muted-foreground">No trust activity yet. Verify your email to start building trust.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Social Links Section (Editable) */}
+          {isOwnProfile && (
             <Card>
               <CardHeader>
-                <CardTitle>Skills</CardTitle>
+                <CardTitle className="text-lg">Social Links</CardTitle>
+                <CardDescription>Add your social profiles to showcase your work</CardDescription>
               </CardHeader>
-              <CardContent>
-                {isEditing ? (
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
+                    <Label htmlFor="github" className="flex items-center gap-2">
+                      <Github className="h-4 w-4" />
+                      GitHub
+                    </Label>
                     <Input
-                      value={editForm.skills}
-                      onChange={(e) => setEditForm({ ...editForm, skills: e.target.value })}
-                      placeholder="Enter skills separated by commas (e.g., React, Node.js, Python)"
+                      id="github"
+                      value={editForm.githubUrl}
+                      onChange={(e) => setEditForm({ ...editForm, githubUrl: e.target.value })}
+                      placeholder="https://github.com/username"
+                      disabled={!isEditing}
                     />
-                    <p className="text-xs text-muted-foreground">Separate skills with commas</p>
                   </div>
-                ) : profile.skills && profile.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {profile.skills.map((skill) => (
-                      <Badge key={skill} variant="secondary">{skill}</Badge>
-                    ))}
+                  <div className="space-y-2">
+                    <Label htmlFor="linkedin" className="flex items-center gap-2">
+                      <Linkedin className="h-4 w-4" />
+                      LinkedIn
+                    </Label>
+                    <Input
+                      id="linkedin"
+                      value={editForm.linkedinUrl}
+                      onChange={(e) => setEditForm({ ...editForm, linkedinUrl: e.target.value })}
+                      placeholder="https://linkedin.com/in/username"
+                      disabled={!isEditing}
+                    />
                   </div>
-                ) : (
-                  <p className="text-muted-foreground">No skills added yet</p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Experience */}
-          {(isOwnProfile || profile.experience) && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Experience</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <Textarea
-                    value={editForm.experience}
-                    onChange={(e) => setEditForm({ ...editForm, experience: e.target.value })}
-                    placeholder="Describe your professional experience..."
-                    rows={4}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="portfolio" className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Portfolio Website
+                  </Label>
+                  <Input
+                    id="portfolio"
+                    value={editForm.portfolioUrl}
+                    onChange={(e) => setEditForm({ ...editForm, portfolioUrl: e.target.value })}
+                    placeholder="https://yourwebsite.com"
+                    disabled={!isEditing}
                   />
-                ) : profile.experience ? (
-                  <p className="text-muted-foreground">{profile.experience}</p>
-                ) : (
-                  <p className="text-muted-foreground">No experience added yet</p>
-                )}
+                </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Resume */}
-          {profile.hasResume && (
+          {/* Public Social Links View */}
+          {!isOwnProfile && (profile.githubUrl || profile.linkedinUrl || profile.portfolioUrl) && (
             <Card>
               <CardHeader>
-                <CardTitle>Resume</CardTitle>
+                <CardTitle>Links</CardTitle>
               </CardHeader>
               <CardContent>
-                {profile.resumeUrl ? (
-                  <Button variant="outline" asChild>
-                    <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Resume
+                <div className="flex flex-wrap gap-3">
+                  {profile.githubUrl && (
+                    <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary hover:underline">
+                      <Github className="h-4 w-4" />
+                      GitHub
+                      <ExternalLink className="h-3 w-3" />
                     </a>
-                  </Button>
-                ) : (
-                  <p className="text-muted-foreground">Resume available for founders and investors</p>
+                  )}
+                  {profile.linkedinUrl && (
+                    <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary hover:underline">
+                      <Linkedin className="h-4 w-4" />
+                      LinkedIn
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  {profile.portfolioUrl && (
+                    <a href={profile.portfolioUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary hover:underline">
+                      <Globe className="h-4 w-4" />
+                      Portfolio
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Talent-specific sections */}
+          {profile.role === 'talent' && (
+            <>
+              {/* Skills */}
+              {(isOwnProfile || (profile.skills && profile.skills.length > 0)) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Skills</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={editForm.skills}
+                          onChange={(e) => setEditForm({ ...editForm, skills: e.target.value })}
+                          placeholder="Enter skills separated by commas (e.g., React, Node.js, Python)"
+                        />
+                        <p className="text-xs text-muted-foreground">Separate skills with commas</p>
+                      </div>
+                    ) : profile.skills && profile.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {profile.skills.map((skill) => (
+                          <Badge key={skill} variant="secondary">{skill}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No skills added yet</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Experience */}
+              {(isOwnProfile || profile.experience) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Experience</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isEditing ? (
+                      <Textarea
+                        value={editForm.experience}
+                        onChange={(e) => setEditForm({ ...editForm, experience: e.target.value })}
+                        placeholder="Describe your professional experience..."
+                        rows={4}
+                      />
+                    ) : profile.experience ? (
+                      <p className="text-muted-foreground">{profile.experience}</p>
+                    ) : (
+                      <p className="text-muted-foreground">No experience added yet</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Resume */}
+              {profile.hasResume && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Resume</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {profile.resumeUrl ? (
+                      <Button variant="outline" asChild>
+                        <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4 mr-2" />
+                          Download Resume
+                        </a>
+                      </Button>
+                    ) : (
+                      <p className="text-muted-foreground">Resume available for founders and investors</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+
+          {/* Founder-specific sections */}
+          {profile.role === 'founder' && profile.startups && profile.startups.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Startups</CardTitle>
+                <CardDescription>Companies founded by {profile.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {profile.startups.map((startup) => (
+                    <div key={startup._id} className="flex items-start gap-4 p-4 border rounded-lg">
+                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        {startup.logo ? (
+                          <img src={startup.logo} alt={startup.name} className="h-12 w-12 rounded-lg object-cover" />
+                        ) : (
+                          <Building2 className="h-6 w-6 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold">{startup.name}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{startup.vision}</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Badge variant="outline">{startup.industry}</Badge>
+                          <Badge variant="outline" className="capitalize">{startup.stage}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Investor-specific sections */}
+          {profile.role === 'investor' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Investment Profile</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profile.ticketSize && (
+                  <div>
+                    <h4 className="font-medium mb-1">Ticket Size</h4>
+                    <p className="text-muted-foreground">
+                      ${profile.ticketSize.min.toLocaleString()} - ${profile.ticketSize.max.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+                {profile.preferredIndustries && profile.preferredIndustries.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Preferred Industries</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.preferredIndustries.map((ind) => (
+                        <Badge key={ind} variant="secondary">{ind}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {profile.stagePreference && profile.stagePreference.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Stage Preference</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.stagePreference.map((stage) => (
+                        <Badge key={stage} variant="outline" className="capitalize">
+                          {stage.replace('-', ' ')}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {profile.investmentThesis && (
+                  <div>
+                    <h4 className="font-medium mb-1">Investment Thesis</h4>
+                    <p className="text-muted-foreground">{profile.investmentThesis}</p>
+                  </div>
+                )}
+
+                {profile.investmentCount !== undefined && (
+                  <div>
+                    <h4 className="font-medium mb-1">Investments Made</h4>
+                    <p className="text-muted-foreground">{profile.investmentCount} investments</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
           )}
         </>
       )}
+    </div>
+  );
+}
 
-      {/* Founder-specific sections */}
-      {profile.role === 'founder' && profile.startups && profile.startups.length > 0 && (
+/** Investment profile section — real data from /api/investments */
+function InvestmentProfileSection({ userId }: { userId: string }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchInvestments = async () => {
+      try {
+        const res = await fetch(`/api/investments?userId=${userId}`, { credentials: 'include' });
+        if (res.ok) {
+          const json = await res.json();
+          setData(json);
+        }
+      } catch (err) {
+        console.error('Investment fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInvestments();
+  }, [userId]);
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  if (!data) return <p className="text-sm text-muted-foreground py-4">No investment data available.</p>;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          ['Total Invested', `$${(data.totalInvested || 0).toLocaleString()}`],
+          ['Portfolio', `${data.portfolio?.length || 0} startups`],
+          ['Avg Equity', `${(data.averageEquity || 0).toFixed(1)}%`],
+          ['Active Rounds', `${data.activeRounds || 0}`],
+        ].map(([label, value]) => (
+          <Card key={label}>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="text-lg font-semibold mt-1 font-mono">{value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {data.portfolio && data.portfolio.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Startups</CardTitle>
-            <CardDescription>Companies founded by {profile.name}</CardDescription>
+            <CardTitle>Portfolio</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {profile.startups.map((startup) => (
-                <div key={startup._id} className="flex items-start gap-4 p-4 border rounded-lg">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    {startup.logo ? (
-                      <img src={startup.logo} alt={startup.name} className="h-12 w-12 rounded-lg object-cover" />
-                    ) : (
-                      <Building2 className="h-6 w-6 text-primary" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold">{startup.name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{startup.vision}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Badge variant="outline">{startup.industry}</Badge>
-                      <Badge variant="outline" className="capitalize">{startup.stage}</Badge>
-                    </div>
-                  </div>
+          <CardContent className="space-y-3">
+            {data.portfolio.map((item: any, i: number) => (
+              <button
+                key={i}
+                onClick={() => item.startup?._id && router.push(`/startup/${item.startup._id}`)}
+                className="flex items-center justify-between w-full px-4 py-3 rounded text-left border transition-colors hover:bg-muted/50"
+              >
+                <div>
+                  <p className="text-sm font-medium">{item.startup?.name || 'Unknown'}</p>
+                  <p className="text-xs text-muted-foreground">{item.startup?.industry} · {item.roundType}</p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Investor-specific sections */}
-      {profile.role === 'investor' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Investment Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {profile.ticketSize && (
-              <div>
-                <h4 className="font-medium mb-1">Ticket Size</h4>
-                <p className="text-muted-foreground">
-                  ${profile.ticketSize.min.toLocaleString()} - ${profile.ticketSize.max.toLocaleString()}
-                </p>
-              </div>
-            )}
-
-            {profile.preferredIndustries && profile.preferredIndustries.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-2">Preferred Industries</h4>
-                <div className="flex flex-wrap gap-2">
-                  {profile.preferredIndustries.map((ind) => (
-                    <Badge key={ind} variant="secondary">{ind}</Badge>
-                  ))}
+                <div className="text-right">
+                  <p className="text-sm font-mono">${(item.amount || 0).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{(item.equity || 0).toFixed(1)}% equity</p>
                 </div>
-              </div>
-            )}
-
-            {profile.stagePreference && profile.stagePreference.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-2">Stage Preference</h4>
-                <div className="flex flex-wrap gap-2">
-                  {profile.stagePreference.map((stage) => (
-                    <Badge key={stage} variant="outline" className="capitalize">
-                      {stage.replace('-', ' ')}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.investmentThesis && (
-              <div>
-                <h4 className="font-medium mb-1">Investment Thesis</h4>
-                <p className="text-muted-foreground">{profile.investmentThesis}</p>
-              </div>
-            )}
-
-            {profile.investmentCount !== undefined && (
-              <div>
-                <h4 className="font-medium mb-1">Investments Made</h4>
-                <p className="text-muted-foreground">{profile.investmentCount} investments</p>
-              </div>
-            )}
+              </button>
+            ))}
           </CardContent>
         </Card>
       )}

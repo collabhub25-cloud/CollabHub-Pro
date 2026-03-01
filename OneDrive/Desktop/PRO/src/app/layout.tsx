@@ -43,6 +43,24 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
       >
+        {/* Cinematic background */}
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: -1,
+            pointerEvents: 'none',
+            background: `radial-gradient(600px circle at 15% 25%, rgba(187,96,78,0.08), transparent 60%),
+                         radial-gradient(700px circle at 85% 75%, rgba(70,84,120,0.07), transparent 60%)`,
+            animation: 'drift 16s ease-in-out infinite alternate',
+          }}
+        />
+        <style>{`
+          @keyframes drift {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-30px); }
+          }
+        `}</style>
         {children}
         <Toaster />
       </body>

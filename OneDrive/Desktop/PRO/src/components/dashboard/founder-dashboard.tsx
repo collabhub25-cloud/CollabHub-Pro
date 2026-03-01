@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Plus, Building2, Users, CheckCircle2, Clock,
   Briefcase, Target, Zap, Loader2, Edit, Trash2,
-  FileText, AlertCircle, DollarSign, Lock
+  FileText, AlertCircle, DollarSign, Lock, ExternalLink
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -116,6 +117,7 @@ interface FounderDashboardProps {
 
 export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const { user } = useAuthStore();
+  const router = useRouter();
   const [startups, setStartups] = useState<Startup[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -726,7 +728,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {startups.map((startup) => (
-              <Card key={startup._id} className="hover:border-primary/50 transition-colors">
+              <Card key={startup._id} className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => router.push(`/startup/${startup._id}`)}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -754,16 +756,16 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => openEditStartup(startup)}
+                      onClick={(e) => { e.stopPropagation(); router.push(`/startup/${startup._id}`); }}
                     >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       className="text-destructive hover:bg-destructive/10"
-                      onClick={() => setShowDeleteStartup(startup)}
+                      onClick={(e) => { e.stopPropagation(); setShowDeleteStartup(startup); }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
