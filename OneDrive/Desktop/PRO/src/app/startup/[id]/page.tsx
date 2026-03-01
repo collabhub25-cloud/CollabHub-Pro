@@ -147,7 +147,7 @@ export default function StartupPage({
                             </p>
                             <div className="flex gap-3 mt-2">
                                 <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#EDE9E3', color: '#6C635C' }}>
-                                    Trust: {startup.trustScore}/100
+                                    Trust: {startup.trustScore ?? 0}/100
                                 </span>
                                 <span className="text-xs px-2 py-0.5 rounded" style={{ background: startup.isActive ? '#e6f4ea' : '#EDE9E3', color: startup.isActive ? '#1a7f37' : '#6C635C' }}>
                                     {startup.isActive ? 'Active' : 'Inactive'}
@@ -156,7 +156,7 @@ export default function StartupPage({
                         </div>
                     </div>
                     {isFounder && (
-                        <button className="flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors" style={{ background: '#2A2623', color: '#FBF9F6' }}>
+                        <button onClick={() => router.push(`/startup/${id}/edit`)} className="flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors" style={{ background: '#2A2623', color: '#FBF9F6' }}>
                             <Edit3 className="h-3.5 w-3.5" /> Edit
                         </button>
                     )}
@@ -187,7 +187,7 @@ export default function StartupPage({
                         {/* Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {[
-                                ['Trust Score', `${startup.trustScore}/100`],
+                                ['Trust Score', `${startup.trustScore ?? 0}/100`],
                                 ['Stage', startup.stage],
                                 ['Agreements', `${agreementCount}`],
                                 ['Funding', startup.fundingStage],

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { useAuthStore, useUIStore } from '@/store';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { toast } from 'sonner';
@@ -59,6 +60,11 @@ export function MessagingPage() {
   const [typing, setTyping] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -343,9 +349,9 @@ export function MessagingPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-200px)] min-h-[500px]">
+    <div className="h-[calc(100vh-160px)] min-h-[500px]">
       <Card className="h-full">
-        <div className="flex h-full">
+        <div className="grid h-full" style={{ gridTemplateColumns: selectedConversation ? '280px 1fr 280px' : '1fr' }}>
           {/* Conversations List */}
           <div className={`border-r ${selectedConversation ? 'hidden md:block md:w-80' : 'w-full'}`}>
             <CardHeader className="border-b">
@@ -484,7 +490,7 @@ export function MessagingPage() {
                             className={`flex ${message.isMine ? 'justify-end' : 'justify-start'}`}
                           >
                             <div
-                              className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${message.isMine
+                              className={`max-w-[65%] px-4 py-2.5 rounded-2xl ${message.isMine
                                 ? 'bg-primary text-primary-foreground rounded-tr-sm'
                                 : 'bg-muted rounded-tl-sm'
                                 }`}
@@ -564,6 +570,50 @@ export function MessagingPage() {
                 <p className="text-muted-foreground">
                   Choose a conversation from the list to start messaging
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Right Info Panel */}
+          {selectedConversation && otherUser && (
+            <div className="hidden md:block border-l overflow-y-auto">
+              <div className="p-4 text-center">
+                <Avatar className="h-16 w-16 mx-auto mb-3">
+                  <AvatarImage src={otherUser.avatar} />
+                  <AvatarFallback className="text-lg">
+                    {getInitials(otherUser.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="font-medium">{otherUser.name}</p>
+                <Badge variant="outline" className="text-xs capitalize mt-1">
+                  {otherUser.role}
+                </Badge>
+              </div>
+              <Separator />
+              <div className="p-4 space-y-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Trust Score</p>
+                  <p className="text-sm font-medium">{otherUser.trustScore ?? 0}/100</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Verification</p>
+                  <Badge className={`text-xs ${getVerificationBadge(otherUser.verificationLevel)} text-white`}>
+                    Level {otherUser.verificationLevel}
+                  </Badge>
+                </div>
+                <Separator />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    setActiveTab('profile');
+                    safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, otherUser._id);
+                  }}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  View Profile
+                </Button>
               </div>
             </div>
           )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -904,6 +905,11 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
     );
   }
 
+  // Projects — startups where talent is a team member
+  if (activeTab === 'projects') {
+    return <TalentProjects />;
+  }
+
   // Settings handled by Dashboard component
 
   // Default fallback
@@ -915,6 +921,87 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
           <p className="text-muted-foreground">This section is coming soon</p>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function TalentProjects() {
+  const router = useRouter();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('/api/startups?member=true', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setProjects(data.startups || []);
+        }
+      } catch (err) {
+        console.error('Projects fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">My Projects</h1>
+      {projects.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
+            <p className="text-muted-foreground text-center">
+              When you join a startup team, your projects will appear here.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {projects.map((project: any) => (
+            <Card
+              key={project._id}
+              className="hover:border-primary/50 transition-colors cursor-pointer"
+              onClick={() => router.push(`/startup/${project._id}`)}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle>{project.name}</CardTitle>
+                    <CardDescription className="mt-1">{project.industry}</CardDescription>
+                  </div>
+                  <Badge className="capitalize">{project.stage}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{project.vision}</p>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span>{project.team?.length || 1} members</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" />
+                    <span>Trust: {project.trustScore ?? 0}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
