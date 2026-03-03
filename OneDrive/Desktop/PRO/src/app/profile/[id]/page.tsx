@@ -187,7 +187,7 @@ export default function ProfilePage() {
                             <div>
                                 <span className="text-sm text-muted-foreground block mb-1">Verification Level</span>
                                 <Badge variant="outline" className="capitalize">
-                                    {profile.verificationLevel?.replace('_', ' ') || 'None'}
+                                    {profile.verificationLevel != null ? `Level ${profile.verificationLevel}` : 'None'}
                                 </Badge>
                             </div>
                         </CardContent>
