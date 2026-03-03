@@ -701,10 +701,23 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">My Startups</h1>
-          <Button onClick={() => setShowCreateStartup(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Startup
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button onClick={() => setShowCreateStartup(true)} disabled={(user?.verificationLevel || 0) < 2}>
+                    {(user?.verificationLevel || 0) < 2 ? <Lock className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                    Create Startup
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {(user?.verificationLevel || 0) < 2 && (
+                <TooltipContent>
+                  <p>You need Verification Level 2 to create a startup.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {loading ? (
@@ -982,122 +995,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
-    );
-  }
-
-  // Applications
-  if (activeTab === 'applications') {
-    const pendingApps = applications.filter(a => a.status === 'pending');
-    const reviewedApps = applications.filter(a => a.status === 'reviewed');
-    const acceptedApps = applications.filter(a => a.status === 'accepted');
-    const rejectedApps = applications.filter(a => a.status === 'rejected');
-
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Applications</h1>
-        <Tabs defaultValue="pending">
-          <TabsList>
-            <TabsTrigger value="pending">Pending ({pendingApps.length})</TabsTrigger>
-            <TabsTrigger value="reviewed">Reviewed ({reviewedApps.length})</TabsTrigger>
-            <TabsTrigger value="accepted">Accepted ({acceptedApps.length})</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected ({rejectedApps.length})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="pending" className="space-y-4 mt-4">
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : pendingApps.length === 0 ? (
-              <Card>
-                <CardContent className="flex items-center justify-center py-8">
-                  <p className="text-muted-foreground">No pending applications</p>
-                </CardContent>
-              </Card>
-            ) : (
-              pendingApps.map((app) => (
-                <Card key={app._id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
-                        <p className="text-sm text-muted-foreground">Applied to {app.startupId?.name}</p>
-                        {app.talentId?.skills && (
-                          <div className="flex gap-1 mt-1">
-                            {app.talentId.skills.slice(0, 3).map((skill: string) => (
-                              <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleUpdateApplication(app._id, 'reviewed')}>Review</Button>
-                        <Button size="sm" onClick={() => handleUpdateApplication(app._id, 'accepted')}>Accept</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-          <TabsContent value="reviewed" className="space-y-4 mt-4">
-            {reviewedApps.map((app) => (
-              <Card key={app._id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
-                      <p className="text-sm text-muted-foreground">{app.startupId?.name}</p>
-                    </div>
-                    <Badge>Reviewed</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-          <TabsContent value="accepted" className="space-y-4 mt-4">
-            {acceptedApps.map((app) => (
-              <Card key={app._id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
-                      <p className="text-sm text-muted-foreground">{app.startupId?.name}</p>
-                    </div>
-                    <Badge className="bg-green-500">Accepted</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-          <TabsContent value="rejected" className="space-y-4 mt-4">
-            {rejectedApps.map((app) => (
-              <Card key={app._id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><h3 className="font-semibold">{app.talentId?.name}</h3></Link>
-                      <p className="text-sm text-muted-foreground">{app.startupId?.name}</p>
-                    </div>
-                    <Badge variant="destructive">Rejected</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-        </Tabs>
       </div>
     );
   }

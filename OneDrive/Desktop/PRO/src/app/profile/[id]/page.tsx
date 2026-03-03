@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MapPin, Building2, Github, Linkedin, Globe, Calendar, ArrowLeft } from 'lucide-react';
+import { Loader2, MapPin, Building2, Github, Linkedin, Globe, Calendar, ArrowLeft, User as UserIcon } from 'lucide-react';
 
 interface UserProfile {
     _id: string;
@@ -46,7 +46,11 @@ export default function ProfilePage() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (!id) return;
+        if (!id) {
+            setError('Invalid profile ID');
+            setLoading(false);
+            return;
+        }
 
         const fetchProfile = async () => {
             try {
@@ -261,25 +265,5 @@ export default function ProfilePage() {
                 </div>
             </div>
         </div>
-    );
-}
-
-function UserIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-        </svg>
     );
 }

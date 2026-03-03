@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Bell, Check, CheckCheck, X, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,12 @@ interface Notification {
   message: string;
   read: boolean;
   actionUrl?: string;
+  metadata?: {
+    startupId?: string;
+    investorId?: string;
+    requestId?: string;
+    [key: string]: unknown;
+  };
   createdAt: string;
 }
 
@@ -46,6 +53,7 @@ const notificationIcons: Record<string, string> = {
 export function NotificationDropdown() {
   const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -257,14 +265,31 @@ export function NotificationDropdown() {
                   if (!notification.read) {
                     markAsRead(notification._id);
                   }
+                  setIsOpen(false);
+
+                  // Type-based routing
+                  const nType = notification.type;
+                  const startupId = notification.metadata?.startupId;
+
+                  if ((nType === 'access_request' || nType === 'application_received') && startupId) {
+                    router.push(`/startup/${startupId}?tab=applications`);
+                    return;
+                  }
+                  if (nType === 'alliance_request' || nType === 'alliance_accepted' || nType === 'alliance_rejected') {
+                    setActiveTab('alliances');
+                    return;
+                  }
+                  if (nType === 'message_received') {
+                    setActiveTab('messages');
+                    return;
+                  }
+
+                  // Fallback: use actionUrl
                   if (notification.actionUrl) {
                     const tabId = mapActionUrlToTab(notification.actionUrl);
                     if (tabId) {
-                      // Use SPA navigation
                       setActiveTab(tabId);
-                      setIsOpen(false);
                     } else {
-                      // External URL or unknown path
                       window.location.href = notification.actionUrl;
                     }
                   }

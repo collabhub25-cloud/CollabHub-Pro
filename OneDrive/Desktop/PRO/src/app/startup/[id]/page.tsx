@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store';
-import { ArrowLeft, Building2, Users, Globe, Loader2, Briefcase, TrendingUp, FileText, Target, DollarSign, Settings, Edit3 } from 'lucide-react';
+import { ArrowLeft, Building2, Users, Globe, Loader2, Briefcase, TrendingUp, FileText, Target, DollarSign, Settings, Edit3, Check, X } from 'lucide-react';
 
 interface StartupData {
     _id: string;
@@ -47,6 +47,7 @@ interface StartupData {
 const TABS = [
     { id: 'overview', label: 'Overview', icon: Building2 },
     { id: 'team', label: 'Team', icon: Users },
+    { id: 'applications', label: 'Applications', icon: Briefcase },
     { id: 'milestones', label: 'Milestones', icon: Target },
     { id: 'agreements', label: 'Agreements', icon: FileText },
     { id: 'funding', label: 'Funding', icon: DollarSign },
@@ -71,6 +72,9 @@ export default function StartupPage({
     const [startup, setStartup] = useState<StartupData | null>(null);
     const [fundingRounds, setFundingRounds] = useState<any[]>([]);
     const [agreementCount, setAgreementCount] = useState(0);
+    const [applications, setApplications] = useState<any[]>([]);
+    const [accessRequests, setAccessRequests] = useState<any[]>([]);
+    const [appsLoading, setAppsLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -99,6 +103,65 @@ export default function StartupPage({
 
     const setTab = (tab: string) => {
         router.replace(`/startup/${id}?tab=${tab}`, { scroll: false });
+    };
+
+    // Fetch applications and access requests when Applications tab is active
+    useEffect(() => {
+        if (activeTab !== 'applications' || !isFounder) return;
+        const fetchApps = async () => {
+            setAppsLoading(true);
+            try {
+                const [appsRes, accessRes] = await Promise.all([
+                    fetch(`/api/applications/received?startupId=${id}`, { credentials: 'include' }),
+                    fetch(`/api/funding/request-access?startupId=${id}`, { credentials: 'include' }),
+                ]);
+                if (appsRes.ok) {
+                    const data = await appsRes.json();
+                    setApplications(data.applications || []);
+                }
+                if (accessRes.ok) {
+                    const data = await accessRes.json();
+                    setAccessRequests(data.requests || []);
+                }
+            } catch (err) {
+                console.error('Error fetching applications:', err);
+            } finally {
+                setAppsLoading(false);
+            }
+        };
+        fetchApps();
+    }, [activeTab, id, isFounder]);
+
+    const handleUpdateApplication = async (appId: string, status: string) => {
+        try {
+            const res = await fetch('/api/applications', {
+                credentials: 'include',
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: appId, status }),
+            });
+            if (res.ok) {
+                setApplications(prev => prev.map(a => a._id === appId ? { ...a, status } : a));
+            }
+        } catch (err) {
+            console.error('Error updating application:', err);
+        }
+    };
+
+    const handleRespondAccess = async (requestId: string, status: 'approved' | 'rejected') => {
+        try {
+            const res = await fetch('/api/funding/request-access/respond', {
+                credentials: 'include',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId, status }),
+            });
+            if (res.ok) {
+                setAccessRequests(prev => prev.map(r => r._id === requestId ? { ...r, status } : r));
+            }
+        } catch (err) {
+            console.error('Error responding to access request:', err);
+        }
     };
 
     if (loading) {
@@ -281,6 +344,127 @@ export default function StartupPage({
                                 </div>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {activeTab === 'applications' && isFounder && (
+                    <div className="space-y-8">
+                        {/* Talent Applications */}
+                        <section>
+                            <h2 className="text-base font-medium mb-4">Talent Applications</h2>
+                            {appsLoading ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#B05A4F' }} />
+                                </div>
+                            ) : applications.length === 0 ? (
+                                <p className="text-sm" style={{ color: '#6C635C' }}>No applications received for this startup.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {applications.map((app: any) => (
+                                        <div key={app._id} className="flex items-center justify-between px-4 py-3 rounded" style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-medium" style={{ background: '#EDE9E3' }}>
+                                                    {app.talentId?.name?.charAt(0) || '?'}
+                                                </div>
+                                                <div>
+                                                    <button onClick={() => router.push(`/profile/${app.talentId?._id}`)} className="text-sm font-medium hover:underline">
+                                                        {app.talentId?.name || 'Unknown'}
+                                                    </button>
+                                                    {app.talentId?.skills && (
+                                                        <div className="flex gap-1 mt-1 flex-wrap">
+                                                            {app.talentId.skills.slice(0, 3).map((s: string) => (
+                                                                <span key={s} className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#EDE9E3', color: '#6C635C' }}>{s}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-xs px-2 py-0.5 rounded capitalize ${app.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                    app.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                                        app.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                            'bg-gray-100 text-gray-800'
+                                                    }`}>{app.status}</span>
+                                                {app.status === 'pending' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleUpdateApplication(app._id, 'accepted')}
+                                                            className="p-1.5 rounded transition-colors hover:bg-green-100"
+                                                            title="Accept"
+                                                        >
+                                                            <Check className="h-4 w-4 text-green-600" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleUpdateApplication(app._id, 'rejected')}
+                                                            className="p-1.5 rounded transition-colors hover:bg-red-100"
+                                                            title="Reject"
+                                                        >
+                                                            <X className="h-4 w-4 text-red-600" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Investor Access Requests */}
+                        <section>
+                            <h2 className="text-base font-medium mb-4">Investor Access Requests</h2>
+                            {appsLoading ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#B05A4F' }} />
+                                </div>
+                            ) : accessRequests.length === 0 ? (
+                                <p className="text-sm" style={{ color: '#6C635C' }}>No investor access requests.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {accessRequests.map((req: any) => (
+                                        <div key={req._id} className="flex items-center justify-between px-4 py-3 rounded" style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-medium" style={{ background: '#EDE9E3' }}>
+                                                    {req.investorId?.name?.charAt(0) || '?'}
+                                                </div>
+                                                <div>
+                                                    <button onClick={() => router.push(`/profile/${req.investorId?._id}`)} className="text-sm font-medium hover:underline">
+                                                        {req.investorId?.name || 'Unknown Investor'}
+                                                    </button>
+                                                    <p className="text-xs" style={{ color: '#6C635C' }}>
+                                                        Trust: {req.investorId?.trustScore ?? 0}/100
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-xs px-2 py-0.5 rounded capitalize ${req.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                    req.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                                        'bg-red-100 text-red-800'
+                                                    }`}>{req.status}</span>
+                                                {req.status === 'pending' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleRespondAccess(req._id, 'approved')}
+                                                            className="p-1.5 rounded transition-colors hover:bg-green-100"
+                                                            title="Approve"
+                                                        >
+                                                            <Check className="h-4 w-4 text-green-600" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRespondAccess(req._id, 'rejected')}
+                                                            className="p-1.5 rounded transition-colors hover:bg-red-100"
+                                                            title="Reject"
+                                                        >
+                                                            <X className="h-4 w-4 text-red-600" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
                     </div>
                 )}
 

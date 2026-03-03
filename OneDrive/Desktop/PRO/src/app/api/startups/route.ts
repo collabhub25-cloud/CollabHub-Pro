@@ -144,6 +144,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Enforce verification level 2
+    if ((user.verificationLevel || 0) < 2) {
+      return NextResponse.json(
+        { error: 'Verification Level 2 required to create a startup' },
+        { status: 403 }
+      );
+    }
+
     // Check plan limits
     const existingStartupCount = await Startup.countDocuments({ founderId: payload.userId, isActive: true });
     const limitCheck = await checkPlanLimit(payload.userId, 'maxProjects', existingStartupCount);

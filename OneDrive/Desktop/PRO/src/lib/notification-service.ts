@@ -2,7 +2,7 @@
 
 const NOTIFICATION_SERVICE_URL = 'http://localhost:3003';
 
-export type NotificationType = 
+export type NotificationType =
   | 'application_received'
   | 'application_status'
   | 'agreement_signed'
@@ -12,7 +12,12 @@ export type NotificationType =
   | 'funding_update'
   | 'trust_score_change'
   | 'verification_update'
-  | 'subscription_update';
+  | 'subscription_update'
+  | 'alliance_request'
+  | 'alliance_accepted'
+  | 'alliance_rejected'
+  | 'message_received'
+  | 'access_request';
 
 export interface NotificationPayload {
   userId: string;
@@ -46,7 +51,7 @@ export async function createNotification(payload: NotificationPayload): Promise<
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),
     });
-    
+
     return response.ok;
   } catch (error) {
     console.error('Failed to create notification via service, falling back to direct DB:', error);
@@ -63,7 +68,7 @@ export async function createBatchNotifications(notifications: NotificationPayloa
       body: JSON.stringify(notifications),
       signal: AbortSignal.timeout(10000),
     });
-    
+
     return response.ok;
   } catch (error) {
     console.error('Failed to create batch notifications:', error);
@@ -78,55 +83,55 @@ export const NotificationTemplates = {
     message: `${talentName} has applied to ${startupName}`,
     type: 'application_received' as NotificationType,
   }),
-  
+
   applicationStatusChanged: (status: string, startupName: string) => ({
     title: 'Application Update',
     message: `Your application to ${startupName} has been ${status}`,
     type: 'application_status' as NotificationType,
   }),
-  
+
   agreementSigned: (agreementType: string, partyName: string) => ({
     title: 'Agreement Signed',
     message: `${partyName} has signed the ${agreementType} agreement`,
     type: 'agreement_signed' as NotificationType,
   }),
-  
+
   milestoneCreated: (milestoneTitle: string, startupName: string) => ({
     title: 'New Milestone',
     message: `New milestone "${milestoneTitle}" created for ${startupName}`,
     type: 'milestone_created' as NotificationType,
   }),
-  
+
   milestoneCompleted: (milestoneTitle: string) => ({
     title: 'Milestone Completed',
     message: `Milestone "${milestoneTitle}" has been marked as completed`,
     type: 'milestone_completed' as NotificationType,
   }),
-  
+
   paymentSuccess: (amount: number, milestoneTitle?: string) => ({
     title: 'Payment Successful',
     message: `Payment of $${amount} received${milestoneTitle ? ` for "${milestoneTitle}"` : ''}`,
     type: 'payment_success' as NotificationType,
   }),
-  
+
   fundingUpdate: (roundName: string, raisedAmount: number, targetAmount: number) => ({
     title: 'Funding Update',
     message: `${roundName}: $${raisedAmount.toLocaleString()} raised of $${targetAmount.toLocaleString()} target`,
     type: 'funding_update' as NotificationType,
   }),
-  
+
   trustScoreChanged: (newScore: number, change: number, reason: string) => ({
     title: 'Trust Score Updated',
     message: `Your trust score ${change >= 0 ? 'increased' : 'decreased'} to ${newScore}. Reason: ${reason}`,
     type: 'trust_score_change' as NotificationType,
   }),
-  
+
   verificationUpdated: (level: number, status: string) => ({
     title: 'Verification Update',
     message: `Your Level ${level} verification has been ${status}`,
     type: 'verification_update' as NotificationType,
   }),
-  
+
   subscriptionUpdated: (plan: string, status: string) => ({
     title: 'Subscription Update',
     message: `Your ${plan} subscription is now ${status}`,

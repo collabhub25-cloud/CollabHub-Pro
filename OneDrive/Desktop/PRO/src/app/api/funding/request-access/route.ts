@@ -63,11 +63,11 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { 
-          error: existing.status === 'pending' 
-            ? 'Access request already pending' 
+        {
+          error: existing.status === 'pending'
+            ? 'Access request already pending'
             : 'Access already granted',
-          request: existing 
+          request: existing
         },
         { status: 400 }
       );
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       type: 'access_request',
       title: 'Access Request',
       message: `${user.name} requested access to ${startup.name}`,
-      actionUrl: '/funding',
+      actionUrl: `/startup/${startupId}?tab=applications`,
       metadata: {
         requestId: accessRequest._id,
         investorId: decoded.userId,
@@ -145,6 +145,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const startupId = searchParams.get('startupId');
 
     let query: Record<string, unknown> = {};
 
@@ -162,6 +163,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) query.status = status;
+    if (startupId) query.startupId = startupId;
 
     const requests = await AccessRequest.find(query)
       .populate('investorId', 'name email avatar role trustScore verificationLevel')

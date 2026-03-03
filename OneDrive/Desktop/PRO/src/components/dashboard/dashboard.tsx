@@ -47,7 +47,6 @@ const navigation = {
   founder: [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'startups', label: 'My Startups', icon: Building2 },
-    { id: 'applications', label: 'Applications', icon: Users },
     { id: 'search', label: 'Search', icon: Search },
     { id: 'alliances', label: 'Alliances', icon: Handshake },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
