@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   authors: [{ name: "CollabHub Team" }],
   icons: {
     icon: "/logo.svg",
+    shortcut: "/favicon.svg",
   },
   openGraph: {
     title: "CollabHub - Startup Collaboration Platform",
