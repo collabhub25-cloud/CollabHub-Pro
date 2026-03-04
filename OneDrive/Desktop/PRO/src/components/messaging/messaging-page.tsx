@@ -351,7 +351,7 @@ export function MessagingPage() {
   return (
     <div className="h-[calc(100vh-160px)] min-h-[500px]">
       <Card className="h-full">
-        <div className="grid h-full" style={{ gridTemplateColumns: selectedConversation ? '300px 1fr 260px' : '1fr' }}>
+        <div className="grid h-full" style={{ gridTemplateColumns: selectedConversation ? '300px 1fr' : '1fr' }}>
           {/* Conversations List */}
           <div className={`border-r overflow-hidden ${selectedConversation ? 'hidden md:block' : 'w-full'}`}>
             <CardHeader className="border-b">
@@ -603,49 +603,6 @@ export function MessagingPage() {
             </div>
           )}
 
-          {/* Right Info Panel */}
-          {selectedConversation && otherUser && (
-            <div className="hidden md:block border-l overflow-y-auto overflow-x-hidden">
-              <div className="p-4 text-center">
-                <Avatar className="h-16 w-16 mx-auto mb-3">
-                  <AvatarImage src={otherUser.avatar} />
-                  <AvatarFallback className="text-lg">
-                    {getInitials(otherUser.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <p className="font-medium">{otherUser.name}</p>
-                <Badge variant="outline" className="text-xs capitalize mt-1">
-                  {otherUser.role}
-                </Badge>
-              </div>
-              <Separator />
-              <div className="p-4 space-y-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Trust Score</p>
-                  <p className="text-sm font-medium">{otherUser.trustScore ?? 0}/100</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Verification</p>
-                  <Badge className={`text-xs ${getVerificationBadge(otherUser.verificationLevel)} text-white`}>
-                    Level {otherUser.verificationLevel}
-                  </Badge>
-                </div>
-                <Separator />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    setActiveTab('profile');
-                    safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, otherUser._id);
-                  }}
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  View Profile
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </Card>
     </div>
