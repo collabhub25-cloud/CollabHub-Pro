@@ -70,8 +70,8 @@ function DynamicCamera() {
 
 export function ThreeParticleField() {
     const { theme } = useTheme();
-    // Use #48E5C2 (Mint) for dark mode and #0F8C79 (Deep Teal) for light mode
-    const particleColor = theme === 'dark' ? '#48E5C2' : '#0F8C79';
+    // Use #4ADE80 (Warm Light Green) for dark mode and #2A7D43 (Warm Rich Green) for light mode
+    const particleColor = theme === 'dark' ? '#4ADE80' : '#2A7D43';
 
     return (
         <div className="absolute inset-0 -z-10 pointer-events-none opacity-40">
