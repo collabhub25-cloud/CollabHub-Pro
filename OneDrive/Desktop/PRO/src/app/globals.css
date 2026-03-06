@@ -55,8 +55,8 @@
   --card-foreground: #0D140E;
   --popover: #FFFFFF;
   --popover-foreground: #0D140E;
-  --primary: #2A7D43;
-  /* Warm Green for light mode contrast */
+  --primary: #597E5B;
+  /* Soft Sage Green for light mode contrast */
   --primary-foreground: #FFFFFF;
   --secondary: #E2E8E2;
   --secondary-foreground: #0D140E;
@@ -67,20 +67,22 @@
   --destructive: #E74C3C;
   --border: #CDE0D4;
   --input: #CDE0D4;
-  --ring: #2A7D43;
-  --chart-1: #2A7D43;
-  --chart-2: #FF7A59;
-  --chart-3: #111A13;
+  --ring: #597E5B;
+  --chart-1: #597E5B;
+  --chart-2: #C0A080;
+  /* Light Brown/Tan */
+  --chart-3: #8B6D55;
+  /* Deep Brown */
   --chart-4: #4ADE80;
   --chart-5: #0D140E;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #0D140E;
-  --sidebar-primary: #2A7D43;
+  --sidebar-primary: #597E5B;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #E2E8E2;
   --sidebar-accent-foreground: #0D140E;
   --sidebar-border: #CDE0D4;
-  --sidebar-ring: #2A7D43;
+  --sidebar-ring: #597E5B;
 
   --accent-founder: #FF7A59;
   /* Coral */
@@ -99,8 +101,8 @@
   --card-foreground: #F4F6F4;
   --popover: #111A13;
   --popover-foreground: #F4F6F4;
-  --primary: #4ADE80;
-  /* Striking warm green Accent */
+  --primary: #8BBD8E;
+  /* Soft Light Green Accent */
   --primary-foreground: #0B140E;
   --secondary: #1C2922;
   --secondary-foreground: #F4F6F4;
@@ -111,20 +113,22 @@
   --destructive: #FF7A59;
   --border: #23332A;
   --input: #23332A;
-  --ring: #4ADE80;
-  --chart-1: #4ADE80;
-  --chart-2: #FF7A59;
-  --chart-3: #F4F6F4;
+  --ring: #8BBD8E;
+  --chart-1: #8BBD8E;
+  --chart-2: #D2B48C;
+  /* Light Brown */
+  --chart-3: #A08060;
+  /* Deep Brown */
   --chart-4: #4DB8FF;
   --chart-5: #FF7A59;
   --sidebar: #0E1711;
   --sidebar-foreground: #F4F6F4;
-  --sidebar-primary: #4ADE80;
+  --sidebar-primary: #8BBD8E;
   --sidebar-primary-foreground: #0B140E;
   --sidebar-accent: #1C2922;
   --sidebar-accent-foreground: #F4F6F4;
   --sidebar-border: #23332A;
-  --sidebar-ring: #4ADE80;
+  --sidebar-ring: #8BBD8E;
 
   --accent-founder: #FF7A59;
   /* Coral */

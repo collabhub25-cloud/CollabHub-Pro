@@ -15,8 +15,12 @@ import { Separator } from '@/components/ui/separator';
 import {
   Plus, Building2, Users, CheckCircle2, Clock,
   Briefcase, Target, Zap, Loader2, Edit, Trash2,
-  FileText, AlertCircle, DollarSign, Lock, ExternalLink
+  FileText, AlertCircle, DollarSign, Lock, ExternalLink,
+  ChevronRight, TrendingUp, Presentation, Check
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Dialog,
@@ -111,6 +115,34 @@ interface Agreement {
   createdAt: string;
   signedBy: Array<{ userId: string; signedAt: string }>;
 }
+
+const mockActivityFeed = [
+  { id: 1, user: "MJ", action: "updated AgriChain's startup profile", time: "Just now", type: 'AI' },
+  { id: 2, user: "FinPilot", action: "secured $150k in seed funding", time: "1d ago", type: 'FUNDING' },
+  { id: 3, user: "Sarah", action: "added the \"Smart Contract Deployment\" milestone in AgriChain", time: "7 days ago", type: 'DOC' },
+  { id: 4, user: "MJ", action: "joined the team of SkillForge", time: "3 days ago", type: 'TEAM' },
+];
+
+const mockChartData = [
+  { month: "Oct", sales: 180, customers: 300 },
+  { month: "Nov", sales: 300, customers: 400 },
+  { month: "Dec", sales: 450, customers: 500 },
+  { month: "Jan", sales: 380, customers: 620 },
+  { month: "Feb", sales: 550, customers: 620 },
+  { month: "Mar", sales: 600, customers: 800 },
+  { month: "Apr", sales: 780, customers: 980 },
+];
+
+const chartConfig = {
+  sales: {
+    label: "Sales",
+    color: "hsl(var(--chart-4))", // Muted Mint/Blue
+  },
+  customers: {
+    label: "Customers",
+    color: "hsl(var(--chart-1))", // Primary Green
+  },
+};
 
 interface FounderDashboardProps {
   activeTab: string;
@@ -445,155 +477,219 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   // Dashboard Overview
   if (activeTab === 'dashboard') {
-    const pendingApplications = applications.filter(a => a.status === 'pending');
-    const totalFundingTarget = fundingRounds.filter(r => r.status === 'active').reduce((sum, r) => sum + r.targetAmount, 0);
-
     return (
       <div className="space-y-6 page-enter">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {user?.name?.split(' ')[0]}!</h1>
-            <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your startups</p>
+            <h1 className="text-2xl font-bold">Welcome back!</h1>
+            <p className="text-muted-foreground mt-1">
+              Here&apos;s what&apos;s happening with <span className="font-semibold text-foreground">your startups:</span>
+            </p>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <InteractiveHoverButton text="New Startup" onClick={() => setShowCreateStartup(true)} disabled={(user?.verificationLevel || 0) < 2} className="w-36" />
-                </div>
-              </TooltipTrigger>
-              {(user?.verificationLevel || 0) < 2 && (
-                <TooltipContent>
-                  <p>You need Verification Level 2 to create a startup.</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Apps</CardTitle>
-              <Clock className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingApplications.length}</div>
-              <p className="text-xs text-muted-foreground">Awaiting review</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Pursuits</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${(totalFundingTarget / 1000).toFixed(0)}k</div>
-              <p className="text-xs text-muted-foreground">Target capital</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Startups</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.startups}</div>
-              <p className="text-xs text-muted-foreground">Active ventures</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Team Members</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.teamMembers}</div>
-              <p className="text-xs text-muted-foreground">Across all startups</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Milestones</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeMilestones}</div>
-              <p className="text-xs text-muted-foreground">In progress</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
-              <Zap className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{user?.trustScore || 50}</div>
-              <Progress value={user?.trustScore || 50} className="h-2 mt-2" />
-            </CardContent>
-          </Card>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Left Column - Recent Milestones & Funding */}
+          <div className="md:col-span-5 flex flex-col gap-6">
+            <Card className="card-elevated flex-1">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg font-medium">Recent Milestones</CardTitle>
+                <Button variant="ghost" size="sm" className="text-muted-foreground h-auto p-0 font-normal hover:bg-transparent hover:text-foreground">
+                  View All <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : milestones.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No milestones yet</p>
+                ) : (
+                  <div className="space-y-6">
+                    {milestones.slice(0, 4).map((milestone) => {
+                      const isCompleted = milestone.status === 'completed';
+                      return (
+                        <div key={milestone._id} className="flex flex-col gap-1">
+                          <div className="flex justify-between items-start">
+                            <span className="font-medium text-[15px]">{milestone.startupId?.name || 'Startup'}</span>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {milestone.dueDate ? formatDistanceToNow(new Date(milestone.dueDate), { addSuffix: true }) : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            {isCompleted ? (
+                              <Check className="h-4 w-4 text-primary shrink-0" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />
+                            )}
+                            <span className="text-muted-foreground truncate">{milestone.title}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Recent Activity */}
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Applications</CardTitle>
-              <CardDescription>Latest talent applications to your startups</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : applications.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">No applications yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {applications.slice(0, 5).map((app) => (
-                    <div key={app._id} className="flex items-center gap-4">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback>{app.talentId?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/profile/${app.talentId?._id}`} className="hover:underline"><p className="text-sm font-medium truncate">{app.talentId?.name}</p></Link>
-                        <p className="text-xs text-muted-foreground">{app.startupId?.name}</p>
+            <Card className="card-elevated">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg font-medium">Funding Activity</CardTitle>
+                <Button variant="ghost" size="sm" className="text-muted-foreground h-auto p-0 font-normal hover:bg-transparent hover:text-foreground">
+                  View All <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : fundingRounds.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No funding activity yet</p>
+                ) : (
+                  <div className="space-y-6">
+                    {fundingRounds.slice(0, 3).map((round, index) => (
+                      <div key={round._id} className="flex justify-between items-center bg-transparent gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">
+                            <span className="font-semibold text-foreground">{round.startupId?.name}</span>{" "}
+                            <span className="font-bold text-foreground">${(round.targetAmount / 1000).toFixed(0)}k</span>{" "}
+                            <span className="text-muted-foreground ml-1">{round.roundName} Round</span>
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(round.createdAt), { addSuffix: true })}
+                          </span>
+                          {index === 0 && (
+                            <Badge className="bg-orange-500 hover:bg-orange-600 text-[10px] px-1.5 py-0 h-5">New</Badge>
+                          )}
+                        </div>
                       </div>
-                      <Badge variant={app.status === 'pending' ? 'secondary' : 'default'}>{app.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Milestone Progress</CardTitle>
-              <CardDescription>Current milestones across your startups</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : milestones.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">No milestones yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {milestones.slice(0, 3).map((milestone) => (
-                    <div key={milestone._id} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{milestone.title}</span>
-                        <Badge variant="outline">{milestone.status}</Badge>
-                      </div>
-                      <Progress value={milestone.status === 'completed' ? 100 : milestone.status === 'in_progress' ? 50 : 0} className="h-2" />
+          {/* Right Column - Graph & Feed */}
+          <div className="md:col-span-7 flex flex-col gap-6">
+            <Card className="card-elevated">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium mb-4">Startup Growth</CardTitle>
+                <div className="flex flex-wrap gap-8 items-start">
+                  <div>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl font-bold tracking-tight text-foreground">980</span>
+                      <span className="text-sm font-medium text-primary flex items-center">
+                        +35
+                      </span>
                     </div>
-                  ))}
+                    <span className="text-sm text-muted-foreground flex items-center gap-3">Customers <span className="opacity-70 text-xs">this month</span></span>
+                  </div>
+                  <Separator orientation="vertical" className="h-12 hidden sm:block" />
+                  <div>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl font-bold tracking-tight text-foreground">$120K</span>
+                      <span className="text-sm font-medium text-primary flex items-center">
+                        +8.2K
+                      </span>
+                    </div>
+                    <span className="text-sm text-muted-foreground flex items-center gap-3">Sales <span className="opacity-70 text-xs text-primary">+$8.2K this month</span></span>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="h-[200px] w-full">
+                  <ChartContainer config={chartConfig} className="h-full w-full">
+                    <AreaChart
+                      data={mockChartData}
+                      margin={{ top: 10, right: 0, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="fillCustomers" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--color-customers)" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="var(--color-customers)" stopOpacity={0.0} />
+                        </linearGradient>
+                        <linearGradient id="fillSales" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--color-sales)" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="var(--color-sales)" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={10}
+                        fontSize={12}
+                        color="hsl(var(--muted-foreground))"
+                      />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={10}
+                        fontSize={12}
+                        color="hsl(var(--muted-foreground))"
+                      />
+                      <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                      <Area
+                        type="monotone"
+                        dataKey="customers"
+                        stroke="var(--color-customers)"
+                        strokeWidth={2}
+                        fill="url(#fillCustomers)"
+                        fillOpacity={1}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="sales"
+                        stroke="var(--color-sales)"
+                        strokeWidth={2}
+                        fill="url(#fillSales)"
+                        fillOpacity={1}
+                      />
+                    </AreaChart>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 h-full">
+              {[0, 1].map((colIndex) => (
+                <Card key={colIndex} className="card-elevated h-full">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-medium">Activity Feed</CardTitle>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground h-auto p-0 font-normal hover:bg-transparent hover:text-foreground">
+                      View All <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="space-y-6">
+                      {mockActivityFeed.slice(colIndex * 2, colIndex * 2 + 2).map((activity) => (
+                        <div key={activity.id} className="flex gap-4 items-start">
+                          <Avatar className={`h-10 w-10 shrink-0 ${activity.type === 'AI' ? 'bg-primary/10 text-primary' : activity.type === 'FUNDING' ? 'bg-orange-500/10 text-orange-500' : 'bg-muted text-muted-foreground'
+                            }`}>
+                            <AvatarFallback className="bg-transparent font-medium">
+                              {activity.type === 'AI' ? 'AI' : activity.type === 'FUNDING' ? '$' : activity.user[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <p className="text-sm font-medium leading-snug">
+                              {activity.user} <span className="text-muted-foreground font-normal">{activity.action}</span>
+                            </p>
+                            <span className="text-xs text-muted-foreground">{activity.time}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Create Startup Dialog */}
