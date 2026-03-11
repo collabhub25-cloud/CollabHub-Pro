@@ -34,18 +34,18 @@ export async function POST(request: NextRequest) {
         }
 
         // Include the password field which is normally excluded by default depending on the schema
-        const user = await User.findById(payload.userId).select('+password');
+        const user = await User.findById(payload.userId);
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const isValidPassword = await verifyPassword(currentPassword, user.password);
+        const isValidPassword = await verifyPassword(currentPassword, user.passwordHash);
         if (!isValidPassword) {
             return NextResponse.json({ error: 'Invalid current password' }, { status: 403 });
         }
 
         const newPasswordHash = await hashPassword(newPassword);
-        user.password = newPasswordHash;
+        user.passwordHash = newPasswordHash;
         await user.save();
 
         return NextResponse.json({ success: true, message: 'Password updated successfully' });

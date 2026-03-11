@@ -383,100 +383,69 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     const dueDiligenceCount = accessRequests.filter(r => r.status === 'approved' || r.status === 'pending').length;
 
     return (
-      <div className="space-y-6 page-enter fade-up">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 page-enter fade-up relative">
+        {/* 3D Animated Background Orbs */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
+          <div className="absolute rounded-full opacity-[0.07]" style={{ width: 500, height: 500, top: '-5%', right: '-8%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', animation: 'float-orb 18s ease-in-out infinite', filter: 'blur(80px)' }} />
+          <div className="absolute rounded-full opacity-[0.06]" style={{ width: 400, height: 400, bottom: '10%', left: '-5%', background: 'radial-gradient(circle, #0047AB 0%, transparent 70%)', animation: 'float-orb 22s ease-in-out infinite reverse', filter: 'blur(70px)' }} />
+          <div className="absolute rounded-full opacity-[0.04]" style={{ width: 300, height: 300, top: '40%', right: '20%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', animation: 'float-orb 15s ease-in-out infinite 3s', filter: 'blur(60px)' }} />
+        </div>
+        <style>{`@keyframes float-orb { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(30px, -20px) scale(1.05); } 50% { transform: translate(-20px, 30px) scale(0.95); } 75% { transform: translate(15px, 15px) scale(1.02); } }`}</style>
+
+        {/* Header with glassmorphism */}
+        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.06) 0%, rgba(0,71,171,0.04) 50%, rgba(255,255,255,0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(46,139,87,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
           <div>
-            <h1 className="text-2xl font-bold">Investor Dashboard</h1>
-            <p className="text-muted-foreground">Discover your next investment opportunity</p>
+            <h1 className="text-2xl font-bold tracking-tight">Welcome back, {user?.name?.split(' ')[0]}!</h1>
+            <p className="text-muted-foreground mt-1">Discover your next investment opportunity</p>
           </div>
-          <Button variant="outline" onClick={() => setGlobalTab('search')}>
+          <Button onClick={() => setGlobalTab('search')} className="rounded-xl px-5" style={{ background: 'linear-gradient(135deg, #0047AB 0%, #0066CC 100%)', boxShadow: '0 4px 14px rgba(0,71,171,0.25)' }}>
             <Search className="h-4 w-4 mr-2" />
             Discover Startups
           </Button>
         </div>
 
-        {/* KYC/Accreditation Warning */}
+        {/* KYC/Accreditation Warning — Premium */}
         {(user?.verificationLevel || 0) < 3 && (
-          <Card className="border-orange-500/50 bg-orange-500/5">
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between p-5 rounded-2xl transition-all duration-300 hover:shadow-lg" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.06) 0%, rgba(249,115,22,0.02) 100%)', border: '1px solid rgba(249,115,22,0.2)', backdropFilter: 'blur(12px)' }}>
+            <div className="flex items-center gap-4">
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.05) 100%)' }}>
                 <Shield className="h-5 w-5 text-orange-500" />
-                <div>
-                  <p className="font-medium">Verification Required</p>
-                  <p className="text-sm text-muted-foreground">
-                    Complete Verification Level 3 to unlock investing capabilities.
-                  </p>
-                </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setGlobalTab('settings')}>
-                Verify Now
-              </Button>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="font-semibold text-[15px]">Verification Required</p>
+                <p className="text-sm text-muted-foreground">Complete Verification Level 3 to unlock investing capabilities.</p>
+              </div>
+            </div>
+            <Button size="sm" className="rounded-xl" style={{ background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', boxShadow: '0 4px 12px rgba(249,115,22,0.25)', color: 'white' }} onClick={() => setGlobalTab('settings')}>Verify Now</Button>
+          </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Due Diligence</CardTitle>
-              <FileText className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dueDiligenceCount}</div>
-              <p className="text-xs text-muted-foreground">Approve or pending access</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Average Equity</CardTitle>
-              <Target className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(portfolioStats.totalEquity / Math.max(portfolioStats.activeInvestments, 1)).toFixed(2)}%</div>
-              <p className="text-xs text-muted-foreground">Per investment</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Invested</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${portfolioStats.totalInvested.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{portfolioStats.activeInvestments} investments</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Portfolio Equity</CardTitle>
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{portfolioStats.totalEquity.toFixed(4)}%</div>
-              <p className="text-xs text-muted-foreground">Across all investments</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Open Rounds</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{fundingRounds.length}</div>
-              <p className="text-xs text-muted-foreground">Available for investment</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
-              <Zap className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{user?.trustScore || 50}</div>
-              <Progress value={user?.trustScore || 50} className="h-2 mt-2" />
-            </CardContent>
-          </Card>
+        {/* Stats Cards — Premium Glassmorphic */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" style={{ perspective: '1000px' }}>
+          {[
+            { title: 'Active Due Diligence', value: dueDiligenceCount, sub: 'Approved or pending access', icon: FileText, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)' },
+            { title: 'Average Equity', value: `${(portfolioStats.totalEquity / Math.max(portfolioStats.activeInvestments, 1)).toFixed(2)}%`, sub: 'Per investment', icon: Target, iconColor: '#7C3AED', bg: 'rgba(124,58,237,0.06)' },
+            { title: 'Total Invested', value: `$${portfolioStats.totalInvested.toLocaleString()}`, sub: `${portfolioStats.activeInvestments} investments`, icon: TrendingUp, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)' },
+            { title: 'Portfolio Equity', value: `${portfolioStats.totalEquity.toFixed(4)}%`, sub: 'Across all investments', icon: Briefcase, iconColor: '#2A2623', bg: 'rgba(42,38,35,0.04)' },
+            { title: 'Open Rounds', value: fundingRounds.length, sub: 'Available for investment', icon: Building2, iconColor: '#0047AB', bg: 'rgba(0,71,171,0.06)' },
+            { title: 'Trust Score', value: user?.trustScore || 50, sub: 'Your reputation', icon: Zap, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)', showProgress: true },
+          ].map((stat, index) => (
+            <div key={stat.title} className="group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg" style={{ background: `linear-gradient(135deg, ${stat.bg} 0%, rgba(255,255,255,0.9) 100%)`, backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transformStyle: 'preserve-3d', animationDelay: `${index * 80}ms` }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: stat.bg }}>
+                  <stat.icon className="h-4 w-4" style={{ color: stat.iconColor }} />
+                </div>
+              </div>
+              <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
+              <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
+              {stat.showProgress && (
+                <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${user?.trustScore || 50}%`, background: 'linear-gradient(90deg, #2E8B57 0%, #0047AB 100%)' }} />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Pending Access Requests Alert */}
@@ -499,8 +468,8 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
           </Card>
         )}
 
-        {/* Top Deals */}
-        <Card>
+        {/* Open Funding Rounds — Premium */}
+        <Card className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -528,9 +497,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
             ) : (
               <div className="space-y-4">
                 {fundingRounds.slice(0, 5).map((round) => (
-                  <div key={round._id} className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 transition-colors">
+                  <div key={round._id} className="flex items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,248,0.9) 100%)', border: '1px solid rgba(0,0,0,0.06)' }}>
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-bold">
+                      <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-sm transition-transform duration-300 group-hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57 0%, #0047AB 100%)', boxShadow: '0 4px 12px rgba(46,139,87,0.2)' }}>
                         {round.startupId.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>

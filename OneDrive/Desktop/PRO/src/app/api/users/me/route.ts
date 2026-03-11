@@ -104,6 +104,26 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Auto-increment verificationLevel from 0 → 1 when profile is complete (name + bio filled)
+    if (user.verificationLevel === 0 && user.name && user.bio) {
+      user.verificationLevel = 1;
+      await user.save();
+
+      // Create/update the 'profile' verification record as approved
+      await Verification.findOneAndUpdate(
+        { userId: decoded.userId, type: 'profile', role: user.role },
+        {
+          status: 'approved',
+          level: 0,
+          role: user.role,
+          type: 'profile',
+          userId: decoded.userId,
+          verifiedAt: new Date(),
+        },
+        { upsert: true, new: true }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       user: {

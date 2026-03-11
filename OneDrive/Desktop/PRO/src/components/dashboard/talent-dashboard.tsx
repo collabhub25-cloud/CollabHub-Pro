@@ -230,114 +230,106 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
       : 'No assignments';
 
     return (
-      <div className="space-y-6 page-enter">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 page-enter relative">
+        {/* 3D Animated Background Orbs */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
+          <div className="absolute rounded-full opacity-[0.07]" style={{ width: 450, height: 450, top: '-5%', left: '-8%', background: 'radial-gradient(circle, #0047AB 0%, transparent 70%)', animation: 'float-orb-t 20s ease-in-out infinite', filter: 'blur(80px)' }} />
+          <div className="absolute rounded-full opacity-[0.06]" style={{ width: 380, height: 380, bottom: '5%', right: '-5%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', animation: 'float-orb-t 16s ease-in-out infinite reverse', filter: 'blur(70px)' }} />
+          <div className="absolute rounded-full opacity-[0.04]" style={{ width: 280, height: 280, top: '35%', left: '30%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', animation: 'float-orb-t 24s ease-in-out infinite 2s', filter: 'blur(60px)' }} />
+        </div>
+        <style>{`@keyframes float-orb-t { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(-25px, 20px) scale(1.04); } 50% { transform: translate(20px, -25px) scale(0.96); } 75% { transform: translate(-10px, -15px) scale(1.02); } }`}</style>
+
+        {/* Header with glassmorphism */}
+        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(0,71,171,0.05) 0%, rgba(46,139,87,0.04) 50%, rgba(255,255,255,0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,71,171,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {user?.name?.split(' ')[0]}!</h1>
-            <p className="text-muted-foreground">Track your progress and find new opportunities</p>
+            <h1 className="text-2xl font-bold tracking-tight">Welcome back, {user?.name?.split(' ')[0]}!</h1>
+            <p className="text-muted-foreground mt-1">Track your progress and find new opportunities</p>
           </div>
+          <Button onClick={() => setGlobalTab('search')} className="rounded-xl px-5" style={{ background: 'linear-gradient(135deg, #0047AB 0%, #0066CC 100%)', boxShadow: '0 4px 14px rgba(0,71,171,0.25)' }}>
+            <Search className="h-4 w-4 mr-2" />
+            Browse Opportunities
+          </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeMilestones.length}</div>
-              <p className="text-xs text-muted-foreground">In progress</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{completedMilestones.length}</div>
-              <p className="text-xs text-muted-foreground">Total completed</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingApplications.length}</div>
-              <p className="text-xs text-muted-foreground">Awaiting response</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${totalEarnings.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">From completed tasks</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Next Deadline</CardTitle>
-              <Calendar className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold truncate">{nextDeadline}</div>
-              <p className="text-xs text-muted-foreground">Upcoming milestone</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
-              <Zap className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{user?.trustScore || 50}</div>
-              <Progress value={user?.trustScore || 50} className="h-2 mt-2" />
-            </CardContent>
-          </Card>
+        {/* Stats Cards — Premium Glassmorphic */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" style={{ perspective: '1000px' }}>
+          {[
+            { title: 'Active Projects', value: activeMilestones.length, sub: 'In progress', icon: Briefcase, iconColor: '#0047AB', bg: 'rgba(0,71,171,0.06)' },
+            { title: 'Completed Tasks', value: completedMilestones.length, sub: 'Total completed', icon: CheckCircle2, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)' },
+            { title: 'Pending Applications', value: pendingApplications.length, sub: 'Awaiting response', icon: Clock, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)' },
+            { title: 'Total Earnings', value: `$${totalEarnings.toLocaleString()}`, sub: 'From completed tasks', icon: DollarSign, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)' },
+            { title: 'Next Deadline', value: nextDeadline, sub: 'Upcoming milestone', icon: Calendar, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)', truncate: true },
+            { title: 'Trust Score', value: user?.trustScore || 50, sub: 'Your reputation', icon: Zap, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)', showProgress: true },
+          ].map((stat, index) => (
+            <div key={stat.title} className="group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg" style={{ background: `linear-gradient(135deg, ${stat.bg} 0%, rgba(255,255,255,0.9) 100%)`, backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transformStyle: 'preserve-3d', animationDelay: `${index * 80}ms` }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: stat.bg }}>
+                  <stat.icon className="h-4 w-4" style={{ color: stat.iconColor }} />
+                </div>
+              </div>
+              <div className={`text-2xl font-bold tracking-tight ${stat.truncate ? 'truncate' : ''}`}>{stat.value}</div>
+              <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
+              {stat.showProgress && (
+                <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${user?.trustScore || 50}%`, background: 'linear-gradient(90deg, #2E8B57 0%, #0047AB 100%)' }} />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Verification Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
-              Verification Progress
-            </CardTitle>
-            <CardDescription>Complete all levels to unlock premium opportunities</CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Verification Progress — Premium Stepper */}
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(46,139,87,0.08)' }}>
+                <Award className="h-4 w-4" style={{ color: '#2E8B57' }} />
+              </div>
+              <h3 className="text-lg font-bold tracking-tight">Verification Progress</h3>
+            </div>
+            <p className="text-sm text-muted-foreground ml-10">Complete all levels to unlock premium opportunities</p>
+          </div>
+          <div className="px-6 pb-6">
             <div className="flex items-center justify-between">
               {verificationSteps.map((step, index) => (
                 <div key={step.level} className="flex items-center">
                   <div className="flex flex-col items-center">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${step.completed ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                      }`}>
+                    <div
+                      className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
+                      style={{
+                        background: step.completed
+                          ? 'linear-gradient(135deg, #2E8B57 0%, #0047AB 100%)'
+                          : 'rgba(0,0,0,0.04)',
+                        color: step.completed ? 'white' : '#6C635C',
+                        boxShadow: step.completed ? '0 4px 14px rgba(46,139,87,0.3)' : 'none',
+                      }}
+                    >
                       {step.completed ? <CheckCircle2 className="h-5 w-5" /> : step.level}
                     </div>
-                    <span className="text-xs mt-2 text-center">{step.title}</span>
+                    <span className="text-xs mt-2 text-center font-medium" style={{ color: step.completed ? '#2E8B57' : '#6C635C' }}>{step.title}</span>
                   </div>
                   {index < verificationSteps.length - 1 && (
-                    <div className={`w-16 h-1 mx-2 ${step.completed ? 'bg-primary' : 'bg-muted'}`} />
+                    <div className="w-16 h-1 mx-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)' }}>
+                      <div className="h-full rounded-full transition-all duration-700" style={{ width: step.completed ? '100%' : '0%', background: 'linear-gradient(90deg, #2E8B57 0%, #0047AB 100%)' }} />
+                    </div>
                   )}
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity — Premium Two-Column */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Milestones</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+            <div className="p-6 pb-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold tracking-tight">Active Milestones</h3>
+                <Button variant="ghost" size="sm" className="rounded-xl text-sm" onClick={() => setGlobalTab('projects')}>View All</Button>
+              </div>
+            </div>
+            <div className="px-6 pb-6">
               {loading ? (
                 <div className="flex justify-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -345,29 +337,34 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               ) : activeMilestones.length === 0 ? (
                 <p className="text-center text-muted-foreground py-4">No active milestones</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {activeMilestones.map((milestone) => (
-                    <div key={milestone._id} className="space-y-2">
+                    <div key={milestone._id} className="p-4 rounded-xl space-y-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,248,0.9) 100%)', border: '1px solid rgba(0,0,0,0.06)' }}>
                       <div className="flex justify-between">
                         <div>
-                          <p className="font-medium">{milestone.title}</p>
+                          <p className="font-semibold text-[15px]">{milestone.title}</p>
                           <p className="text-xs text-muted-foreground">{milestone.startupId?.name}</p>
                         </div>
-                        <span className="text-sm text-muted-foreground">${milestone.amount}</span>
+                        <span className="text-sm font-bold" style={{ color: '#2E8B57' }}>${milestone.amount}</span>
                       </div>
-                      <Progress value={50} className="h-2" />
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: '50%', background: 'linear-gradient(90deg, #2E8B57 0%, #0047AB 100%)' }} />
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recommended Opportunities</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+            <div className="p-6 pb-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold tracking-tight">Recommended Opportunities</h3>
+                <Button variant="ghost" size="sm" className="rounded-xl text-sm" onClick={() => setGlobalTab('search')}>See Trends</Button>
+              </div>
+            </div>
+            <div className="px-6 pb-6">
               {loading ? (
                 <div className="flex justify-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -375,34 +372,33 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               ) : startups.length === 0 ? (
                 <p className="text-center text-muted-foreground py-4">No opportunities found</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {startups.slice(0, 3).map((startup) => (
-                    <div key={startup._id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div key={startup._id} className="flex items-center justify-between p-4 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,248,0.9) 100%)', border: '1px solid rgba(0,0,0,0.06)' }}>
                       <div>
-                        <p className="font-medium">{startup.name}</p>
+                        <p className="font-semibold text-[15px]">{startup.name}</p>
                         <p className="text-xs text-muted-foreground">{startup.industry} • {startup.stage}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          <Zap className="h-3 w-3" />
-                          {startup.trustScore}
-                        </Badge>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: 'rgba(46,139,87,0.08)' }}>
+                          <Zap className="h-3 w-3" style={{ color: '#2E8B57' }} />
+                          <span className="text-sm font-medium" style={{ color: '#2E8B57' }}>{startup.trustScore}</span>
+                        </div>
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setGlobalTab('search');
-                          }}
+                          className="rounded-xl"
+                          style={{ background: 'linear-gradient(135deg, #0047AB 0%, #0066CC 100%)', boxShadow: '0 4px 12px rgba(0,71,171,0.2)' }}
+                          onClick={() => setGlobalTab('search')}
                         >
-                          <ExternalLink className="h-3 w-3" />
+                          View
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     );
