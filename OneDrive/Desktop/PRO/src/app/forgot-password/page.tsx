@@ -37,10 +37,10 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col" style={{ background: '#F4F2ED', color: '#2A2623' }}>
-            <header className="border-b" style={{ borderColor: '#D8D2C8' }}>
+        <div className="min-h-screen flex flex-col bg-background text-foreground">
+            <header className="border-b border-border/50" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)' }}>
                 <div className="max-w-5xl mx-auto px-6 py-4">
-                    <Link href="/" className="text-base font-medium" style={{ letterSpacing: '0.3px' }}>AlloySphere</Link>
+                    <Link href="/" className="text-base font-semibold tracking-tight">AlloySphere</Link>
                 </div>
             </header>
 
@@ -48,17 +48,16 @@ export default function ForgotPasswordPage() {
                 <div className="w-full max-w-sm">
                     {sent ? (
                         <div className="text-center space-y-4">
-                            <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#EDE9E3' }}>
-                                <Mail className="h-6 w-6" style={{ color: '#6C635C' }} />
+                            <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center bg-muted">
+                                <Mail className="h-6 w-6 text-muted-foreground" />
                             </div>
                             <h2 className="text-lg font-medium">Check your email</h2>
-                            <p className="text-sm" style={{ color: '#6C635C' }}>
+                            <p className="text-sm text-muted-foreground">
                                 If an account exists for <strong>{email}</strong>, we&apos;ve sent a password reset code.
                             </p>
                             <Link
                                 href="/login"
-                                className="inline-flex items-center gap-2 text-sm font-medium hover:underline mt-4"
-                                style={{ color: '#2A2623' }}
+                                className="inline-flex items-center gap-2 text-sm font-medium hover:underline mt-4 text-foreground"
                             >
                                 <ArrowLeft className="h-4 w-4" />
                                 Back to sign in
@@ -66,8 +65,8 @@ export default function ForgotPasswordPage() {
                         </div>
                     ) : (
                         <>
-                            <h2 className="mb-1">Reset password</h2>
-                            <p className="text-sm mb-8" style={{ color: '#6C635C' }}>
+                            <h2 className="mb-1 text-2xl font-bold tracking-tight">Reset password</h2>
+                            <p className="text-sm mb-8 text-muted-foreground">
                                 Enter your email and we&apos;ll send you a reset code.
                             </p>
 
@@ -79,24 +78,23 @@ export default function ForgotPasswordPage() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                                        style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                                        className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 bg-white border border-border transition-all duration-200"
                                         placeholder="you@example.com"
                                     />
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
-                                    style={{ background: '#2A2623', color: '#FBF9F6' }}
+                                    className="w-full py-2.5 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 hover:opacity-90 active:scale-[0.98] text-white"
+                                    style={{ background: 'linear-gradient(135deg, #2E8B57 0%, #0047AB 100%)' }}
                                 >
                                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'Send reset code'}
                                 </button>
                             </form>
 
-                            <p className="text-center text-sm mt-6" style={{ color: '#6C635C' }}>
+                            <p className="text-center text-sm mt-6 text-muted-foreground">
                                 Remember your password?{' '}
-                                <Link href="/login" className="font-medium hover:underline" style={{ color: '#2A2623' }}>
+                                <Link href="/login" className="font-medium hover:underline text-foreground">
                                     Sign in
                                 </Link>
                             </p>

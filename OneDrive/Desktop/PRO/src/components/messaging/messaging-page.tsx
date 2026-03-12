@@ -509,7 +509,7 @@ export function MessagingPage() {
                                 <div>
                                   <div
                                     className={`px-4 py-2.5 rounded-2xl ${message.isMine
-                                      ? 'bg-[#2A2623] text-[#FBF9F6] rounded-tr-sm'
+                                      ? 'bg-primary text-primary-foreground rounded-tr-sm'
                                       : 'bg-muted rounded-tl-sm'
                                       }`}
                                   >

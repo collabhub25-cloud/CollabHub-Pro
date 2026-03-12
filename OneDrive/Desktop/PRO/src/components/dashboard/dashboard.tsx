@@ -237,8 +237,11 @@ export function Dashboard({ onLogout }: DashboardProps) {
                     style={{ animation: 'sidebar-logo-float 4s ease-in-out infinite' }}
                   >
                     <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <text x="3" y="24" fontFamily="system-ui,sans-serif" fontSize="18" fontWeight="700" fill="white" letterSpacing="-0.5">AS</text>
-                      <circle cx="27" cy="6" r="2.5" fill="white" opacity="0.6" />
+                      {/* Abstract Sphere Intersection Logo */}
+                      <circle cx="16" cy="12" r="6" fill="white" opacity="0.9" />
+                      <circle cx="12" cy="20" r="6" fill="white" opacity="0.7" />
+                      <circle cx="20" cy="20" r="6" fill="white" opacity="0.5" />
+                      <path d="M12 20a6 6 0 018 0" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
                     </svg>
                   </div>
                   {sidebarOpen && (

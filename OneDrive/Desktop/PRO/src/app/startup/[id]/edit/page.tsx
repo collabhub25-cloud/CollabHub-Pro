@@ -90,8 +90,8 @@ export default function StartupEditPage({
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: '#F4F2ED' }}>
-                <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#B05A4F' }} />
+            <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -100,15 +100,15 @@ export default function StartupEditPage({
     const fundingStages = ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'];
 
     return (
-        <div className="min-h-screen" style={{ background: '#F4F2ED', color: '#2A2623' }}>
+        <div className="min-h-screen bg-background text-foreground">
             <div className="max-w-3xl mx-auto px-6 py-8">
-                <button onClick={() => router.back()} className="flex items-center gap-2 text-sm mb-6" style={{ color: '#6C635C' }}>
+                <button onClick={() => router.back()} className="flex items-center gap-2 text-sm mb-6 text-muted-foreground hover:text-foreground">
                     <ArrowLeft className="h-4 w-4" /> Back
                 </button>
 
                 <h1 className="text-2xl font-medium mb-8">Edit Startup</h1>
 
-                {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+                {error && <p className="text-sm text-destructive mb-4">{error}</p>}
 
                 <div className="space-y-6">
                     {/* Name */}
@@ -117,8 +117,7 @@ export default function StartupEditPage({
                         <input
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                            style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                         />
                     </div>
 
@@ -128,8 +127,7 @@ export default function StartupEditPage({
                         <input
                             value={form.vision}
                             onChange={(e) => setForm({ ...form, vision: e.target.value })}
-                            className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                            style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                             maxLength={500}
                         />
                     </div>
@@ -141,8 +139,7 @@ export default function StartupEditPage({
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
                             rows={4}
-                            className="w-full px-3 py-2 rounded text-sm resize-none focus:outline-none"
-                            style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                             maxLength={2000}
                         />
                     </div>
@@ -154,8 +151,7 @@ export default function StartupEditPage({
                             <select
                                 value={form.stage}
                                 onChange={(e) => setForm({ ...form, stage: e.target.value })}
-                                className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                                style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                             >
                                 {stages.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
@@ -165,8 +161,7 @@ export default function StartupEditPage({
                             <input
                                 value={form.industry}
                                 onChange={(e) => setForm({ ...form, industry: e.target.value })}
-                                className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                                style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                             />
                         </div>
                     </div>
@@ -178,8 +173,7 @@ export default function StartupEditPage({
                             <select
                                 value={form.fundingStage}
                                 onChange={(e) => setForm({ ...form, fundingStage: e.target.value })}
-                                className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                                style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                             >
                                 {fundingStages.map(s => <option key={s} value={s}>{s.replace('-', ' ')}</option>)}
                             </select>
@@ -190,8 +184,7 @@ export default function StartupEditPage({
                                 type="number"
                                 value={form.fundingAmount}
                                 onChange={(e) => setForm({ ...form, fundingAmount: e.target.value })}
-                                className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                                style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                                 placeholder="0"
                             />
                         </div>
@@ -203,8 +196,7 @@ export default function StartupEditPage({
                         <input
                             value={form.website}
                             onChange={(e) => setForm({ ...form, website: e.target.value })}
-                            className="w-full px-3 py-2 rounded text-sm focus:outline-none"
-                            style={{ background: '#FBF9F6', border: '1px solid #D8D2C8' }}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                             placeholder="https://"
                         />
                     </div>
@@ -214,16 +206,14 @@ export default function StartupEditPage({
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex items-center gap-2 px-5 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
-                            style={{ background: '#2A2623', color: '#FBF9F6' }}
+                            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 hover:opacity-90 bg-primary text-primary-foreground"
                         >
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             {saving ? 'Saving...' : 'Save Changes'}
                         </button>
                         <button
                             onClick={() => router.back()}
-                            className="px-5 py-2 rounded text-sm"
-                            style={{ border: '1px solid #D8D2C8', color: '#6C635C' }}
+                            className="px-6 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
                         >
                             Cancel
                         </button>

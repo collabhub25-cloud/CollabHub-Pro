@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Loader2, Eye, EyeOff, ArrowRight, Rocket, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import AnoAI from '@/components/ui/animated-shader-background';
 
 const roles = [
     { id: 'founder' as const, label: 'Founder', desc: 'Launch & grow' },
@@ -79,18 +80,8 @@ export default function LoginPage() {
                 </div>
             </header>
 
-            <main className="flex-1 flex items-center justify-center px-6 py-16 login-bg relative">
-                {/* Floating decorative elements */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="absolute rounded-full" style={{
-                            width: 3 + i * 2, height: 3 + i * 2,
-                            left: `${20 + i * 20}%`, top: `${25 + (i % 2) * 40}%`,
-                            background: i % 2 === 0 ? 'rgba(46,139,87,0.15)' : 'rgba(0,71,171,0.15)',
-                            animation: `float-particle ${4 + i}s ease-in-out infinite ${i * 0.7}s`,
-                        }} />
-                    ))}
-                </div>
+            <main className="flex-1 flex items-center justify-center px-6 py-16 relative">
+                <AnoAI />
 
                 <div className="w-full max-w-sm relative z-10">
                     {/* Header */}

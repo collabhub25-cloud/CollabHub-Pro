@@ -11,6 +11,7 @@ import {
   TrendingUp, Handshake, FileCheck, Award, Building2,
   Lightbulb, Target, Globe, Menu, X, ArrowDown, Sparkles
 } from 'lucide-react';
+import AnoAI from '@/components/ui/animated-shader-background';
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -159,18 +160,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       </header>
 
       {/* Hero Section - Cinematic */}
-      <section className="relative overflow-hidden hero-bg">
-        {/* Floating Particles */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="absolute rounded-full" style={{
-              width: 4 + i * 2, height: 4 + i * 2,
-              left: `${15 + i * 14}%`, top: `${20 + (i % 3) * 25}%`,
-              background: i % 2 === 0 ? 'rgba(46,139,87,0.3)' : 'rgba(0,71,171,0.3)',
-              animation: `float-particle ${3 + i * 0.8}s ease-in-out infinite ${i * 0.5}s`,
-            }} />
-          ))}
-        </div>
+      <section className="relative overflow-hidden w-full h-full min-h-[90vh]">
+        <AnoAI />
 
         <div className="container mx-auto px-4 py-24 md:py-36 relative">
           <RevealSection className="max-w-4xl mx-auto text-center">

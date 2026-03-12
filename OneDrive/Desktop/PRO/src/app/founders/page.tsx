@@ -4,15 +4,15 @@ import Link from 'next/link';
 
 export default function FounderLanding() {
     return (
-        <div className="min-h-screen" style={{ background: '#F4F2ED', color: '#2A2623' }}>
-            <header className="border-b" style={{ borderColor: '#D8D2C8' }}>
+        <div className="min-h-screen bg-background text-foreground">
+            <header className="border-b border-border/50 bg-white/50 backdrop-blur-sm">
                 <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link href="/" className="text-base font-medium" style={{ letterSpacing: '0.3px' }}>
-                        <span className="font-bold tracking-tight">AlloySphere</span>
+                    <Link href="/" className="text-base font-medium tracking-tight">
+                        <span className="font-bold">AlloySphere</span>
                     </Link>
                     <div className="flex items-center gap-5">
-                        <Link href="/login" className="text-sm" style={{ color: '#6C635C' }}>Sign in</Link>
-                        <Link href="/signup/founder" className="text-sm font-medium text-[#FBF9F6] px-3.5 py-2 rounded transition-colors" style={{ background: '#B05A4F' }}>
+                        <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
+                        <Link href="/signup/founder" className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-xl transition-all hover:bg-primary/90">
                             Get started
                         </Link>
                     </div>
@@ -20,27 +20,27 @@ export default function FounderLanding() {
             </header>
 
             <main>
-                <section className="max-w-5xl mx-auto px-6" style={{ paddingTop: '96px', paddingBottom: '72px' }}>
-                    <p className="text-sm font-medium mb-4" style={{ color: '#B05A4F' }}>For Founders</p>
-                    <h1 className="mb-4 max-w-lg">Build your startup with verified collaborators.</h1>
-                    <p className="max-w-md" style={{ color: '#6C635C', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+                <section className="max-w-5xl mx-auto px-6 py-24">
+                    <p className="text-sm font-medium mb-4 text-primary">For Founders</p>
+                    <h1 className="text-4xl font-bold tracking-tight mb-4 max-w-lg leading-tight">Build your startup with verified collaborators.</h1>
+                    <p className="max-w-md text-muted-foreground text-lg leading-relaxed mb-8">
                         Hire verified talent, manage milestones, sign agreements digitally, and track payments. Everything a serious founder needs.
                     </p>
-                    <div className="flex items-center gap-4">
-                        <Link href="/signup/founder" className="text-sm font-medium text-[#FBF9F6] px-4 py-2.5 rounded transition-colors" style={{ background: '#B05A4F' }}>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <Link href="/signup/founder" className="text-sm font-medium bg-primary text-primary-foreground px-5 py-2.5 rounded-xl transition-all hover:bg-primary/90">
                             Create founder account
                         </Link>
-                        <Link href="/login" className="text-sm" style={{ color: '#6C635C' }}>
+                        <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                             Already have an account?
                         </Link>
                     </div>
                 </section>
 
-                <hr style={{ borderColor: '#D8D2C8', maxWidth: '64rem', margin: '0 auto' }} />
+                <hr className="border-border/50 max-w-5xl mx-auto" />
 
-                <section className="max-w-5xl mx-auto px-6" style={{ paddingTop: '72px', paddingBottom: '64px' }}>
-                    <h2 className="mb-10">What founders use AlloySphere for</h2>
-                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-8">
+                <section className="max-w-5xl mx-auto px-6 py-20">
+                    <h2 className="text-3xl font-bold tracking-tight mb-10">What founders use AlloySphere for</h2>
+                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-10">
                         {[
                             ['Verified talent hiring', 'Every applicant passes identity and skill verification before they can apply to your startup.'],
                             ['Legal agreements', 'Generate NDAs and contracts. Digital signing with immutable audit trails.'],
@@ -50,25 +50,25 @@ export default function FounderLanding() {
                             ['Team management', 'Manage your team, track applications, and coordinate across multiple startups.'],
                         ].map(([title, desc], i) => (
                             <div key={i}>
-                                <p className="font-medium mb-1">{title}</p>
-                                <p className="text-sm" style={{ color: '#6C635C', lineHeight: '1.6' }}>{desc}</p>
+                                <p className="font-semibold text-foreground mb-2">{title}</p>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                <hr style={{ borderColor: '#D8D2C8', maxWidth: '64rem', margin: '0 auto' }} />
+                <hr className="border-border/50 max-w-5xl mx-auto" />
 
-                <section className="max-w-5xl mx-auto px-6" style={{ paddingTop: '64px', paddingBottom: '80px' }}>
-                    <h2 className="mb-3">Start building.</h2>
-                    <p className="mb-6" style={{ color: '#6C635C', fontSize: '15px' }}>Free to create an account. No credit card required.</p>
-                    <Link href="/signup/founder" className="text-sm font-medium text-[#FBF9F6] px-4 py-2.5 rounded transition-colors" style={{ background: '#B05A4F' }}>
+                <section className="max-w-5xl mx-auto px-6 py-24 text-center">
+                    <h2 className="text-3xl font-bold tracking-tight mb-4">Start building.</h2>
+                    <p className="text-muted-foreground text-lg mb-8">Free to create an account. No credit card required.</p>
+                    <Link href="/signup/founder" className="inline-block text-sm font-medium bg-primary text-primary-foreground px-6 py-3 rounded-xl transition-all hover:bg-primary/90">
                         Create founder account
                     </Link>
                 </section>
             </main>
 
-            <footer className="border-t py-5 text-center text-sm" style={{ borderColor: '#D8D2C8', color: '#6C635C' }}>
+            <footer className="border-t border-border/50 py-8 text-center text-sm text-muted-foreground">
                 © {new Date().getFullYear()} AlloySphere
             </footer>
         </div>

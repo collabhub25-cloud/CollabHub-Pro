@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
+import AnoAI from '@/components/ui/animated-shader-background';
 
 interface Application {
   _id: string;
@@ -231,13 +232,8 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
     return (
       <div className="space-y-6 page-enter relative">
-        {/* 3D Animated Background Orbs */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
-          <div className="absolute rounded-full opacity-[0.07]" style={{ width: 450, height: 450, top: '-5%', left: '-8%', background: 'radial-gradient(circle, #0047AB 0%, transparent 70%)', animation: 'float-orb-t 20s ease-in-out infinite', filter: 'blur(80px)' }} />
-          <div className="absolute rounded-full opacity-[0.06]" style={{ width: 380, height: 380, bottom: '5%', right: '-5%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', animation: 'float-orb-t 16s ease-in-out infinite reverse', filter: 'blur(70px)' }} />
-          <div className="absolute rounded-full opacity-[0.04]" style={{ width: 280, height: 280, top: '35%', left: '30%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', animation: 'float-orb-t 24s ease-in-out infinite 2s', filter: 'blur(60px)' }} />
-        </div>
-        <style>{`@keyframes float-orb-t { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(-25px, 20px) scale(1.04); } 50% { transform: translate(20px, -25px) scale(0.96); } 75% { transform: translate(-10px, -15px) scale(1.02); } }`}</style>
+        {/* Animated Shader Background */}
+        <AnoAI />
 
         {/* Header with glassmorphism */}
         <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(0,71,171,0.05) 0%, rgba(46,139,87,0.04) 50%, rgba(255,255,255,0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,71,171,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
@@ -280,7 +276,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
         </div>
 
         {/* Verification Progress — Premium Stepper */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
           <div className="p-6">
             <div className="flex items-center gap-2 mb-1">
               <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(46,139,87,0.08)' }}>
@@ -322,7 +318,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
         {/* Recent Activity — Premium Two-Column */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+          <div className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <div className="p-6 pb-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold tracking-tight">Active Milestones</h3>
@@ -357,7 +353,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
             </div>
           </div>
 
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+          <div className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <div className="p-6 pb-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold tracking-tight">Recommended Opportunities</h3>

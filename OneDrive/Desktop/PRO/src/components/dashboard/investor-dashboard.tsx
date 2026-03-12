@@ -34,12 +34,13 @@ import {
 import {
   TrendingUp, Building2, DollarSign, Users, Zap, Star,
   Filter, ExternalLink, Loader2, Heart, CheckCircle2,
-  Target, Briefcase, Clock, FileText, Send, Edit, Save, X,
-  Shield, Bell, Settings as SettingsIcon, Award, Search, Lock
+  Shield, Bell, Settings as SettingsIcon, Award, Search, Lock,
+  Target, Briefcase, Clock, FileText, Send, Edit, Save, X
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
+import AnoAI from '@/components/ui/animated-shader-background';
 
 interface FundingRound {
   _id: string;
@@ -383,14 +384,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     const dueDiligenceCount = accessRequests.filter(r => r.status === 'approved' || r.status === 'pending').length;
 
     return (
-      <div className="space-y-6 page-enter fade-up relative">
-        {/* 3D Animated Background Orbs */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
-          <div className="absolute rounded-full opacity-[0.07]" style={{ width: 500, height: 500, top: '-5%', right: '-8%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', animation: 'float-orb 18s ease-in-out infinite', filter: 'blur(80px)' }} />
-          <div className="absolute rounded-full opacity-[0.06]" style={{ width: 400, height: 400, bottom: '10%', left: '-5%', background: 'radial-gradient(circle, #0047AB 0%, transparent 70%)', animation: 'float-orb 22s ease-in-out infinite reverse', filter: 'blur(70px)' }} />
-          <div className="absolute rounded-full opacity-[0.04]" style={{ width: 300, height: 300, top: '40%', right: '20%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', animation: 'float-orb 15s ease-in-out infinite 3s', filter: 'blur(60px)' }} />
-        </div>
-        <style>{`@keyframes float-orb { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(30px, -20px) scale(1.05); } 50% { transform: translate(-20px, 30px) scale(0.95); } 75% { transform: translate(15px, 15px) scale(1.02); } }`}</style>
+      <div className="space-y-6 page-enter relative">
+        {/* Animated Shader Background */}
+        <AnoAI />
 
         {/* Header with glassmorphism */}
         <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.06) 0%, rgba(0,71,171,0.04) 50%, rgba(255,255,255,0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(46,139,87,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
@@ -434,7 +430,11 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
                 <div className="h-9 w-9 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: stat.bg }}>
-                  <stat.icon className="h-4 w-4" style={{ color: stat.iconColor }} />
+                  {typeof stat.icon === 'string' ? (
+                    <span style={{ color: stat.iconColor }}>{stat.icon}</span>
+                  ) : (
+                    <stat.icon className="h-4 w-4" style={{ color: stat.iconColor }} />
+                  )}
                 </div>
               </div>
               <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
@@ -468,8 +468,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
           </Card>
         )}
 
-        {/* Open Funding Rounds — Premium */}
-        <Card className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+        <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

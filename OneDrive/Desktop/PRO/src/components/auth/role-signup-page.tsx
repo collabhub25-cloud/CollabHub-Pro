@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Rocket, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import AnoAI from '@/components/ui/animated-shader-background';
 
 interface RoleSignupPageProps {
     role: 'founder' | 'investor' | 'talent';
@@ -87,18 +88,8 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
                 </div>
             </header>
 
-            <main className="flex-1 flex items-center justify-center px-6 py-12 signup-bg relative">
-                {/* Floating decorative elements */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-                    {[...Array(3)].map((_, i) => (
-                        <div key={i} className="absolute rounded-full" style={{
-                            width: 4 + i * 2, height: 4 + i * 2,
-                            left: `${25 + i * 25}%`, top: `${30 + (i % 2) * 35}%`,
-                            background: i % 2 === 0 ? 'rgba(46,139,87,0.12)' : 'rgba(0,71,171,0.12)',
-                            animation: `float-particle ${4 + i}s ease-in-out infinite ${i * 0.5}s`,
-                        }} />
-                    ))}
-                </div>
+            <main className="flex-1 flex items-center justify-center px-6 py-12 relative">
+                <AnoAI />
 
                 <div className="w-full max-w-sm relative z-10">
                     {/* Header */}

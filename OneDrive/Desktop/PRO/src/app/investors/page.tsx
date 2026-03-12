@@ -4,15 +4,15 @@ import Link from 'next/link';
 
 export default function InvestorLanding() {
     return (
-        <div className="min-h-screen" style={{ background: '#1A2332', color: '#C8CDD4' }}>
-            <header className="border-b" style={{ borderColor: '#2A3545' }}>
+        <div className="min-h-screen bg-background text-foreground">
+            <header className="border-b border-border/50 bg-white/50 backdrop-blur-sm">
                 <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link href="/" className="text-base font-medium text-white" style={{ letterSpacing: '0.3px' }}>
-                        <span className="font-bold tracking-tight">AlloySphere</span>
+                    <Link href="/" className="text-base font-medium tracking-tight">
+                        <span className="font-bold">AlloySphere</span>
                     </Link>
                     <div className="flex items-center gap-5">
-                        <Link href="/login" className="text-sm" style={{ color: '#8897A8' }}>Sign in</Link>
-                        <Link href="/signup/investor" className="text-sm font-medium text-white px-3.5 py-2 rounded transition-colors" style={{ background: '#2E4057' }}>
+                        <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
+                        <Link href="/signup/investor" className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-xl transition-all hover:bg-primary/90">
                             Get started
                         </Link>
                     </div>
@@ -20,27 +20,27 @@ export default function InvestorLanding() {
             </header>
 
             <main>
-                <section className="max-w-5xl mx-auto px-6" style={{ paddingTop: '96px', paddingBottom: '72px' }}>
-                    <p className="text-sm font-medium mb-4" style={{ color: '#5A8AB5' }}>For Investors</p>
-                    <h1 className="text-white mb-4 max-w-lg">Verified deal flow. Transparent risk.</h1>
-                    <p className="max-w-md" style={{ color: '#8897A8', fontSize: '16px', lineHeight: '1.7', marginBottom: '32px' }}>
+                <section className="max-w-5xl mx-auto px-6 py-24">
+                    <p className="text-sm font-medium mb-4 text-primary">For Investors</p>
+                    <h1 className="text-4xl font-bold tracking-tight mb-4 max-w-lg leading-tight">Verified deal flow. Transparent risk.</h1>
+                    <p className="max-w-md text-muted-foreground text-lg leading-relaxed mb-8">
                         Invest in trust-verified startups. Every founder passes KYC. Every agreement is signed on-platform. Every risk factor is visible.
                     </p>
-                    <div className="flex items-center gap-4">
-                        <Link href="/signup/investor" className="text-sm font-medium text-white px-4 py-2.5 rounded transition-colors" style={{ background: '#2E4057' }}>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <Link href="/signup/investor" className="text-sm font-medium bg-primary text-primary-foreground px-5 py-2.5 rounded-xl transition-all hover:bg-primary/90">
                             Create investor account
                         </Link>
-                        <Link href="/login" className="text-sm" style={{ color: '#8897A8' }}>
+                        <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                             Already have an account?
                         </Link>
                     </div>
                 </section>
 
-                <hr style={{ borderColor: '#2A3545', maxWidth: '64rem', margin: '0 auto' }} />
+                <hr className="border-border/50 max-w-5xl mx-auto" />
 
-                <section className="max-w-5xl mx-auto px-6" style={{ paddingTop: '72px', paddingBottom: '64px' }}>
-                    <h2 className="text-white mb-10">What investors use AlloySphere for</h2>
-                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-8">
+                <section className="max-w-5xl mx-auto px-6 py-20">
+                    <h2 className="text-3xl font-bold tracking-tight mb-10">What investors use AlloySphere for</h2>
+                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-10">
                         {[
                             ['Verified deal flow', 'Browse startups with verified founders, transparent trust scores, and documented team composition.'],
                             ['Accreditation controls', 'Only Level 3 verified investors can invest. Protects both sides of every transaction.'],
@@ -50,25 +50,25 @@ export default function InvestorLanding() {
                             ['Legal agreements', 'Every investment is backed by a digitally signed agreement with an immutable audit trail.'],
                         ].map(([title, desc], i) => (
                             <div key={i}>
-                                <p className="font-medium text-white mb-1">{title}</p>
-                                <p className="text-sm" style={{ color: '#8897A8', lineHeight: '1.6' }}>{desc}</p>
+                                <p className="font-semibold text-foreground mb-2">{title}</p>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                <hr style={{ borderColor: '#2A3545', maxWidth: '64rem', margin: '0 auto' }} />
+                <hr className="border-border/50 max-w-5xl mx-auto" />
 
-                <section className="max-w-5xl mx-auto px-6" style={{ paddingTop: '64px', paddingBottom: '80px' }}>
-                    <h2 className="text-white mb-3">Start your due diligence.</h2>
-                    <p className="mb-6" style={{ color: '#8897A8', fontSize: '15px' }}>Free to create an account. Browse startups before investing.</p>
-                    <Link href="/signup/investor" className="text-sm font-medium text-white px-4 py-2.5 rounded transition-colors" style={{ background: '#2E4057' }}>
+                <section className="max-w-5xl mx-auto px-6 py-24 text-center">
+                    <h2 className="text-3xl font-bold tracking-tight mb-4">Start your due diligence.</h2>
+                    <p className="text-muted-foreground text-lg mb-8">Free to create an account. Browse startups before investing.</p>
+                    <Link href="/signup/investor" className="inline-block text-sm font-medium bg-primary text-primary-foreground px-6 py-3 rounded-xl transition-all hover:bg-primary/90">
                         Create investor account
                     </Link>
                 </section>
             </main>
 
-            <footer className="border-t py-5 text-center text-sm" style={{ borderColor: '#2A3545', color: '#5A6474' }}>
+            <footer className="border-t border-border/50 py-8 text-center text-sm text-muted-foreground">
                 © {new Date().getFullYear()} AlloySphere
             </footer>
         </div>

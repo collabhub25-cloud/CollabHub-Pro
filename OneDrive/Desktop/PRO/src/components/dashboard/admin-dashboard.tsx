@@ -13,6 +13,7 @@ import {
   TrendingUp, TrendingDown, Clock, CheckCircle2, XCircle,
   Shield, Activity, FileText, Zap
 } from 'lucide-react';
+import AnoAI from '@/components/ui/animated-shader-background';
 
 interface AdminDashboardProps {
   activeTab: string;
@@ -35,7 +36,8 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
   // Dashboard Overview
   if (activeTab === 'dashboard') {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 relative page-enter">
+        <AnoAI />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
@@ -47,9 +49,8 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
           </Button>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -62,7 +63,7 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Active Startups</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -75,7 +76,7 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Open Disputes</CardTitle>
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
@@ -85,7 +86,7 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
               <p className="text-xs text-yellow-500">5 require attention</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Platform Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -99,7 +100,7 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
 
         {/* Charts Row */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
+          <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <CardHeader>
               <CardTitle>User Growth</CardTitle>
               <CardDescription>New registrations over time</CardDescription>
@@ -110,7 +111,7 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
             <CardHeader>
               <CardTitle>Revenue Breakdown</CardTitle>
               <CardDescription>Revenue by source</CardDescription>

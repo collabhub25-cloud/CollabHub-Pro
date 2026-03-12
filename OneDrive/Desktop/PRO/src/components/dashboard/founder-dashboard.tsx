@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import AnoAI from '@/components/ui/animated-shader-background';
 import {
   Plus, Building2, Users, CheckCircle2, Clock,
   Briefcase, Target, Zap, Loader2, Edit, Trash2,
@@ -514,13 +515,8 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
     return (
       <div className="space-y-6 page-enter relative">
-        {/* 3D Animated Background Orbs */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
-          <div className="absolute rounded-full opacity-[0.07]" style={{ width: 500, height: 500, top: '-8%', right: '-10%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', animation: 'float-orb-f 18s ease-in-out infinite', filter: 'blur(80px)' }} />
-          <div className="absolute rounded-full opacity-[0.06]" style={{ width: 400, height: 400, bottom: '10%', left: '-8%', background: 'radial-gradient(circle, #0047AB 0%, transparent 70%)', animation: 'float-orb-f 22s ease-in-out infinite reverse', filter: 'blur(70px)' }} />
-          <div className="absolute rounded-full opacity-[0.04]" style={{ width: 300, height: 300, top: '40%', left: '40%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', animation: 'float-orb-f 26s ease-in-out infinite 3s', filter: 'blur(60px)' }} />
-        </div>
-        <style>{`@keyframes float-orb-f { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(30px, -20px) scale(1.05); } 50% { transform: translate(-20px, 25px) scale(0.95); } 75% { transform: translate(15px, 10px) scale(1.02); } }`}</style>
+        {/* Animated Shader Background */}
+        <AnoAI />
 
         {/* Glassmorphic Header */}
         <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.06) 0%, rgba(0,71,171,0.04) 50%, rgba(255,255,255,0.85) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(46,139,87,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
@@ -543,7 +539,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             { label: 'Agreements', value: agreements.length, icon: '📄', gradient: 'rgba(59,130,246,0.08)' },
             { label: 'Trust Score', value: `${user?.trustScore || 50}/100`, icon: '⚡', gradient: 'rgba(46,139,87,0.08)' },
           ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-default" style={{ background: stat.gradient, backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' }}>
+            <div key={stat.label} className="p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] cursor-default" style={{ background: stat.gradient, backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.18)' }}>
               <div className="text-2xl mb-2">{stat.icon}</div>
               <p className="text-xl font-bold tracking-tight">{stat.value}</p>
               <p className="text-xs text-muted-foreground font-medium mt-0.5">{stat.label}</p>
@@ -571,7 +567,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
           {/* Left Column */}
           <div className="md:col-span-5 flex flex-col gap-6">
             {/* Recent Milestones */}
-            <div className="p-5 rounded-xl" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.03)' }}>
+            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold flex items-center gap-2"><Target className="h-4 w-4" style={{ color: 'var(--sea-green)' }} /> Recent Milestones</h3>
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
@@ -604,7 +600,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             </div>
 
             {/* Funding Activity */}
-            <div className="p-5 rounded-xl" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.03)' }}>
+            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold flex items-center gap-2"><DollarSign className="h-4 w-4" style={{ color: 'var(--cobalt-blue)' }} /> Funding Activity</h3>
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
@@ -638,7 +634,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
           {/* Right Column */}
           <div className="md:col-span-7 flex flex-col gap-6">
             {/* Growth Chart */}
-            <div className="p-5 rounded-xl" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.03)' }}>
+            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
               <h3 className="text-base font-semibold mb-4">Startup Growth</h3>
               <div className="flex flex-wrap gap-8 items-start mb-4">
                 <div>
@@ -682,7 +678,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             </div>
 
             {/* Real Activity Feed */}
-            <div className="p-5 rounded-xl" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.03)' }}>
+            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold flex items-center gap-2"><Zap className="h-4 w-4" style={{ color: 'var(--sea-green)' }} /> Activity Feed</h3>
               </div>
