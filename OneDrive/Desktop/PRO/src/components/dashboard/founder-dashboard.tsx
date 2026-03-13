@@ -555,11 +555,11 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Complete Verification Level {(user?.verificationLevel || 0) + 1}</p>
-                <p className="text-xs text-muted-foreground">Unlock more features like funding rounds and alliances</p>
+                <p className="text-sm font-semibold">Unlock Full Potential (Level 2)</p>
+                <p className="text-xs text-muted-foreground">Raise capital with funding rounds and form strategic alliances</p>
               </div>
             </div>
-            <Badge variant="outline" className="cursor-pointer hover:bg-primary/5" style={{ borderColor: 'var(--sea-green)', color: 'var(--sea-green)' }}>Continue →</Badge>
+            <Button variant="outline" className="cursor-pointer hover:bg-primary/5" style={{ borderColor: 'var(--sea-green)', color: 'var(--sea-green)' }} onClick={() => useUIStore.getState().setActiveTab('verification')}>Continue →</Button>
           </div>
         )}
 

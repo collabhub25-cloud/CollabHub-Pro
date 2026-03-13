@@ -144,10 +144,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Enforce verification level 2
-    if ((user.verificationLevel || 0) < 2) {
+    // Enforce verification level 1
+    if ((user.verificationLevel || 0) < 1) {
       return NextResponse.json(
-        { error: 'Verification Level 2 required to create a startup' },
+        { error: 'Verification Level 1 (Profile Completion) required to create a startup' },
         { status: 403 }
       );
     }
