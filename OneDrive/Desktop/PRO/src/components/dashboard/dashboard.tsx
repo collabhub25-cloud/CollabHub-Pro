@@ -220,7 +220,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
               background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(250,250,250,0.96) 100%)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              borderRight: '1px solid rgba(0,0,0,0.06)',
+              borderRight: '1px solid rgba(0,0,0,0.2)',
               boxShadow: '4px 0 24px -4px rgba(0,0,0,0.05)',
             }}
           >
@@ -276,7 +276,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                     title={!sidebarOpen ? item.label : undefined}
                     className={`sidebar-nav-item relative flex h-11 w-full items-center rounded-xl transition-all duration-300 ${isSelected
                       ? "bg-primary text-primary-foreground shadow-md"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground border border-transparent hover:border-black/10"
                       }`}
                     style={{
                       animationDelay: `${index * 50}ms`,
@@ -300,7 +300,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
             {sidebarOpen && (
               <div className="border-t border-border/50 pt-4 pb-12 space-y-1 pl-1">
                 {user.role === 'founder' && (userPlan === 'free' || userPlan === 'free_founder') && (
-                  <div className="mb-2 p-3 rounded-xl border border-border/50 bg-gradient-to-br from-zinc-50 to-white shadow-sm">
+                  <div className="mb-2 p-3 rounded-xl border border-black/20 bg-gradient-to-br from-zinc-50 to-white shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">Upgrade plan</span>

@@ -519,12 +519,12 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         <AnoAI />
 
         {/* Glassmorphic Header */}
-        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.06) 0%, rgba(0,71,171,0.04) 50%, rgba(255,255,255,0.85) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(46,139,87,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.25)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Welcome back, {user?.name?.split(' ')[0]}!</h1>
             <p className="text-muted-foreground mt-1">Here&apos;s what&apos;s happening with <span className="font-semibold text-foreground">your startups</span></p>
           </div>
-          <Badge variant="outline" className="px-3 py-1.5 text-xs font-semibold" style={{ background: 'rgba(46,139,87,0.08)', borderColor: 'rgba(46,139,87,0.2)', color: 'var(--sea-green)' }}>
+          <Badge variant="outline" className="px-3 py-1.5 text-xs font-semibold" style={{ background: 'rgba(0,0,0,0.05)', borderColor: 'rgba(0,0,0,0.2)' }}>
             Level {user?.verificationLevel || 0} Verified
           </Badge>
         </div>
@@ -532,14 +532,14 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         {/* Premium Stat Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Startups', value: startups.length, icon: '🏢', gradient: 'rgba(46,139,87,0.08)' },
-            { label: 'Team Members', value: totalTeamMembers, icon: '👥', gradient: 'rgba(0,71,171,0.08)' },
-            { label: 'Active Milestones', value: activeMilestones.length, icon: '🎯', gradient: 'rgba(124,58,237,0.08)' },
-            { label: 'Funding Raised', value: totalRaisedDisplay, icon: '💰', gradient: 'rgba(234,179,8,0.08)' },
-            { label: 'Agreements', value: agreements.length, icon: '📄', gradient: 'rgba(59,130,246,0.08)' },
-            { label: 'Trust Score', value: `${user?.trustScore || 50}/100`, icon: '⚡', gradient: 'rgba(46,139,87,0.08)' },
+            { label: 'Startups', value: startups.length, icon: '🏢', gradient: 'rgba(0,0,0,0.03)' },
+            { label: 'Team Members', value: totalTeamMembers, icon: '👥', gradient: 'rgba(0,0,0,0.03)' },
+            { label: 'Active Milestones', value: activeMilestones.length, icon: '🎯', gradient: 'rgba(0,0,0,0.03)' },
+            { label: 'Funding Raised', value: totalRaisedDisplay, icon: '💰', gradient: 'rgba(0,0,0,0.03)' },
+            { label: 'Agreements', value: agreements.length, icon: '📄', gradient: 'rgba(0,0,0,0.03)' },
+            { label: 'Trust Score', value: `${user?.trustScore || 50}/100`, icon: '⚡', gradient: 'rgba(0,0,0,0.03)' },
           ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] cursor-default" style={{ background: stat.gradient, backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.18)' }}>
+            <div key={stat.label} className="p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] cursor-default" style={{ background: stat.gradient, backdropFilter: 'blur(12px)', border: '1px solid rgba(0,0,0,0.25)' }}>
               <div className="text-2xl mb-2">{stat.icon}</div>
               <p className="text-xl font-bold tracking-tight">{stat.value}</p>
               <p className="text-xs text-muted-foreground font-medium mt-0.5">{stat.label}</p>
@@ -567,7 +567,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
           {/* Left Column */}
           <div className="md:col-span-5 flex flex-col gap-6">
             {/* Recent Milestones */}
-            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)]" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.15)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold flex items-center gap-2"><Target className="h-4 w-4" style={{ color: 'var(--sea-green)' }} /> Recent Milestones</h3>
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
@@ -581,7 +581,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                   {milestones.slice(0, 4).map((milestone) => {
                     const isCompleted = milestone.status === 'completed';
                     return (
-                      <div key={milestone._id} className="p-3 rounded-lg transition-all hover:bg-white/50" style={{ border: '1px solid rgba(0,0,0,0.04)' }}>
+                      <div key={milestone._id} className="p-3 rounded-lg transition-all hover:bg-black/5" style={{ border: '1px solid rgba(0,0,0,0.25)' }}>
                         <div className="flex justify-between items-start">
                           <span className="font-medium text-sm">{milestone.startupId?.name || 'Startup'}</span>
                           <span className="text-xs text-muted-foreground">
@@ -600,7 +600,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             </div>
 
             {/* Funding Activity */}
-            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)]" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.15)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold flex items-center gap-2"><DollarSign className="h-4 w-4" style={{ color: 'var(--cobalt-blue)' }} /> Funding Activity</h3>
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
@@ -612,7 +612,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               ) : (
                 <div className="space-y-3">
                   {fundingRounds.slice(0, 3).map((round, index) => (
-                    <div key={round._id} className="flex justify-between items-center p-3 rounded-lg transition-all hover:bg-white/50" style={{ border: '1px solid rgba(0,0,0,0.04)' }}>
+                    <div key={round._id} className="flex justify-between items-center p-3 rounded-lg transition-all hover:bg-black/5" style={{ border: '1px solid rgba(0,0,0,0.25)' }}>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm truncate">
                           <span className="font-semibold">{round.startupId?.name}</span>{" "}
@@ -634,7 +634,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
           {/* Right Column */}
           <div className="md:col-span-7 flex flex-col gap-6">
             {/* Growth Chart */}
-            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)]" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.15)' }}>
               <h3 className="text-base font-semibold mb-4">Startup Growth</h3>
               <div className="flex flex-wrap gap-8 items-start mb-4">
                 <div>
@@ -678,7 +678,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             </div>
 
             {/* Real Activity Feed */}
-            <div className="p-5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)]" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,0,0,0.15)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold flex items-center gap-2"><Zap className="h-4 w-4" style={{ color: 'var(--sea-green)' }} /> Activity Feed</h3>
               </div>
@@ -690,7 +690,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               ) : (
                 <div className="space-y-3">
                   {notifications.slice(0, 6).map((notif: any) => (
-                    <div key={notif._id} className="flex gap-3 items-start p-3 rounded-lg transition-all hover:bg-white/50" style={{ border: '1px solid rgba(0,0,0,0.04)' }}>
+                    <div key={notif._id} className="flex gap-3 items-start p-3 rounded-lg transition-all hover:bg-black/5" style={{ border: '1px solid rgba(0,0,0,0.25)' }}>
                       <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold" style={{ background: notif.type?.includes('milestone') ? 'rgba(46,139,87,0.1)' : notif.type?.includes('funding') ? 'rgba(234,179,8,0.1)' : 'rgba(0,71,171,0.1)', color: notif.type?.includes('milestone') ? '#2E8B57' : notif.type?.includes('funding') ? '#B45309' : '#0047AB' }}>
                         {notif.type?.includes('milestone') ? '🎯' : notif.type?.includes('funding') ? '💰' : notif.type?.includes('agreement') ? '📄' : '🔔'}
                       </div>
