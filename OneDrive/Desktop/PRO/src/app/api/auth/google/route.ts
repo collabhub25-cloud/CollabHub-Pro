@@ -4,7 +4,8 @@ import { connectDB } from '@/lib/mongodb';
 import { User } from '@/lib/models';
 import { generateAccessToken, generateRefreshToken, setAuthCookies, sanitizeUser } from '@/lib/auth';
 
-const client = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_ID = "473460743491-ph80eufbukqtl7gi7daov9b54d9fjec.apps.googleusercontent.com";
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       // Treat as ID Token
       const ticket = await client.verifyIdToken({
         idToken: credential,
-        audience: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        audience: GOOGLE_CLIENT_ID,
       });
       payload = ticket.getPayload();
       if (!payload || !payload.email) {
