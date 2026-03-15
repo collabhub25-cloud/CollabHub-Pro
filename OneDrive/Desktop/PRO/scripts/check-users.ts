@@ -9,6 +9,7 @@ async function main() {
   // Let's assume we can query raw Mongoose or Prisma.
   // Actually, wait, let's just query Mongoose direct collection.
   const db = mongoose.connection.db;
+  if (!db) throw new Error('Database connection failed');
   const users = await db.collection('users').find({ email: { $in: ['murarijagansai@gmail.com', 'collabhub25@gmail.com', 'jaganloveyou3000@gmail.com'] } }).toArray();
 
   for (const user of users) {

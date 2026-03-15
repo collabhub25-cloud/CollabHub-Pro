@@ -10,7 +10,9 @@ export type KYCLevel = 0 | 1 | 2;
 
 export interface IUser extends Document {
     email: string;
-    passwordHash: string;
+    passwordHash?: string;
+    googleId?: string;
+    authProvider: 'local' | 'google';
     name: string;
     role: UserRole;
     avatar?: string;
@@ -42,7 +44,9 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>(
     {
         email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-        passwordHash: { type: String, required: true },
+        passwordHash: { type: String, required: false }, // Optional for Google Auth users
+        googleId: { type: String, sparse: true, unique: true },
+        authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
         name: { type: String, required: true, trim: true },
         role: { type: String, enum: ['founder', 'talent', 'investor', 'admin'], required: true },
         avatar: { type: String },
