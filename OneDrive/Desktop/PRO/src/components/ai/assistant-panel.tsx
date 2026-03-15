@@ -144,7 +144,7 @@ export function AssistantPanel() {
                             </div>
                             <div>
                                 <h3 className="text-sm font-semibold text-white">AlloySphere AI</h3>
-                                <p className="text-[10px] text-white/70 flex items-center gap-1">
+                                <p className="text-caption text-white/70 flex items-center gap-1">
                                     <span className="h-1.5 w-1.5 rounded-full bg-green-300 inline-block" />
                                     Online • Ready to help
                                 </p>
@@ -248,7 +248,7 @@ export function AssistantPanel() {
                                 <Send className="h-4 w-4" />
                             </button>
                         </div>
-                        <p className="text-[10px] text-muted-foreground/50 text-center mt-2">Powered by AlloySphere AI</p>
+                        <p className="text-caption text-muted-foreground/50 text-center mt-2">Powered by AlloySphere AI</p>
                     </div>
                 </div>
             )}

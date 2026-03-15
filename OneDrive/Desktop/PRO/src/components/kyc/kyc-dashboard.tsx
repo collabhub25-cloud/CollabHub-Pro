@@ -211,7 +211,7 @@ export function KycDashboard() {
                                         <div>
                                             <p className="font-medium flex items-center gap-2">
                                                 {doc.type === 'kyc-business' ? 'Business Registration' : 'Personal ID'}
-                                                <Badge variant="outline" className="text-[10px] uppercase">{doc.status.replace('_', ' ')}</Badge>
+                                                <Badge variant="outline" className="text-caption uppercase">{doc.status.replace('_', ' ')}</Badge>
                                             </p>
                                             <p className="text-xs text-muted-foreground mt-1 text-balance">
                                                 Submitted: {new Date(doc.submittedAt).toLocaleDateString()}

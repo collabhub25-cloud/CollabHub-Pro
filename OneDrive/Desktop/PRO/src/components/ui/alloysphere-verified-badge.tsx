@@ -136,7 +136,7 @@ export function AlloySphereVerifiedBadge({
                                     AlloySphere Verified
                                 </span>
                                 {formattedDate && (
-                                    <span className="text-[10px] text-muted-foreground" style={{ lineHeight: '1.2' }}>
+                                    <span className="text-caption text-muted-foreground" style={{ lineHeight: '1.2' }}>
                                         Since {formattedDate}
                                     </span>
                                 )}
@@ -172,25 +172,25 @@ export function AlloySphereVerifiedBadge({
                         <div className="flex items-center gap-3 pt-1 border-t border-white/20">
                             <div className="flex items-center gap-1.5">
                                 <CheckCircle2 className="h-3.5 w-3.5 text-green-300" />
-                                <span className="text-[11px] text-white/70">Background Check</span>
+                                <span className="text-caption text-white/70">Background Check</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <CheckCircle2 className="h-3.5 w-3.5 text-green-300" />
-                                <span className="text-[11px] text-white/70">On-site Visit</span>
+                                <span className="text-caption text-white/70">On-site Visit</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1.5">
                                 <CheckCircle2 className="h-3.5 w-3.5 text-green-300" />
-                                <span className="text-[11px] text-white/70">Identity Verified</span>
+                                <span className="text-caption text-white/70">Identity Verified</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <CheckCircle2 className="h-3.5 w-3.5 text-green-300" />
-                                <span className="text-[11px] text-white/70">Doc Verified</span>
+                                <span className="text-caption text-white/70">Doc Verified</span>
                             </div>
                         </div>
                         {formattedDate && (
-                            <p className="text-[11px] text-white/50 pt-1 border-t border-white/10">
+                            <p className="text-caption text-white/50 pt-1 border-t border-white/10">
                                 Verified on {formattedDate}
                             </p>
                         )}

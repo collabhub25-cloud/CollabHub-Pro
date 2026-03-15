@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Eye, EyeOff, ArrowRight, Rocket, Sparkles } from 'lucide-react';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+import { Logo } from '@/components/ui/logo';
+import { Loader2, Eye, EyeOff, CheckCircle2, Shield, Building2, User, Zap, Lock, Sparkles, ArrowRight } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
@@ -106,8 +108,8 @@ export default function LoginPage() {
             <header className="border-b border-border/50" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)' }}>
                 <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>
-                            <Rocket className="h-4 w-4 text-white" />
+                        <div className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', boxShadow: '0 4px 15px rgba(46,139,87,0.3)' }}>
+                            <Logo size={20} className="text-white drop-shadow-md" />
                         </div>
                         <span className="text-base font-semibold tracking-tight">AlloySphere</span>
                     </Link>
@@ -164,7 +166,7 @@ export default function LoginPage() {
                                     }`}
                             >
                                 <span className="block text-xs">{role.label}</span>
-                                <span className="block text-[10px] mt-0.5 opacity-50">{role.desc}</span>
+                                <span className="block text-caption mt-0.5 opacity-50">{role.desc}</span>
                             </button>
                         ))}
                     </div>

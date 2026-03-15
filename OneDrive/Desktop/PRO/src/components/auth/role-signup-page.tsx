@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Rocket, Sparkles } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Logo } from '@/components/ui/logo';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import AnoAI from '@/components/ui/animated-shader-background';
@@ -109,10 +112,9 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
             <header className="border-b border-border/50" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)' }}>
                 <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>
-                            <Rocket className="h-4 w-4 text-white" />
+                        <div className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', boxShadow: '0 4px 15px rgba(46,139,87,0.3)' }}>
+                            <Logo size={20} className="text-white drop-shadow-md" />
                         </div>
-                        <span className="text-base font-semibold tracking-tight">AlloySphere</span>
                     </Link>
                     <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
                 </div>

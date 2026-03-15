@@ -1,11 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg width="256" height="256" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="fbg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#09090B"/>
-      <stop offset="100%" stop-color="#27272A"/>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#FFF176" />
+      <stop offset="30%" stopColor="#FFD54F" />
+      <stop offset="70%" stopColor="#FFCA28" />
+      <stop offset="100%" stopColor="#FFB300" />
     </linearGradient>
+    <linearGradient id="highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+    </linearGradient>
+    <radialGradient id="starShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="60%" stopColor="#E65100" stopOpacity="0.8" />
+      <stop offset="100%" stopColor="#FF8F00" stopOpacity="0" />
+    </radialGradient>
   </defs>
-  <rect width="32" height="32" rx="7" fill="url(#fbg)"/>
-  <text x="5" y="23" font-family="system-ui,-apple-system,sans-serif" font-size="16" font-weight="700" fill="#FAFAFA" letter-spacing="-0.5">AS</text>
-  <circle cx="26" cy="7" r="2" fill="#FAFAFA" opacity="0.6"/>
+  <circle cx="50" cy="50" r="25" fill="url(#starShadow)" />
+  <path d="M50 5 L61 38 L95 38 L68 58 L78 90 L50 70 L22 90 L32 58 L5 38 L39 38 Z" fill="url(#goldGradient)" stroke="#FF8F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  <path d="M50 7 L60.5 39 L93 39 L67 58 L76 88 L50 69 L24 88 L33 58 L7 39 L39.5 39 Z" fill="url(#highlight)" style="mix-blend-mode: overlay;" />
+  <circle cx="50" cy="50" r="10" fill="#FFFFFF" fillOpacity="0.9" />
+  <circle cx="50" cy="50" r="6" fill="url(#goldGradient)" />
 </svg>

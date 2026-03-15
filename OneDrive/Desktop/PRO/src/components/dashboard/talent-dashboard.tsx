@@ -334,7 +334,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                     <div key={milestone._id} className="p-4 rounded-xl space-y-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,248,0.9) 100%)', border: '1px solid rgba(0,0,0,0.06)' }}>
                       <div className="flex justify-between">
                         <div>
-                          <p className="font-semibold text-[15px]">{milestone.title}</p>
+                          <p className="font-semibold text-base-body">{milestone.title}</p>
                           <p className="text-xs text-muted-foreground">{milestone.startupId?.name}</p>
                         </div>
                         <span className="text-sm font-bold" style={{ color: '#2E8B57' }}>${milestone.amount}</span>
@@ -368,7 +368,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                   {startups.slice(0, 3).map((startup) => (
                     <div key={startup._id} className="flex items-center justify-between p-4 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,248,0.9) 100%)', border: '1px solid rgba(0,0,0,0.06)' }}>
                       <div>
-                        <p className="font-semibold text-[15px]">{startup.name}</p>
+                        <p className="font-semibold text-base-body">{startup.name}</p>
                         <p className="text-xs text-muted-foreground">{startup.industry} • {startup.stage}</p>
                       </div>
                       <div className="flex items-center gap-2">

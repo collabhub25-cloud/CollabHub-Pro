@@ -239,7 +239,7 @@ export function AgreementsDashboard() {
                                                 {agreement.parties.map((p, i) => (
                                                     <Avatar key={i} className={`h - 8 w - 8 border - 2 border - background ${p.hasSigned ? 'ring-2 ring-green-500 ring-offset-1' : ''}`}>
                                                         <AvatarImage src={p.userId.avatar} />
-                                                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                                                        <AvatarFallback className="text-caption bg-primary/10 text-primary">
                                                             {getInitials(p.userId.name)}
                                                         </AvatarFallback>
                                                     </Avatar>
@@ -305,7 +305,7 @@ export function AgreementsDashboard() {
                                                     <p className="text-xs font-mono text-green-600 dark:text-green-400 break-all bg-green-500/10 p-2 rounded">
                                                         {party.signatureHash}
                                                     </p>
-                                                    <p className="text-[10px] text-muted-foreground">
+                                                    <p className="text-caption text-muted-foreground">
                                                         Signed: {new Date(party.signedAt!).toLocaleString()}
                                                     </p>
                                                 </div>

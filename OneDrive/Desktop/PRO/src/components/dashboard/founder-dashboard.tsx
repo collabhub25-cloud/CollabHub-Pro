@@ -621,7 +621,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(round.createdAt), { addSuffix: true })}</span>
-                        {index === 0 && <Badge className="text-[10px] px-1.5 py-0 h-5" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', color: 'white' }}>New</Badge>}
+                        {index === 0 && <Badge className="text-caption px-1.5 py-0 h-5" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', color: 'white' }}>New</Badge>}
                       </div>
                     </div>
                   ))}
@@ -696,7 +696,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <p className="text-sm font-medium leading-snug">{notif.title}</p>
                         <p className="text-xs text-muted-foreground truncate">{notif.message}</p>
-                        <span className="text-[10px] text-muted-foreground/60">{notif.createdAt ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true }) : ''}</span>
+                        <span className="text-caption text-muted-foreground/60">{notif.createdAt ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true }) : ''}</span>
                       </div>
                     </div>
                   ))}

@@ -529,7 +529,7 @@ export function MessagingPage() {
                                         <MessageActions isMe={true} />
                                       </div>
                                     )}
-                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                    <span className="text-caption text-muted-foreground flex items-center gap-1">
                                       {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                       {message.isMine && (
                                         message.read ? (

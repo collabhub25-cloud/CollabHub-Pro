@@ -23,6 +23,7 @@ import { FounderDashboard } from './founder-dashboard';
 import { TalentDashboard } from './talent-dashboard';
 import { InvestorDashboard } from './investor-dashboard';
 import { AdminDashboard } from './admin-dashboard';
+import { Logo } from '@/components/ui/logo';
 import AgreementsDashboardWithBoundary from '@/components/agreements/agreements-dashboard';
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
 import { VerificationProgress } from '@/components/verification/verification-progress';
@@ -229,14 +230,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   <div
                     className="grid size-10 shrink-0 place-content-center rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-transform duration-300 group-hover:scale-[1.05]"
                   >
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
-                      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" className="animate-[spin_10s_linear_infinite]" />
-                      <circle cx="12" cy="12" r="3" fill="currentColor" />
-                      <circle cx="12" cy="4" r="2" fill="currentColor" />
-                      <circle cx="12" cy="20" r="2" fill="currentColor" />
-                      <line x1="12" y1="9" x2="12" y2="6" stroke="currentColor" strokeWidth="1.5" />
-                      <line x1="12" y1="15" x2="12" y2="18" stroke="currentColor" strokeWidth="1.5" />
-                    </svg>
+                    <Logo size={24} className="text-white drop-shadow-md" />
                   </div>
                   {sidebarOpen && (
                     <div className={`transition-all duration-300 whitespace-nowrap ${sidebarOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
@@ -277,7 +271,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                       <item.icon className="h-[18px] w-[18px]" />
                     </div>
                     {sidebarOpen && (
-                      <span className={`text-[13px] font-medium transition-all duration-200 whitespace-nowrap ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
+                      <span className={`text-small font-medium transition-all duration-200 whitespace-nowrap ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
                         {item.label}
                       </span>
                     )}
@@ -293,7 +287,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   <div className="mb-2 p-3 rounded-lg border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-md">
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles className="h-4 w-4 text-primary" />
-                      <span className="text-[13px] font-medium">Upgrade plan</span>
+                      <span className="text-small font-medium">Upgrade plan</span>
                     </div>
                     <Button size="sm" variant="default" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs" onClick={handleUpgradeClick}>
                       View plans
@@ -315,13 +309,13 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   <div className="grid h-full w-12 place-content-center shrink-0">
                     <Avatar className="h-5 w-5">
                       <AvatarImage src={user.avatar} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                      <AvatarFallback className="bg-primary/10 text-primary text-caption">
                         {getInitials(user.name)}
                       </AvatarFallback>
                     </Avatar>
                   </div>
                   <div className="flex-1 min-w-0 text-left">
-                    <span className="text-[13px] font-medium block truncate">{user.name}</span>
+                    <span className="text-small font-medium block truncate">{user.name}</span>
                   </div>
                 </button>
 
@@ -332,7 +326,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   <div className="grid h-full w-12 place-content-center shrink-0">
                     <LogOut className="h-4 w-4" />
                   </div>
-                  <span className="text-[13px] font-medium">Sign Out</span>
+                  <span className="text-small font-medium">Sign Out</span>
                 </button>
               </div>
             )}
@@ -342,7 +336,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 <button onClick={handleProfileClick} title="Profile" className="relative flex h-10 w-full items-center justify-center rounded-lg transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gray-50">
                   <Avatar className="h-5 w-5">
                     <AvatarImage src={user.avatar} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                    <AvatarFallback className="bg-primary/10 text-primary text-caption">
                       {getInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -366,7 +360,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   />
                 </div>
                 {sidebarOpen && (
-                  <span className="text-[13px] font-medium text-muted-foreground">
+                  <span className="text-small font-medium text-muted-foreground">
                     Collapse Sidebar
                   </span>
                 )}

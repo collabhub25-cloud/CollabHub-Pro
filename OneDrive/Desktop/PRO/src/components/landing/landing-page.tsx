@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Rocket, Users, Shield, Zap, ChevronRight, Check, Star,
   TrendingUp, Handshake, FileCheck, Award, Building2,
-  Lightbulb, Target, Globe, Menu, X, ArrowDown, Sparkles
+  Lightbulb, Target, Globe, Menu, X, ArrowDown, Sparkles, Github, Linkedin, Instagram
 } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 import { PremiumHero } from '@/components/ui/hero';
 import { motion } from 'framer-motion';
 
@@ -152,8 +153,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       >
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2E8B57 0%, #0047AB 100%)', boxShadow: '0 4px 12px rgba(46,139,87,0.3)' }}>
-              <Rocket className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', boxShadow: '0 4px 15px rgba(46,139,87,0.3)' }}>
+              <Logo size={20} className="text-white drop-shadow-md" />
             </div>
             <span className="text-xl font-bold tracking-tight">AlloySphere</span>
           </div>
@@ -391,14 +392,16 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </RevealSection>
       </section>
 
-      {/* Footer */}
-      <footer id="about" className="py-16 border-t">
-        <div className="container mx-auto px-4">
+      <footer id="about" className="py-16 border-t relative overflow-hidden">
+        {/* Subtle background glow for social area */}
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-4 gap-8">
-            <div>
+            <div className="space-y-6">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>
-                  <Rocket className="h-5 w-5 text-white" />
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>
+                  <Logo size={20} className="text-white drop-shadow-md" />
                 </div>
                 <span className="text-xl font-bold tracking-tight">AlloySphere</span>
               </div>
@@ -406,6 +409,24 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                 The AI-powered startup collaboration platform connecting verified talents,
                 founders, and investors.
               </p>
+              
+              {/* Premium Social Links Area */}
+              <div className="pt-4">
+                <h4 className="text-sm font-semibold mb-3">Connect With Us</h4>
+                <div className="flex gap-3">
+                  <a href="#" className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/50 border border-white/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_15px_rgba(0,119,181,0.2)] group">
+                    <Linkedin className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-[#0A66C2]" />
+                  </a>
+                  <a href="#" className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/50 border border-white/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-md group">
+                    <Github className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-black dark:group-hover:text-white" />
+                  </a>
+                  <a href="#" className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/50 border border-white/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-md group relative overflow-hidden">
+                     {/* Instagram standard gradient hover effect via absolute div */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }} />
+                    <Instagram className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-white relative z-10" />
+                  </a>
+                </div>
+              </div>
             </div>
             {[
               { title: 'Platform', links: ['Features', 'Pricing', 'Security', 'API'] },

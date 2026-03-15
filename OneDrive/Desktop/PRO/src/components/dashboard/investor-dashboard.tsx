@@ -404,7 +404,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                 <Shield className="h-5 w-5 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-[15px]">Verification Required</p>
+                <p className="font-semibold text-base-body">Verification Required</p>
                 <p className="text-sm text-muted-foreground">Complete Verification Level 3 to unlock investing capabilities.</p>
               </div>
             </div>

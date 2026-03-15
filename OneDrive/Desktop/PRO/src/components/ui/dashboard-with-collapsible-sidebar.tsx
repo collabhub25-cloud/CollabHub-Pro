@@ -156,7 +156,7 @@ const Option = ({ Icon, title, selected, setSelected, open, notifs }: any) => {
             )}
 
             {notifs && open && (
-                <span className="absolute right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500 px-1.5 text-[10px] text-white font-bold tracking-wide">
+                <span className="absolute right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500 px-1.5 text-caption text-white font-bold tracking-wide">
                     {notifs}
                 </span>
             )}
@@ -180,7 +180,7 @@ const TitleSection = ({ open, role = 'founder' }: { open: boolean, role?: string
                                 <span className="block text-sm font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                                     AlloySphere
                                 </span>
-                                <span className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <span className="block text-caption font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     {role} Portal
                                 </span>
                             </div>
