@@ -24,6 +24,7 @@ import { TalentDashboard } from './talent-dashboard';
 import { InvestorDashboard } from './investor-dashboard';
 import { AdminDashboard } from './admin-dashboard';
 import { Logo } from '@/components/ui/logo';
+import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
 import AgreementsDashboardWithBoundary from '@/components/agreements/agreements-dashboard';
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
 import { VerificationProgress } from '@/components/verification/verification-progress';
@@ -381,7 +382,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   onClick={handleProfileClick}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100/50 backdrop-blur-sm rounded-full hover:bg-gray-200/50 transition-colors border border-gray-200/50"
                 >
-                  <span className="text-sm">⭐</span>
+                  <TrustScoreIcon size={16} />
                   <span className="text-sm font-semibold text-foreground">{user.trustScore}</span>
                 </button>
 

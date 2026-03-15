@@ -11,9 +11,11 @@ import {
   TrendingUp, Handshake, FileCheck, Award, Building2,
   Lightbulb, Target, Globe, Menu, X, ArrowDown, Sparkles, Github, Linkedin, Instagram
 } from 'lucide-react';
+import { ErrorBoundary, PageSkeleton } from '@/components/common/loading-error-handlers';
 import { Logo } from '@/components/ui/logo';
 import { PremiumHero } from '@/components/ui/hero';
 import { motion } from 'framer-motion';
+import { PremiumGithub, PremiumLinkedIn, PremiumInstagram } from '@/components/ui/social-icons';
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -414,17 +416,9 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               <div className="pt-4">
                 <h4 className="text-sm font-semibold mb-3">Connect With Us</h4>
                 <div className="flex gap-3">
-                  <a href="#" className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/50 border border-white/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_15px_rgba(0,119,181,0.2)] group">
-                    <Linkedin className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-[#0A66C2]" />
-                  </a>
-                  <a href="#" className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/50 border border-white/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-md group">
-                    <Github className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-black dark:group-hover:text-white" />
-                  </a>
-                  <a href="#" className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/50 border border-white/40 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-md group relative overflow-hidden">
-                     {/* Instagram standard gradient hover effect via absolute div */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }} />
-                    <Instagram className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-white relative z-10" />
-                  </a>
+                  <PremiumLinkedIn href="#" />
+                  <PremiumGithub href="#" />
+                  <PremiumInstagram href="#" />
                 </div>
               </div>
             </div>

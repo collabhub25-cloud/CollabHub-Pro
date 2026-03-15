@@ -18,11 +18,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
-import { TrustBadge } from '@/components/profile/trust-badge';
+import { PricingPage } from '@/components/pricing/pricing-page';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 import { VerificationProgress } from '@/components/verification/verification-progress';
+import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
+import { PremiumGithub, PremiumLinkedIn, PremiumGlobe } from '@/components/ui/social-icons';
 import { KycDashboard } from '@/components/kyc/kyc-dashboard';
-import { PricingPage } from '@/components/pricing/pricing-page';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
 import { toast } from 'sonner';
@@ -314,7 +315,10 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                   <Shield className="h-3 w-3 mr-1" />
                   Level {profile.verificationLevel} - {verificationBadge.label}
                 </Badge>
-                <TrustBadge score={profile.trustScore || 0} />
+                <div className="flex items-center gap-1">
+                  <TrustScoreIcon size={16} />
+                  <span className="font-semibold">{profile.trustScore || 0}</span>
+                </div>
                 {profile.allianceCount !== undefined && profile.allianceCount > 0 && (
                   <div className="flex items-center gap-1 text-sm">
                     <Users className="h-4 w-4 text-primary" />
@@ -563,28 +567,13 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
               <CardContent>
                 <div className="flex flex-wrap gap-3">
                   {profile.githubUrl && (
-                    <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-primary hover:underline">
-                      <Github className="h-4 w-4" />
-                      GitHub
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <PremiumGithub href={profile.githubUrl} />
                   )}
                   {profile.linkedinUrl && (
-                    <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-primary hover:underline">
-                      <Linkedin className="h-4 w-4" />
-                      LinkedIn
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <PremiumLinkedIn href={profile.linkedinUrl} />
                   )}
                   {profile.portfolioUrl && (
-                    <a href={profile.portfolioUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-primary hover:underline">
-                      <Globe className="h-4 w-4" />
-                      Portfolio
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <PremiumGlobe href={profile.portfolioUrl} />
                   )}
                 </div>
               </CardContent>
