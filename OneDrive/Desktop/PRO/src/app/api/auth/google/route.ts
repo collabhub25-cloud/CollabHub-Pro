@@ -14,18 +14,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing Google credential' }, { status: 400 });
     }
 
-    const ticket = await client.verifyIdToken({
-      idToken: credential,
-      audience: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    });
+    let payload: any;
+    let googleId: string;
+    let email: string;
+    let name: string | undefined;
+    let avatar: string | undefined;
+    let emailVerified: boolean = false;
 
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      return NextResponse.json({ error: 'Invalid Google token' }, { status: 400 });
+    // Check if it's a JWT (ID Token) or an Access Token
+    if (credential.includes('.')) {
+      // Treat as ID Token
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        return NextResponse.json({ error: 'Invalid Google ID token' }, { status: 400 });
+      }
+      googleId = payload.sub;
+      email = payload.email;
+      name = payload.name;
+      avatar = payload.picture;
+      emailVerified = payload.email_verified;
+    } else {
+      // Treat as Access Token (typical for useGoogleLogin hook)
+      const res = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${credential}`);
+      if (!res.ok) {
+        return NextResponse.json({ error: 'Invalid Google access token' }, { status: 400 });
+      }
+      payload = await res.json();
+      googleId = payload.sub;
+      email = payload.email;
+      name = payload.name;
+      avatar = payload.picture;
+      emailVerified = payload.email_verified;
     }
 
-    const { email, name, sub: googleId, picture: avatar } = payload;
-    const emailVerified = payload.email_verified;
+    if (!email) {
+      return NextResponse.json({ error: 'Could not retrieve email from Google' }, { status: 400 });
+    }
 
     await connectDB();
 
