@@ -12,6 +12,7 @@ import {
   Lightbulb, Target, Globe, Menu, X, ArrowDown, Sparkles
 } from 'lucide-react';
 import { PremiumHero } from '@/components/ui/hero';
+import { motion } from 'framer-motion';
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -101,13 +102,42 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         @keyframes float-particle { 0%,100% { transform: translateY(0) rotate(0deg); opacity: 0.3; } 50% { transform: translateY(-30px) rotate(180deg); opacity: 0.7; } }
         @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(46,139,87,0.2); } 50% { box-shadow: 0 0 60px rgba(46,139,87,0.4), 0 0 120px rgba(0,71,171,0.1); } }
         @keyframes scroll-indicator { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(8px); opacity: 1; } }
+        @keyframes border-shine {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
         .hero-bg { background: linear-gradient(135deg, rgba(46,139,87,0.08), rgba(0,71,171,0.06), rgba(124,58,237,0.04), rgba(46,139,87,0.08)); background-size: 400% 400%; animation: hero-gradient 15s ease infinite; }
-        .feature-card { transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
-        .feature-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(46,139,87,0.15); }
+        .feature-card { transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); position: relative; overflow: hidden; }
+        .feature-card::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          background: linear-gradient(90deg, transparent, rgba(46,139,87,0.2), rgba(0,71,171,0.2), transparent);
+          background-size: 200% 100%;
+          animation: border-shine 4s linear infinite;
+          z-index: -1;
+          border-radius: inherit;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .feature-card:hover::before { opacity: 1; }
         .stat-item { transition: transform 0.3s ease; }
         .stat-item:hover { transform: scale(1.08); }
-        .testimonial-card { transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
-        .testimonial-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.06); }
+        .testimonial-card { transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); position: relative; overflow: hidden; }
+        .testimonial-card::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          background: linear-gradient(90deg, transparent, rgba(46,139,87,0.2), rgba(0,71,171,0.2), transparent);
+          background-size: 200% 100%;
+          animation: border-shine 4s linear infinite;
+          z-index: -1;
+          border-radius: inherit;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .testimonial-card:hover::before { opacity: 1; }
       `}</style>
 
       {/* Navigation - Glass Effect */}
@@ -177,13 +207,17 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {features.map((feature, index) => (
               <RevealSection key={index} delay={0.1 * index}>
-                <div className="feature-card p-6 rounded-2xl bg-white/40 border border-white/20 h-full cursor-default backdrop-blur-md">
+                <motion.div
+                  whileHover={{ y: -8, scale: 1.02, rotateZ: 0.5 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="feature-card p-6 rounded-2xl bg-white/40 border border-white/20 h-full cursor-default backdrop-blur-md"
+                >
                   <div className="h-14 w-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.1) 0%, rgba(0,71,171,0.08) 100%)', color: '#2E8B57' }}>
                     {feature.icon}
                   </div>
                   <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                </div>
+                </motion.div>
               </RevealSection>
             ))}
           </div>
@@ -256,7 +290,11 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
             {pricingPlans.map((plan, index) => (
               <RevealSection key={index} delay={0.15 * index}>
-                <Card className={`relative rounded-2xl transition-all duration-400 hover:-translate-y-2 bg-white/40 backdrop-blur-md ${plan.popular ? 'border-2 shadow-xl' : 'border-white/20 hover:shadow-lg'}`} style={plan.popular ? { borderColor: '#2E8B57', boxShadow: '0 20px 60px rgba(46,139,87,0.12)' } : {}}>
+                <motion.div
+                  whileHover={{ y: -10, scale: 1.03 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                >
+                  <Card className={`relative rounded-2xl transition-all duration-400 bg-white/40 backdrop-blur-md ${plan.popular ? 'border-2 shadow-xl' : 'border-white/20 hover:shadow-lg'}`} style={plan.popular ? { borderColor: '#2E8B57', boxShadow: '0 20px 60px rgba(46,139,87,0.12)' } : {}}>
                   {plan.popular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <Badge className="px-4 py-1 text-white" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>Most Popular</Badge>
@@ -288,6 +326,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                     )}
                   </CardFooter>
                 </Card>
+                </motion.div>
               </RevealSection>
             ))}
           </div>
@@ -305,7 +344,11 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <RevealSection key={index} delay={0.15 * index}>
-                <Card className="testimonial-card border-white/20 rounded-2xl h-full bg-white/40 backdrop-blur-md">
+                <motion.div
+                  whileHover={{ y: -5, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                >
+                  <Card className="testimonial-card border-white/20 rounded-2xl h-full bg-white/40 backdrop-blur-md">
                   <CardContent className="pt-8 pb-8">
                     <div className="flex gap-1 mb-5">
                       {[...Array(5)].map((_, i) => (
@@ -324,6 +367,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                     </div>
                   </CardContent>
                 </Card>
+                </motion.div>
               </RevealSection>
             ))}
           </div>
