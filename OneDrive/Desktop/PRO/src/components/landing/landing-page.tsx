@@ -94,7 +94,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-transparent overflow-x-hidden">
       {/* Cinematic CSS Animations */}
       <style>{`
         @keyframes hero-gradient { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
@@ -177,7 +177,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {features.map((feature, index) => (
               <RevealSection key={index} delay={0.1 * index}>
-                <div className="feature-card p-6 rounded-2xl bg-background border border-border/50 h-full cursor-default" style={{ backdropFilter: 'blur(8px)' }}>
+                <div className="feature-card p-6 rounded-2xl bg-white/40 border border-white/20 h-full cursor-default backdrop-blur-md">
                   <div className="h-14 w-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.1) 0%, rgba(0,71,171,0.08) 100%)', color: '#2E8B57' }}>
                     {feature.icon}
                   </div>
@@ -256,7 +256,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
             {pricingPlans.map((plan, index) => (
               <RevealSection key={index} delay={0.15 * index}>
-                <Card className={`relative rounded-2xl transition-all duration-400 hover:-translate-y-2 ${plan.popular ? 'border-2 shadow-xl' : 'border-border/50 hover:shadow-lg'}`} style={plan.popular ? { borderColor: '#2E8B57', boxShadow: '0 20px 60px rgba(46,139,87,0.12)' } : {}}>
+                <Card className={`relative rounded-2xl transition-all duration-400 hover:-translate-y-2 bg-white/40 backdrop-blur-md ${plan.popular ? 'border-2 shadow-xl' : 'border-white/20 hover:shadow-lg'}`} style={plan.popular ? { borderColor: '#2E8B57', boxShadow: '0 20px 60px rgba(46,139,87,0.12)' } : {}}>
                   {plan.popular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <Badge className="px-4 py-1 text-white" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>Most Popular</Badge>
@@ -305,7 +305,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <RevealSection key={index} delay={0.15 * index}>
-                <Card className="testimonial-card border-border/50 rounded-2xl h-full">
+                <Card className="testimonial-card border-white/20 rounded-2xl h-full bg-white/40 backdrop-blur-md">
                   <CardContent className="pt-8 pb-8">
                     <div className="flex gap-1 mb-5">
                       {[...Array(5)].map((_, i) => (

@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-transparent text-foreground`}
       >
         <GoogleOAuthProvider clientId="473460743491-ph80eufbukqtl7gi7daov9b54d9fjec.apps.googleusercontent.com">
           <AnoAI />
