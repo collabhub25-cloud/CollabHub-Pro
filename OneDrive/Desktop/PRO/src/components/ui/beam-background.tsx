@@ -97,11 +97,11 @@ export const BeamBackground = () => {
   
         const pulsingOpacity = Math.min(1, beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.4));
         const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
-        gradient.addColorStop(0, `rgba(0,255,255,0)`);
-        gradient.addColorStop(0.2, `rgba(0,255,255,${pulsingOpacity * 0.5})`);
-        gradient.addColorStop(0.5, `rgba(0,255,255,${pulsingOpacity})`);
-        gradient.addColorStop(0.8, `rgba(0,255,255,${pulsingOpacity * 0.5})`);
-        gradient.addColorStop(1, `rgba(0,255,255,0)`);
+        gradient.addColorStop(0, `rgba(46,139,87,0)`); // Sea Green
+        gradient.addColorStop(0.2, `rgba(46,139,87,${pulsingOpacity * 0.3})`);
+        gradient.addColorStop(0.5, `rgba(0,71,171,${pulsingOpacity * 0.6})`); // Cobalt Blue
+        gradient.addColorStop(0.8, `rgba(0,71,171,${pulsingOpacity * 0.3})`);
+        gradient.addColorStop(1, `rgba(0,71,171,0)`);
   
         ctx.fillStyle = gradient;
         ctx.filter = `blur(${2 + beam.layer * 2}px)`;
@@ -113,8 +113,8 @@ export const BeamBackground = () => {
         if (!canvas || !ctx) return;
   
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, "#050505");
-        gradient.addColorStop(1, "#111111");
+        gradient.addColorStop(0, "#ffffff");
+        gradient.addColorStop(1, "#f8fafc");
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
   

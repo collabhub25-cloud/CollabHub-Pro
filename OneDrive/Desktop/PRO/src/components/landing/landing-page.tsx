@@ -114,10 +114,10 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <header
         className="sticky top-0 z-50 w-full border-b transition-all duration-300"
         style={{
-          background: scrolled ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.4)',
+          background: scrolled ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.6)',
           backdropFilter: 'blur(20px)',
-          borderColor: scrolled ? 'rgba(255,255,255,0.08)' : 'transparent',
-          boxShadow: scrolled ? '0 4px 30px rgba(0,0,0,0.4)' : 'none',
+          borderColor: scrolled ? 'rgba(0,0,0,0.08)' : 'transparent',
+          boxShadow: scrolled ? '0 4px 30px rgba(0,0,0,0.04)' : 'none',
         }}
       >
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -130,7 +130,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
           <nav className="hidden md:flex items-center gap-8">
             {['Features', 'Pricing', 'Testimonials', 'About'].map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-white/70 hover:text-white transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">{item}</a>
+              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">{item}</a>
             ))}
           </nav>
 
@@ -167,8 +167,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         <div className="container mx-auto px-4">
           <RevealSection className="text-center mb-16">
             <Badge variant="outline" className="mb-4 px-4 py-1.5">Features</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-white">Everything You Need to Build</h2>
-            <p className="text-white/60 max-w-2xl mx-auto text-lg">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Everything You Need to Build</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Comprehensive tools for founders, talents, and investors to collaborate
               effectively and build successful startups.
             </p>
@@ -177,12 +177,12 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {features.map((feature, index) => (
               <RevealSection key={index} delay={0.1 * index}>
-                <div className="feature-card p-6 rounded-2xl bg-white/5 border border-white/10 h-full cursor-default backdrop-blur-md">
+                <div className="feature-card p-6 rounded-2xl bg-white/40 border border-white/20 h-full cursor-default backdrop-blur-md">
                   <div className="h-14 w-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.1) 0%, rgba(0,71,171,0.08) 100%)', color: '#2E8B57' }}>
                     {feature.icon}
                   </div>
-                  <h3 className="text-lg font-semibold mb-2 text-white">{feature.title}</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">{feature.description}</p>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                 </div>
               </RevealSection>
             ))}
@@ -194,8 +194,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <section className="py-24 relative" style={{ background: 'linear-gradient(180deg, rgba(46,139,87,0.03) 0%, transparent 100%)' }}>
         <div className="container mx-auto px-4">
           <RevealSection className="text-center mb-16">
-            <Badge variant="outline" className="mb-4 px-4 py-1.5 border-white/20 text-white">How It Works</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-white">Simple Steps to Get Started</h2>
+            <Badge variant="outline" className="mb-4 px-4 py-1.5">How It Works</Badge>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Simple Steps to Get Started</h2>
           </RevealSection>
 
           <RevealSection delay={0.2}>
@@ -232,8 +232,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                         {item.step}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-base text-white">{item.title}</h4>
-                        <p className="text-sm text-white/50 mt-0.5">{item.desc}</p>
+                        <h4 className="font-semibold text-base text-foreground">{item.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-0.5">{item.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -248,26 +248,26 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <section id="pricing" className="py-24">
         <div className="container mx-auto px-4">
           <RevealSection className="text-center mb-16">
-            <Badge variant="outline" className="mb-4 px-4 py-1.5 border-white/20 text-white">Pricing</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-white">Simple, Transparent Pricing</h2>
-            <p className="text-white/60 max-w-2xl mx-auto text-lg">Start for free, upgrade as you grow. No hidden fees.</p>
+            <Badge variant="outline" className="mb-4 px-4 py-1.5">Pricing</Badge>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Simple, Transparent Pricing</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Start for free, upgrade as you grow. No hidden fees.</p>
           </RevealSection>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
             {pricingPlans.map((plan, index) => (
               <RevealSection key={index} delay={0.15 * index}>
-                <Card className={`relative rounded-2xl transition-all duration-400 hover:-translate-y-2 bg-white/5 backdrop-blur-md ${plan.popular ? 'border-2 shadow-xl' : 'border-white/10 hover:shadow-lg'}`} style={plan.popular ? { borderColor: '#2E8B57', boxShadow: '0 20px 60px rgba(46,139,87,0.12)' } : {}}>
+                <Card className={`relative rounded-2xl transition-all duration-400 hover:-translate-y-2 bg-white/40 backdrop-blur-md ${plan.popular ? 'border-2 shadow-xl' : 'border-white/20 hover:shadow-lg'}`} style={plan.popular ? { borderColor: '#2E8B57', boxShadow: '0 20px 60px rgba(46,139,87,0.12)' } : {}}>
                   {plan.popular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <Badge className="px-4 py-1 text-white" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>Most Popular</Badge>
                     </div>
                   )}
                   <CardHeader className="text-center pt-8">
-                    <CardTitle className="text-xl text-white">{plan.name}</CardTitle>
-                    <CardDescription className="text-white/60">{plan.description}</CardDescription>
+                    <CardTitle className="text-xl text-foreground">{plan.name}</CardTitle>
+                    <CardDescription className="text-muted-foreground">{plan.description}</CardDescription>
                     <div className="mt-4">
-                      <span className="text-5xl font-bold text-white">{plan.price}</span>
-                      {plan.period && <span className="text-white/60 text-lg">{plan.period}</span>}
+                      <span className="text-5xl font-bold text-foreground">{plan.price}</span>
+                      {plan.period && <span className="text-muted-foreground text-lg">{plan.period}</span>}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -275,7 +275,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                       {plan.features.map((feature, fIndex) => (
                         <li key={fIndex} className="flex items-center gap-2.5">
                           <Check className="h-4 w-4 shrink-0" style={{ color: '#2E8B57' }} />
-                          <span className="text-sm text-white/80">{feature}</span>
+                          <span className="text-sm text-foreground/80">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -298,14 +298,14 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       <section id="testimonials" className="py-24" style={{ background: 'linear-gradient(180deg, rgba(46,139,87,0.03) 0%, transparent 100%)' }}>
         <div className="container mx-auto px-4">
           <RevealSection className="text-center mb-16">
-            <Badge variant="outline" className="mb-4 px-4 py-1.5 border-white/20 text-white">Testimonials</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-white">Trusted by Thousands</h2>
+            <Badge variant="outline" className="mb-4 px-4 py-1.5">Testimonials</Badge>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Trusted by Thousands</h2>
           </RevealSection>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <RevealSection key={index} delay={0.15 * index}>
-                <Card className="testimonial-card border-white/10 rounded-2xl h-full bg-white/5 backdrop-blur-md">
+                <Card className="testimonial-card border-white/20 rounded-2xl h-full bg-white/40 backdrop-blur-md">
                   <CardContent className="pt-8 pb-8">
                     <div className="flex gap-1 mb-5">
                       {[...Array(5)].map((_, i) => (
@@ -318,8 +318,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                         {testimonial.avatar}
                       </div>
                       <div>
-                        <div className="font-semibold text-sm text-white">{testimonial.author}</div>
-                        <div className="text-xs text-white/50">{testimonial.role}</div>
+                        <div className="font-semibold text-sm text-foreground">{testimonial.author}</div>
+                        <div className="text-xs text-muted-foreground">{testimonial.role}</div>
                       </div>
                     </div>
                   </CardContent>
