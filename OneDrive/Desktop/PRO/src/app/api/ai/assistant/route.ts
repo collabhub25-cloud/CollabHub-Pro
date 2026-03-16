@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
             verificationLevel: (user as any).verificationLevel,
         });
 
-        // Check for OpenAI API key
-        const apiKey = process.env.OPENAI_API_KEY;
+        // Check for Gemini API key
+        const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
             // Fallback: generate contextual response without API
@@ -48,32 +48,43 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ response: fallbackResponse });
         }
 
-        // Call OpenAI API
-        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Call Google Gemini API
+        const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+
+        const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-                model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: message },
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [{ text: `${systemPrompt}\n\nUser message: ${message}` }],
+                    },
                 ],
-                max_tokens: 500,
-                temperature: 0.7,
+                generationConfig: {
+                    maxOutputTokens: 500,
+                    temperature: 0.7,
+                },
+                safetySettings: [
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+                ],
             }),
         });
 
-        if (!openaiResponse.ok) {
-            console.error('OpenAI API error:', openaiResponse.status);
+        if (!geminiResponse.ok) {
+            console.error('Gemini API error:', geminiResponse.status, await geminiResponse.text().catch(() => ''));
             const fallbackResponse = generateFallbackResponse(message, (user as any).role);
             return NextResponse.json({ response: fallbackResponse });
         }
 
-        const data = await openaiResponse.json();
-        const reply = data.choices?.[0]?.message?.content || 'I could not generate a response. Please try again.';
+        const data = await geminiResponse.json();
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I could not generate a response. Please try again.';
 
         return NextResponse.json({ response: reply });
     } catch (error) {

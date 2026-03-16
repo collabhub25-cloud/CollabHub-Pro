@@ -114,10 +114,8 @@ export function PricingPage() {
   }, [fetchSubscription]);
 
   const handleUpgrade = async (planKey: string) => {
-    // The new Pricing component doesn't offer a 'free_founder' option for upgrade,
-    // so this check might be less relevant if only paid plans are presented.
-    // However, keeping it for robustness.
     if (planKey === 'free_founder') return;
+    const planDisplayName = planKey.replace('_founder', '').toUpperCase();
     setProcessing(planKey);
 
     const res = await loadRazorpayScript();
@@ -128,13 +126,10 @@ export function PricingPage() {
     }
 
     try {
-      // The create-order endpoint should ideally take the planKey to create an order for that specific plan.
-      // Assuming the backend handles which plan to subscribe to based on context or a default PRO plan.
-      // If the backend needs the planKey, it should be passed in the body:
-      // body: JSON.stringify({ planKey }),
       const orderResp = await fetch('/api/payments/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planKey }),
       });
       const orderData = await orderResp.json();
 
@@ -149,7 +144,7 @@ export function PricingPage() {
         amount: orderData.amount,
         currency: orderData.currency,
         name: "AlloySphere",
-        description: "PRO Subscription", // This description might need to be dynamic based on planKey
+        description: `${planDisplayName} Subscription`,
         order_id: orderData.orderId,
         handler: async function (response: any) {
           try {
@@ -159,7 +154,8 @@ export function PricingPage() {
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature
+                razorpay_signature: response.razorpay_signature,
+                planKey,
               })
             });
             const verifyData = await verifyResp.json();

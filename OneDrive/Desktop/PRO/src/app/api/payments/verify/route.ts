@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Subscription, User } from '@/lib/models';
 import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
+import { FounderPlanType, PLAN_PRICES } from '@/lib/subscription/features';
 import crypto from 'crypto';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('payment-verify');
+
+const VALID_PAID_PLANS: FounderPlanType[] = ['pro_founder', 'scale_founder', 'enterprise_founder'];
 
 // POST /api/payments/verify
 export async function POST(request: NextRequest) {
@@ -26,10 +29,16 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planKey } = body;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
             return NextResponse.json({ error: 'Missing payment details' }, { status: 400 });
+        }
+
+        // Determine which plan to upgrade to
+        let targetPlan: FounderPlanType = 'pro_founder';
+        if (planKey && VALID_PAID_PLANS.includes(planKey)) {
+            targetPlan = planKey;
         }
 
         // Verify Signature
@@ -52,28 +61,50 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User validation failed' }, { status: 403 });
         }
 
-        // Update Subscription
-        // 30 days from now
+        // Update Subscription - 30 days from now
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 30);
+
+        const planDisplayName = targetPlan.replace('_founder', '').toUpperCase();
 
         const subscription = await Subscription.findOneAndUpdate(
             { userId: decoded.userId },
             {
-                plan: 'pro_founder',
+                plan: targetPlan,
                 status: 'active',
                 currentPeriodEnd: expiresAt,
-                updatedAt: new Date()
+                razorpayPaymentId: razorpay_payment_id,
+                razorpayOrderId: razorpay_order_id,
+                updatedAt: new Date(),
             },
             { new: true, upsert: true }
         );
 
-        log.info(`Upgraded user ${decoded.userId} to PRO plan via Razorpay payment ${razorpay_payment_id}`);
+        log.info(`Upgraded user ${decoded.userId} to ${planDisplayName} plan via Razorpay payment ${razorpay_payment_id}`);
+
+        // Send notification emails (graceful - don't fail the payment if email fails)
+        try {
+            const { sendSubscriptionUpgradeEmail, sendPaymentReceiptEmail } = await import('@/lib/mailer');
+            const amount = PLAN_PRICES[targetPlan]?.monthly || 0;
+
+            await Promise.allSettled([
+                sendSubscriptionUpgradeEmail(user.email, user.name, planDisplayName),
+                sendPaymentReceiptEmail(
+                    user.email,
+                    user.name,
+                    amount / 100,
+                    planDisplayName,
+                    razorpay_payment_id
+                ),
+            ]);
+        } catch (emailError) {
+            log.error('Failed to send notification emails (non-critical):', emailError);
+        }
 
         return NextResponse.json({
             success: true,
-            message: 'Payment verified successfully and subscription upgraded.',
-            subscription
+            message: `Payment verified successfully. Subscription upgraded to ${planDisplayName}.`,
+            subscription,
         });
 
     } catch (error) {
@@ -84,3 +115,4 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
