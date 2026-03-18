@@ -68,12 +68,15 @@ export async function POST(request: NextRequest) {
       skills: [],
     });
 
-    // Send verification email
+    // Send welcome and verification emails
     try {
-      const { sendVerificationEmail } = await import('@/lib/mailer');
-      await sendVerificationEmail(user.email, otp);
+      const { sendVerificationEmail, sendWelcomeEmail } = await import('@/lib/mailer');
+      await Promise.allSettled([
+        sendVerificationEmail(user.email, otp),
+        sendWelcomeEmail(user.email, user.name, user.role)
+      ]);
     } catch (err) {
-      console.error('Failed to send verification email:', err);
+      console.error('Failed to send welcome/verification emails:', err);
       // Proceed without failing registration; user can hit resend later
     }
 
