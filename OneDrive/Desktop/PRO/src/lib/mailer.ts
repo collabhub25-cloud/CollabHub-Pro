@@ -16,6 +16,33 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+// ============================================
+// Branded HTML wrapper
+// ============================================
+function wrapInBrandedTemplate(title: string, bodyHtml: string): string {
+    return `
+    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 560px; margin: 0 auto; padding: 0; background: #ffffff;">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #2E8B57 0%, #0047AB 100%); padding: 28px 24px; border-radius: 12px 12px 0 0; text-align: center;">
+        <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">AlloySphere</h1>
+        <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 4px 0 0 0;">Trust-Verified Startup Collaboration</p>
+      </div>
+      <!-- Body -->
+      <div style="padding: 32px 24px; border: 1px solid #e5e7eb; border-top: none;">
+        <h2 style="color: #1a1a1a; font-size: 18px; font-weight: 600; margin: 0 0 16px 0;">${title}</h2>
+        ${bodyHtml}
+      </div>
+      <!-- Footer -->
+      <div style="padding: 20px 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; text-align: center;">
+        <p style="color: #9ca3af; font-size: 11px; margin: 0;">© ${new Date().getFullYear()} AlloySphere. All rights reserved.</p>
+        <p style="color: #9ca3af; font-size: 11px; margin: 4px 0 0 0;">You received this email because you have an AlloySphere account.</p>
+      </div>
+    </div>`;
+}
+
+// ============================================
+// Verification Email
+// ============================================
 export async function sendVerificationEmail(email: string, otp: string) {
     if (!SMTP_USER || !SMTP_PASS) {
         console.warn(`[MAILER] DEV MODE - Verification OTP for ${email}: ${otp}`);
@@ -28,16 +55,13 @@ export async function sendVerificationEmail(email: string, otp: string) {
             to: email,
             subject: 'Verify your AlloySphere account',
             text: `Your verification code is: ${otp}`,
-            html: `
-        <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
-          <h2 style="color: #1a1a1a;">Welcome to AlloySphere!</h2>
-          <p style="color: #4a4a4a; line-height: 1.5;">To verify your email address and activate your account, please use the following one-time password (OTP):</p>
-          <div style="background-color: #f3f4f6; padding: 16px; border-radius: 6px; text-align: center; margin: 24px 0;">
-            <h1 style="color: #2563eb; letter-spacing: 5px; margin: 0; font-size: 32px;">${otp}</h1>
-          </div>
-          <p style="color: #71717a; font-size: 14px;">This code will expire in 10 minutes.</p>
-        </div>
-      `,
+            html: wrapInBrandedTemplate('Verify Your Email', `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">To verify your email address and activate your account, please use the following one-time password:</p>
+                <div style="background: linear-gradient(135deg, rgba(46,139,87,0.08), rgba(0,71,171,0.08)); padding: 20px; border-radius: 10px; text-align: center; margin: 24px 0; border: 1px solid rgba(46,139,87,0.15);">
+                  <h1 style="color: #2E8B57; letter-spacing: 6px; margin: 0; font-size: 36px; font-weight: 700;">${otp}</h1>
+                </div>
+                <p style="color: #71717a; font-size: 13px; margin: 0;">This code will expire in 10 minutes.</p>
+            `),
         });
         return info.messageId;
     } catch (error) {
@@ -46,6 +70,9 @@ export async function sendVerificationEmail(email: string, otp: string) {
     }
 }
 
+// ============================================
+// Password Reset Email
+// ============================================
 export async function sendPasswordResetEmail(email: string, otp: string) {
     if (!SMTP_USER || !SMTP_PASS) {
         console.warn(`[MAILER] DEV MODE - Password Reset OTP for ${email}: ${otp}`);
@@ -58,20 +85,200 @@ export async function sendPasswordResetEmail(email: string, otp: string) {
             to: email,
             subject: 'Reset your AlloySphere password',
             text: `Your password reset code is: ${otp}`,
-            html: `
-        <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
-          <h2 style="color: #1a1a1a;">Reset Your Password</h2>
-          <p style="color: #4a4a4a; line-height: 1.5;">We received a request to reset your AlloySphere password. Use the code below to proceed:</p>
-          <div style="background-color: #f3f4f6; padding: 16px; border-radius: 6px; text-align: center; margin: 24px 0;">
-            <h1 style="color: #dc2626; letter-spacing: 5px; margin: 0; font-size: 32px;">${otp}</h1>
-          </div>
-          <p style="color: #71717a; font-size: 14px;">This code will expire in 10 minutes. If you did not request a password reset, please ignore this email.</p>
-        </div>
-      `,
+            html: wrapInBrandedTemplate('Reset Your Password', `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">We received a request to reset your AlloySphere password. Use the code below to proceed:</p>
+                <div style="background: #fef2f2; padding: 20px; border-radius: 10px; text-align: center; margin: 24px 0; border: 1px solid #fecaca;">
+                  <h1 style="color: #dc2626; letter-spacing: 6px; margin: 0; font-size: 36px; font-weight: 700;">${otp}</h1>
+                </div>
+                <p style="color: #71717a; font-size: 13px; margin: 0;">This code will expire in 10 minutes. If you did not request a password reset, please ignore this email.</p>
+            `),
         });
         return info.messageId;
     } catch (error) {
         console.error('[MAILER] Error sending password reset email:', error);
         throw error;
+    }
+}
+
+// ============================================
+// Welcome Email (sent on registration)
+// ============================================
+export async function sendWelcomeEmail(email: string, name: string, role: string) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.warn(`[MAILER] DEV MODE - Welcome email for ${email} (${role})`);
+        return;
+    }
+
+    const roleMessages: Record<string, string> = {
+        founder: 'Start building your startup profile, invite team members, and connect with verified talent and investors.',
+        investor: 'Explore deal flow, review verified startups, and connect with founders building the future.',
+        talent: 'Discover exciting startup opportunities, showcase your skills, and join teams building something great.',
+    };
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"AlloySphere" <${FROM_EMAIL}>`,
+            to: email,
+            subject: `Welcome to AlloySphere, ${name}!`,
+            text: `Welcome to AlloySphere! Your ${role} account has been created.`,
+            html: wrapInBrandedTemplate(`Welcome, ${name}!`, `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 16px 0;">Your <strong>${role}</strong> account has been created successfully.</p>
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 24px 0;">${roleMessages[role] || 'Explore the platform and start collaborating.'}</p>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard/${role}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E8B57, #0047AB); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Go to Dashboard</a>
+                </div>
+                <p style="color: #71717a; font-size: 13px; margin: 0;">Next step: Complete your profile and verify your email to unlock full features.</p>
+            `),
+        });
+        return info.messageId;
+    } catch (error) {
+        console.error('[MAILER] Error sending welcome email:', error);
+        // Non-critical, don't throw
+    }
+}
+
+// ============================================
+// Subscription Upgrade Email
+// ============================================
+export async function sendSubscriptionEmail(email: string, name: string, planName: string, expiresAt: Date) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.warn(`[MAILER] DEV MODE - Subscription email for ${email}: upgraded to ${planName}`);
+        return;
+    }
+
+    const formattedDate = expiresAt.toLocaleDateString('en-IN', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+    });
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"AlloySphere" <${FROM_EMAIL}>`,
+            to: email,
+            subject: `AlloySphere ${planName} Plan Activated`,
+            text: `Your AlloySphere subscription has been upgraded to ${planName}. Active until ${formattedDate}.`,
+            html: wrapInBrandedTemplate('Subscription Confirmed', `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">Hi ${name}, your subscription has been upgraded.</p>
+                <div style="background: linear-gradient(135deg, rgba(46,139,87,0.06), rgba(0,71,171,0.06)); padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid rgba(46,139,87,0.12);">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Plan</td>
+                      <td style="color: #1a1a1a; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">${planName}</td>
+                    </tr>
+                    <tr>
+                      <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Status</td>
+                      <td style="color: #2E8B57; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">Active</td>
+                    </tr>
+                    <tr>
+                      <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Renews on</td>
+                      <td style="color: #1a1a1a; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">${formattedDate}</td>
+                    </tr>
+                  </table>
+                </div>
+                <p style="color: #71717a; font-size: 13px; margin: 0;">Thank you for upgrading. You now have access to all ${planName} features.</p>
+            `),
+        });
+        return info.messageId;
+    } catch (error) {
+        console.error('[MAILER] Error sending subscription email:', error);
+    }
+}
+
+// ============================================
+// Application Notification Email
+// ============================================
+export async function sendApplicationNotificationEmail(
+    email: string, 
+    recipientName: string, 
+    applicantName: string, 
+    startupName: string, 
+    type: 'received' | 'accepted' | 'rejected'
+) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.warn(`[MAILER] DEV MODE - Application ${type} email for ${email}`);
+        return;
+    }
+
+    const subjects: Record<string, string> = {
+        received: `New application for ${startupName}`,
+        accepted: `Your application to ${startupName} was accepted`,
+        rejected: `Update on your application to ${startupName}`,
+    };
+
+    const messages: Record<string, string> = {
+        received: `<strong>${applicantName}</strong> has applied to join <strong>${startupName}</strong>. Review their profile and respond to their application.`,
+        accepted: `Congratulations! Your application to <strong>${startupName}</strong> has been accepted by ${recipientName}. Check your dashboard for next steps.`,
+        rejected: `Your application to <strong>${startupName}</strong> has been reviewed. Unfortunately, the team has decided to move forward with other candidates.`,
+    };
+
+    const statusColors: Record<string, string> = {
+        received: '#0047AB',
+        accepted: '#2E8B57',
+        rejected: '#dc2626',
+    };
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"AlloySphere" <${FROM_EMAIL}>`,
+            to: email,
+            subject: subjects[type],
+            text: `Application ${type} for ${startupName}`,
+            html: wrapInBrandedTemplate('Application Update', `
+                <div style="border-left: 4px solid ${statusColors[type]}; padding-left: 16px; margin: 0 0 20px 0;">
+                  <p style="color: #4a4a4a; line-height: 1.6; margin: 0;">${messages[type]}</p>
+                </div>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E8B57, #0047AB); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View on Dashboard</a>
+                </div>
+            `),
+        });
+        return info.messageId;
+    } catch (error) {
+        console.error('[MAILER] Error sending application notification email:', error);
+    }
+}
+
+// ============================================
+// Agreement Notification Email
+// ============================================
+export async function sendAgreementNotificationEmail(
+    email: string, 
+    recipientName: string, 
+    agreementType: string, 
+    action: 'created' | 'signed' | 'completed'
+) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.warn(`[MAILER] DEV MODE - Agreement ${action} email for ${email}`);
+        return;
+    }
+
+    const subjects: Record<string, string> = {
+        created: `New ${agreementType} agreement requires your attention`,
+        signed: `${agreementType} agreement has been signed`,
+        completed: `${agreementType} agreement completed`,
+    };
+
+    const messages: Record<string, string> = {
+        created: `A new <strong>${agreementType}</strong> agreement has been created and requires your review and signature.`,
+        signed: `The <strong>${agreementType}</strong> agreement has been signed. The agreement is now active.`,
+        completed: `The <strong>${agreementType}</strong> agreement has been successfully completed by all parties.`,
+    };
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"AlloySphere" <${FROM_EMAIL}>`,
+            to: email,
+            subject: subjects[action],
+            text: `Agreement ${action}: ${agreementType}`,
+            html: wrapInBrandedTemplate('Agreement Update', `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">Hi ${recipientName},</p>
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">${messages[action]}</p>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E8B57, #0047AB); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Agreement</a>
+                </div>
+            `),
+        });
+        return info.messageId;
+    } catch (error) {
+        console.error('[MAILER] Error sending agreement notification email:', error);
     }
 }

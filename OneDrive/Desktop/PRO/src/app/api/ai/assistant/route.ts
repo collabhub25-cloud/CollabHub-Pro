@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/security';
+import { requireAuth, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/lib/models';
 import { getSystemPrompt } from '@/lib/ai/system-prompts';
 
 export const runtime = 'nodejs';
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = 'gemini-2.0-flash';
+
 export async function POST(request: NextRequest) {
     try {
+        const rateLimitKey = getRateLimitKey(request, 'ai_assistant');
+        const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.ai_assistant);
+
+        if (!rateLimitResult.allowed) {
+            return rateLimitResponse(rateLimitResult.resetTime, RATE_LIMITS.ai_assistant.message);
+        }
+
         const authResult = await requireAuth(request);
         if (!authResult.success) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
@@ -39,41 +49,47 @@ export async function POST(request: NextRequest) {
             verificationLevel: (user as any).verificationLevel,
         });
 
-        // Check for OpenAI API key
-        const apiKey = process.env.OPENAI_API_KEY;
-
-        if (!apiKey) {
+        if (!GEMINI_API_KEY) {
             // Fallback: generate contextual response without API
             const fallbackResponse = generateFallbackResponse(message, (user as any).role);
             return NextResponse.json({ response: fallbackResponse });
         }
 
-        // Call OpenAI API
-        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: message },
-                ],
-                max_tokens: 500,
-                temperature: 0.7,
-            }),
-        });
+        // Call Google Gemini API
+        const geminiResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }],
+                    },
+                    contents: [
+                        {
+                            role: 'user',
+                            parts: [{ text: message }],
+                        },
+                    ],
+                    generationConfig: {
+                        maxOutputTokens: 600,
+                        temperature: 0.7,
+                    },
+                }),
+            }
+        );
 
-        if (!openaiResponse.ok) {
-            console.error('OpenAI API error:', openaiResponse.status);
+        if (!geminiResponse.ok) {
+            console.error('Gemini API error:', geminiResponse.status, await geminiResponse.text().catch(() => ''));
             const fallbackResponse = generateFallbackResponse(message, (user as any).role);
             return NextResponse.json({ response: fallbackResponse });
         }
 
-        const data = await openaiResponse.json();
-        const reply = data.choices?.[0]?.message?.content || 'I could not generate a response. Please try again.';
+        const data = await geminiResponse.json();
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+            || 'I could not generate a response. Please try again.';
 
         return NextResponse.json({ response: reply });
     } catch (error) {

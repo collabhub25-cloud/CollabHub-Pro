@@ -128,13 +128,10 @@ export function PricingPage() {
     }
 
     try {
-      // The create-order endpoint should ideally take the planKey to create an order for that specific plan.
-      // Assuming the backend handles which plan to subscribe to based on context or a default PRO plan.
-      // If the backend needs the planKey, it should be passed in the body:
-      // body: JSON.stringify({ planKey }),
       const orderResp = await fetch('/api/payments/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planKey, billingCycle: isMonthly ? 'monthly' : 'yearly' }),
       });
       const orderData = await orderResp.json();
 
@@ -144,12 +141,13 @@ export function PricingPage() {
         return;
       }
 
+      const planDisplayName = orderData.planName || planKey.replace('_founder', '').toUpperCase();
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "AlloySphere",
-        description: "PRO Subscription", // This description might need to be dynamic based on planKey
+        description: `${planDisplayName} Subscription (${isMonthly ? 'Monthly' : 'Yearly'})`,
         order_id: orderData.orderId,
         handler: async function (response: any) {
           try {
@@ -159,7 +157,10 @@ export function PricingPage() {
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature
+                razorpay_signature: response.razorpay_signature,
+                planKey,
+                billingCycle: isMonthly ? 'monthly' : 'yearly',
+                amount: orderData.amount,
               })
             });
             const verifyData = await verifyResp.json();
@@ -196,8 +197,12 @@ export function PricingPage() {
     toast.error('Account portal management is currently being migrated.');
   };
 
+  // Track billing toggle state
+  const [isMonthly, setIsMonthly] = useState(true);
+
   // Handle plan selection from the new Pricing component
-  const handlePlanSelect = (plan: { name: string; href: string }, _isMonthly: boolean) => {
+  const handlePlanSelect = (plan: { name: string; href: string }, isMonthlyBilling: boolean) => {
+    setIsMonthly(isMonthlyBilling);
     // Map plan name back to plan key
     const selected = founderPricingPlans.find(p => p.name === plan.name);
     if (selected) {

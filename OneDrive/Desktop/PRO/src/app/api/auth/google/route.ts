@@ -3,12 +3,20 @@ import { OAuth2Client } from 'google-auth-library';
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/lib/models';
 import { generateAccessToken, generateRefreshToken, setAuthCookies, sanitizeUser } from '@/lib/auth';
+import { checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitKey = getRateLimitKey(request, 'auth_google');
+    const rateLimitResult = checkRateLimit(rateLimitKey, RATE_LIMITS.auth_google);
+
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetTime, RATE_LIMITS.auth_google.message);
+    }
+
     const { credential, role } = await request.json();
 
     if (!GOOGLE_CLIENT_ID) {
