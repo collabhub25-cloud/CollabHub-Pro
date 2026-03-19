@@ -111,14 +111,16 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Existing user: link Google account if needed
+      const updates: any = { lastActive: new Date() };
+      
       if (!user.googleId) {
-        user.googleId = googleId;
-        user.authProvider = 'google';
-        if (avatar && !user.avatar) user.avatar = avatar;
-        if (emailVerified) user.isEmailVerified = true;
+        updates.googleId = googleId;
+        updates.authProvider = 'google';
+        if (avatar && !user.avatar) updates.avatar = avatar;
+        if (emailVerified) updates.isEmailVerified = true;
       }
-      user.lastActive = new Date();
-      await user.save();
+      
+      await User.updateOne({ _id: user._id }, { $set: updates });
     }
 
     // Step 4: Generate JWT tokens

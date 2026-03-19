@@ -178,8 +178,10 @@ export async function authenticateUser(
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
-  user.lastActive = new Date();
-  await user.save();
+  await User.updateOne(
+    { _id: user._id },
+    { $set: { lastActive: new Date() } }
+  );
 
   return { user, accessToken, refreshToken };
 }
