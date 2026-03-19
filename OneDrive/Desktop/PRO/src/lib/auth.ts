@@ -80,7 +80,7 @@ export function verifyToken(token: string): TokenPayload | null {
 const COOKIE_OPTIONS_BASE = {
   httpOnly: true,
   secure: IS_PRODUCTION,
-  sameSite: 'strict' as const,
+  sameSite: 'lax' as const,
   path: '/',
 };
 

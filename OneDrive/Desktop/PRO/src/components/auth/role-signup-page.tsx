@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Rocket, Sparkles } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Logo } from '@/components/ui/logo';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -68,38 +67,10 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
         }
     };
 
-    const handleGoogleSignUp = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            setIsLoading(true);
-            try {
-                const response = await fetch('/api/auth/google', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ 
-                        credential: tokenResponse.access_token, 
-                        role: role 
-                    }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    login(data.user);
-                    router.push(`/dashboard/${role}`);
-                } else {
-                    toast.error(data.error || 'Google Sign-Up failed');
-                }
-            } catch {
-                toast.error('Something went wrong during Google Sign-Up');
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        onError: () => {
-            toast.error('Google Sign-Up was unsuccessful or cancelled.');
-        }
-    });
+    const handleGoogleSignUp = () => {
+        // Redirect to our server-side Google OAuth endpoint
+        window.location.href = `/api/auth/google?role=${role}&mode=signup`;
+    };
 
     return (
         <div className="min-h-screen flex flex-col bg-background text-foreground">
