@@ -70,9 +70,7 @@ export function MessagingPage() {
   const fetchConversations = useCallback(async () => {
 
     try {
-      const response = await fetch('/api/messages/conversations', {
-        credentials: 'include',
-      });
+      const response = await apiFetch('/api/messages/conversations');
 
       if (response.ok) {
         const data = await response.json();
@@ -94,9 +92,7 @@ export function MessagingPage() {
 
     setLoadingMessages(true);
     try {
-      const response = await fetch(`/api/messages/conversation/${userId}`, {
-        credentials: 'include',
-      });
+      const response = await apiFetch(`/api/messages/conversation/${userId}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -281,10 +277,9 @@ export function MessagingPage() {
     setSending(true);
 
     try {
-      const response = await fetch('/api/messages/create', {
+      const response = await apiFetch('/api/messages/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           receiverId: selectedConversation.otherUser._id,
           content,

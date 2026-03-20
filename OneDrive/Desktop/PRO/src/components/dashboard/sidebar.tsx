@@ -61,9 +61,7 @@ const getNavigation = (role: string) => {
         { id: 'milestones', label: 'Milestones', icon: Target },
         { id: 'agreements', label: 'Agreements', icon: FileText, countKey: 'agreements' },
       ],
-      finance: [
-        { id: 'earnings', label: 'Earnings', icon: Wallet },
-      ],
+      finance: [],
       communication: [
         { id: 'messages', label: 'Messages', icon: MessageSquare, countKey: 'messages' },
         { id: 'alliances', label: 'Alliances', icon: Handshake },

@@ -163,7 +163,7 @@ export function TalentDashboardNew() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <QuickActionCard
           icon={Search}
           label="Find Startups"
@@ -182,16 +182,10 @@ export function TalentDashboardNew() {
           description={`${stats.activeMilestones} active`}
           onClick={() => setActiveTab('milestones')}
         />
-        <QuickActionCard
-          icon={Wallet}
-          label="Earnings"
-          description={formatCurrency(stats.totalEarnings)}
-          onClick={() => setActiveTab('earnings')}
-        />
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <StatsCard
           icon={Briefcase}
           iconColor="text-blue-500"
@@ -208,16 +202,6 @@ export function TalentDashboardNew() {
           subtext={`${stats.activeMilestones} in progress`}
           progress={milestoneProgress}
           onClick={() => setActiveTab('milestones')}
-        />
-        <StatsCard
-          icon={Wallet}
-          iconColor="text-green-500"
-          label="Total Earnings"
-          value={formatCurrency(stats.totalEarnings)}
-          subtext={`${formatCurrency(stats.pendingEarnings)} pending`}
-          trend={stats.totalEarnings > 0 ? '+12% this month' : undefined}
-          trendPositive={true}
-          onClick={() => setActiveTab('earnings')}
         />
       </div>
 

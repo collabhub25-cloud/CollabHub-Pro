@@ -160,8 +160,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       case 'talent':
         // Talent-specific tabs
         if (activeTab === 'applications' || activeTab === 'projects' || 
-            activeTab === 'milestones' || activeTab === 'agreements' || 
-            activeTab === 'earnings') {
+            activeTab === 'milestones' || activeTab === 'agreements') {
           return <TalentDashboard activeTab={activeTab} />;
         }
         return <TalentDashboardNew />;
