@@ -19,8 +19,8 @@ import {
 import { useTheme } from 'next-themes';
 import Image from "next/image";
 import { FounderDashboardNew } from './founder-dashboard-new';
-import { TalentDashboard } from './talent-dashboard';
-import { InvestorDashboard } from './investor-dashboard';
+import { TalentDashboardNew } from './talent-dashboard-new';
+import { InvestorDashboardNew } from './investor-dashboard-new';
 import { AdminDashboard } from './admin-dashboard';
 import { DashboardSidebar } from './sidebar';
 import { Logo } from '@/components/ui/logo';
@@ -182,17 +182,14 @@ export function Dashboard({ onLogout }: DashboardProps) {
     if (activeTab === 'subscription') return <PricingPage />;
     if (activeTab === 'trust-score') return <ProfilePage profileId={viewProfileId} />;
 
-    // Handle role-specific dashboards
-    // SECURITY FIX: Return AccessDenied for unknown roles instead of defaulting to Founder
+    // Handle role-specific dashboards with new designs
     switch (user.role) {
       case 'founder':
-        // Use new founder dashboard for main dashboard view
-        if (activeTab === 'dashboard') return <FounderDashboardNew />;
         return <FounderDashboardNew />;
       case 'talent':
-        return <TalentDashboard activeTab={activeTab} />;
+        return <TalentDashboardNew />;
       case 'investor':
-        return <InvestorDashboard activeTab={activeTab} />;
+        return <InvestorDashboardNew />;
       case 'admin':
         return <AdminDashboard activeTab={activeTab} />;
       default:

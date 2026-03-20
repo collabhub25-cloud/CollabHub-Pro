@@ -28,7 +28,12 @@ interface SidebarProps {
 
 // Role-based navigation configuration
 const getNavigation = (role: string) => {
-  const baseNav = {
+  const baseNav: Record<string, { 
+    overview: any[]; 
+    workspace: any[]; 
+    finance: any[]; 
+    communication: any[]; 
+  }> = {
     founder: {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,7 +51,8 @@ const getNavigation = (role: string) => {
       ],
       communication: [
         { id: 'messages', label: 'Messages', icon: MessageSquare, countKey: 'messages' },
-        { id: 'trust-score', label: 'Trust Score', icon: Shield },
+        { id: 'profile', label: 'My Profile', icon: Shield },
+        { id: 'settings', label: 'Settings', icon: Settings },
       ],
     },
     talent: {
@@ -65,7 +71,8 @@ const getNavigation = (role: string) => {
       ],
       communication: [
         { id: 'messages', label: 'Messages', icon: MessageSquare, countKey: 'messages' },
-        { id: 'trust-score', label: 'Trust Score', icon: Shield },
+        { id: 'profile', label: 'My Profile', icon: Shield },
+        { id: 'settings', label: 'Settings', icon: Settings },
       ],
     },
     investor: {
@@ -83,7 +90,8 @@ const getNavigation = (role: string) => {
       ],
       communication: [
         { id: 'messages', label: 'Messages', icon: MessageSquare, countKey: 'messages' },
-        { id: 'trust-score', label: 'Trust Score', icon: Shield },
+        { id: 'profile', label: 'My Profile', icon: Shield },
+        { id: 'settings', label: 'Settings', icon: Settings },
       ],
     },
     admin: {
@@ -96,14 +104,14 @@ const getNavigation = (role: string) => {
         { id: 'verifications', label: 'Verifications', icon: Shield },
         { id: 'disputes', label: 'Disputes', icon: AlertTriangle },
       ],
-      analytics: [
+      finance: [
         { id: 'analytics', label: 'Analytics', icon: BarChart3 },
       ],
       communication: [],
     },
   };
 
-  return baseNav[role as keyof typeof baseNav] || baseNav.founder;
+  return baseNav[role] || baseNav.founder;
 };
 
 export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {} }: SidebarProps) {
@@ -201,7 +209,7 @@ export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {}
       <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
         <NavSection title="Overview" items={navigation.overview} />
         <NavSection title="Workspace" items={navigation.workspace} />
-        <NavSection title={user.role === 'admin' ? 'Analytics' : 'Finance'} items={user.role === 'admin' ? navigation.analytics : navigation.finance} />
+        <NavSection title="Finance" items={navigation.finance} />
         <NavSection title="Communication" items={navigation.communication} />
       </div>
 
