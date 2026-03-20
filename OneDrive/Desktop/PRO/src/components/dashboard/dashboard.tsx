@@ -21,6 +21,9 @@ import Image from "next/image";
 import { FounderDashboardNew } from './founder-dashboard-new';
 import { TalentDashboardNew } from './talent-dashboard-new';
 import { InvestorDashboardNew } from './investor-dashboard-new';
+import { FounderDashboard } from './founder-dashboard';
+import { TalentDashboard } from './talent-dashboard';
+import { InvestorDashboard } from './investor-dashboard';
 import { AdminDashboard } from './admin-dashboard';
 import { DashboardSidebar } from './sidebar';
 import { Logo } from '@/components/ui/logo';
@@ -146,11 +149,11 @@ export function Dashboard({ onLogout }: DashboardProps) {
     // Role-specific content rendering
     switch (user.role) {
       case 'founder':
-        // Founder-specific tabs that show in their dashboard
+        // Founder-specific tabs
         if (activeTab === 'startups' || activeTab === 'applications' || 
             activeTab === 'milestones' || activeTab === 'agreements' || 
             activeTab === 'payments') {
-          return <FounderDashboardNew key={activeTab} />;
+          return <FounderDashboard activeTab={activeTab === 'payments' ? 'funding' : activeTab} />;
         }
         return <FounderDashboardNew />;
         
@@ -159,15 +162,15 @@ export function Dashboard({ onLogout }: DashboardProps) {
         if (activeTab === 'applications' || activeTab === 'projects' || 
             activeTab === 'milestones' || activeTab === 'agreements' || 
             activeTab === 'earnings') {
-          return <TalentDashboardNew key={activeTab} />;
+          return <TalentDashboard activeTab={activeTab} />;
         }
         return <TalentDashboardNew />;
         
       case 'investor':
         // Investor-specific tabs
         if (activeTab === 'dealflow' || activeTab === 'portfolio' || 
-            activeTab === 'investments') {
-          return <InvestorDashboardNew key={activeTab} />;
+            activeTab === 'investments' || activeTab === 'agreements') {
+          return <InvestorDashboard activeTab={activeTab} />;
         }
         return <InvestorDashboardNew />;
         
