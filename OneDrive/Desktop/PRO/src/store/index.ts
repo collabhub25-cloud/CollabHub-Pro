@@ -169,6 +169,7 @@ export const useUIStore = create<UIState>()(
       partialize: (state) => ({
         sidebarOpen: state.sidebarOpen,
         theme: state.theme,
+        activeTab: state.activeTab,
       }),
     }
   )
