@@ -106,6 +106,71 @@ const getNavigation = (role: string) => {
   return baseNav[role] || baseNav.founder;
 };
 
+interface NavSectionProps {
+  title: string;
+  items: any[];
+  collapsed: boolean;
+  activeTab: string;
+  counts: any;
+  onTabChange: (tab: string) => void;
+}
+
+const NavSection = ({ title, items, collapsed, activeTab, counts, onTabChange }: NavSectionProps) => {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <div className="mb-4">
+      {collapsed ? (
+        <div className="h-px bg-border/30 mx-2 my-3" />
+      ) : (
+        <div className="px-3 py-2 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
+          {title}
+        </div>
+      )}
+      <div className="space-y-0.5 px-2">
+        {items.map((item) => {
+          const isSelected = activeTab === item.id;
+          const count = item.countKey ? counts[item.countKey as keyof typeof counts] : undefined;
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              title={collapsed ? item.label : undefined}
+              data-testid={`sidebar-${item.id}`}
+              className={`relative flex h-9 w-full items-center gap-3 rounded-lg px-3 transition-all duration-200 group ${
+                isSelected
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              {isSelected && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r" />
+              )}
+              <item.icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
+              {!collapsed && (
+                <>
+                  <span className="text-sm flex-1 text-left truncate">{item.label}</span>
+                  {count !== undefined && count > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className={`h-5 min-w-5 px-1.5 text-[10px] font-semibold ${
+                        isSelected ? 'bg-primary/20 text-primary' : 'bg-muted'
+                      }`}
+                    >
+                      {count}
+                    </Badge>
+                  )}
+                </>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {} }: SidebarProps) {
   const { user } = useAuthStore();
   const { sidebarOpen, toggleSidebar } = useUIStore();
@@ -114,62 +179,6 @@ export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {}
   if (!user) return null;
 
   const navigation = getNavigation(user.role);
-
-  const NavSection = ({ title, items }: { title: string; items: any[] }) => {
-    if (!items || items.length === 0) return null;
-
-    return (
-      <div className="mb-4">
-        {collapsed ? (
-          <div className="h-px bg-border/30 mx-2 my-3" />
-        ) : (
-          <div className="px-3 py-2 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
-            {title}
-          </div>
-        )}
-        <div className="space-y-0.5 px-2">
-          {items.map((item) => {
-            const isSelected = activeTab === item.id;
-            const count = item.countKey ? counts[item.countKey as keyof typeof counts] : undefined;
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => onTabChange(item.id)}
-                title={collapsed ? item.label : undefined}
-                data-testid={`sidebar-${item.id}`}
-                className={`relative flex h-9 w-full items-center gap-3 rounded-lg px-3 transition-all duration-200 group ${
-                  isSelected
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-              >
-                {isSelected && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r" />
-                )}
-                <item.icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                {!collapsed && (
-                  <>
-                    <span className="text-sm flex-1 text-left truncate">{item.label}</span>
-                    {count !== undefined && count > 0 && (
-                      <Badge 
-                        variant="secondary" 
-                        className={`h-5 min-w-5 px-1.5 text-[10px] font-semibold ${
-                          isSelected ? 'bg-primary/20 text-primary' : 'bg-muted'
-                        }`}
-                      >
-                        {count}
-                      </Badge>
-                    )}
-                  </>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <nav
@@ -199,10 +208,10 @@ export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {}
 
       {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
-        <NavSection title="Overview" items={navigation.overview} />
-        <NavSection title="Workspace" items={navigation.workspace} />
-        <NavSection title="Finance" items={navigation.finance} />
-        <NavSection title="Communication" items={navigation.communication} />
+        <NavSection title="Overview" items={navigation.overview} collapsed={collapsed} activeTab={activeTab} counts={counts} onTabChange={onTabChange} />
+        <NavSection title="Workspace" items={navigation.workspace} collapsed={collapsed} activeTab={activeTab} counts={counts} onTabChange={onTabChange} />
+        <NavSection title="Finance" items={navigation.finance} collapsed={collapsed} activeTab={activeTab} counts={counts} onTabChange={onTabChange} />
+        <NavSection title="Communication" items={navigation.communication} collapsed={collapsed} activeTab={activeTab} counts={counts} onTabChange={onTabChange} />
       </div>
 
       {/* User Section */}

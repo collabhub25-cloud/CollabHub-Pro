@@ -243,7 +243,7 @@ export function FounderDashboardNew() {
           label="Funding Secured"
           value={formatCurrency(stats.fundingRaised)}
           subtext={stats.fundingTarget > 0 ? `${Math.round((stats.fundingRaised / stats.fundingTarget) * 100)}% of target` : 'Set your target'}
-          onClick={() => setActiveTab('investors')}
+          onClick={() => setActiveTab('search')}
         />
       </div>
 

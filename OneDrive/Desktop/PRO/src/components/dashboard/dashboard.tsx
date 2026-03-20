@@ -48,46 +48,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const navigation = {
-  founder: [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'startups', label: 'My Startups', icon: Building2 },
-    { id: 'search', label: 'Search', icon: Search },
-    { id: 'alliances', label: 'Alliances', icon: Handshake },
-    { id: 'messages', label: 'Messages', icon: MessageSquare },
-    { id: 'profile', label: 'My Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ],
-  talent: [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'search', label: 'Discover', icon: Search },
-    { id: 'applications', label: 'Applications', icon: Users },
-    { id: 'projects', label: 'Projects', icon: Building2 },
-    { id: 'messages', label: 'Messages', icon: MessageSquare },
-    { id: 'profile', label: 'My Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ],
-  investor: [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'dealflow', label: 'Deal Flow', icon: DollarSign },
-    { id: 'portfolio', label: 'Portfolio', icon: Building2 },
-    { id: 'search', label: 'Discover', icon: Search },
-    { id: 'alliances', label: 'Alliances', icon: Handshake },
-    { id: 'messages', label: 'Messages', icon: MessageSquare },
-    { id: 'profile', label: 'My Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ],
-  admin: [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'startups', label: 'Startups', icon: Building2 },
-    { id: 'verifications', label: 'Verifications', icon: Shield },
-    { id: 'disputes', label: 'Disputes', icon: AlertTriangle },
-    { id: 'alliances', label: 'Alliances', icon: Handshake },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ],
-};
+
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const { user, setUser } = useAuthStore();
@@ -158,7 +119,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
     document.documentElement.style.setProperty('--role-accent', roleAccentMap[user.role] || roleAccentMap.founder);
   }
 
-  const navItems = navigation[user.role] || navigation.founder;
+
 
   const getVerificationBadge = (level: number) => {
     const badges = [
@@ -188,7 +149,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
         // Founder-specific tabs that show in their dashboard
         if (activeTab === 'startups' || activeTab === 'applications' || 
             activeTab === 'milestones' || activeTab === 'agreements' || 
-            activeTab === 'payments' || activeTab === 'investors') {
+            activeTab === 'payments') {
           return <FounderDashboardNew key={activeTab} />;
         }
         return <FounderDashboardNew />;
