@@ -24,7 +24,6 @@ import {
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
-import { TalentStatsChart } from '@/components/dashboard/talent-stats-chart';
 import { FloatingTooltip } from '@/components/ui/floating-tooltip';
 
 interface Application {
@@ -280,12 +279,6 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               )}
             </div>
           ))}
-        </div>
-
-        {/* Chart Section */}
-        <div data-aos="fade-up" className="rounded-2xl p-6 shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
-          <h3 className="text-lg font-semibold mb-6">Performance Overview</h3>
-          <TalentStatsChart />
         </div>
 
         {/* Verification Progress — Premium Stepper */}

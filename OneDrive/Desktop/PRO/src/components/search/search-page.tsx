@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Search, Filter, ChevronDown, X, Loader2, Users, Building2,
-  TrendingUp, MapPin, Star, Briefcase, DollarSign, FileText, Send, Lock
+  TrendingUp, MapPin, Star, Briefcase, DollarSign, FileText, Send
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -482,14 +482,9 @@ export function SearchPage() {
                                       <Button
                                         size="sm"
                                         onClick={() => handleApply(result)}
-                                        disabled={!result.isActive || !result.rolesNeeded?.length || result.hasApplied || (user?.verificationLevel || 0) < 2}
+                                        disabled={!result.isActive || !result.rolesNeeded?.length || result.hasApplied}
                                       >
-                                        {(user?.verificationLevel || 0) < 2 ? (
-                                          <>
-                                            <Lock className="h-4 w-4 mr-1" />
-                                            Lv.2 Required
-                                          </>
-                                        ) : result.hasApplied ? (
+                                        {result.hasApplied ? (
                                           <>
                                             <FileText className="h-4 w-4 mr-1" />
                                             Applied
@@ -503,9 +498,9 @@ export function SearchPage() {
                                       </Button>
                                     </div>
                                   </TooltipTrigger>
-                                  {(user?.verificationLevel || 0) < 2 && (
+                                  {!result.isActive && (
                                     <TooltipContent>
-                                      <p>You need Verification Level 2 to apply to startups.</p>
+                                      <p>This startup is not accepting applications.</p>
                                     </TooltipContent>
                                   )}
                                 </Tooltip>

@@ -1,49 +1,46 @@
-# CollabHub - Production Security Implementation PRD
+# CollabHub/AlloySphere - Production Security & UX Implementation
 
 ## Original Problem Statement
-Implement production-level security for the CollabHub Next.js (TypeScript) web application.
+1. Implement production-level security
+2. Remove email/password auth - Google-only authentication
+3. Fix talent cannot apply to startups issue
+4. Remove Performance Overview from talent dashboard
+5. Make platform production-ready
 
 ## Project Type
-Existing Next.js/TypeScript startup collaboration platform with MongoDB, JWT auth, Razorpay payments.
+Next.js/TypeScript startup collaboration platform with MongoDB, JWT auth, Razorpay payments.
 
 ## What's Been Implemented (Jan 2026)
 
-### Security Modules Created
-1. **CSRF Protection** (`/src/lib/security/csrf.ts`)
-   - Double Submit Cookie pattern
-   - Timing-safe token comparison
-   - Auto-retry on token mismatch
+### Session 1: Security Modules
+- CSRF Protection (Double Submit Cookie)
+- Account Lockout (progressive)
+- Security Audit Logging
+- Request ID tracking
+- JWT hardening (fail-fast in production)
+- Input sanitization (XSS/MongoDB injection prevention)
 
-2. **Account Lockout** (`/src/lib/security/account-lockout.ts`)
-   - 5 failed attempts = 15min lockout
-   - Progressive lockout (doubles each time)
-   - Admin unlock capability
+### Session 2: Auth & UX Fixes
+1. **Google-Only Auth**
+   - Removed email/password login form
+   - Removed email/password signup form
+   - Simplified login/signup to single Google button
+   - Updated role-signup-page.tsx component
 
-3. **Security Audit Logging** (`/src/lib/security/audit.ts`)
-   - 25+ audit event types
-   - Suspicious activity detection
-   - Risk scoring system
+2. **Talent Apply Fix**
+   - Removed verificationLevel >= 2 requirement
+   - Apply button now works for all verified talents
+   - Simplified tooltip to show when startup is inactive
 
-4. **Request Validation** (`/src/lib/security/request-validation.ts`)
-   - Request ID tracking
-   - Content-Type validation
-   - Body size limits
-   - Standardized error responses
+3. **Performance Overview Removed**
+   - Removed chart section from talent-dashboard.tsx
+   - Removed TalentStatsChart import
 
-5. **Security Config** (`/src/lib/security/config.ts`)
-   - Centralized security constants
-   - CSP directives
-   - Rate limit configs
-
-### Enhanced Files
-- `middleware.ts` - CSRF validation, request IDs, fail-fast JWT check
-- `auth.ts` - Production JWT secret enforcement
-- `login/route.ts` - Account lockout integration, audit logging
-- `api-client.ts` - Automatic CSRF token handling
-- `validation/schemas.ts` - XSS/MongoDB injection prevention
-
-### Documentation
-- `/docs/SECURITY.md` - Complete security guide
+## Files Modified (Session 2)
+- `/src/app/login/page.tsx` - Google-only login
+- `/src/components/auth/role-signup-page.tsx` - Google-only signup
+- `/src/components/search/search-page.tsx` - Fixed Apply button
+- `/src/components/dashboard/talent-dashboard.tsx` - Removed Performance Overview
 
 ## Backlog (P1)
 - Redis-based rate limiting for horizontal scaling
@@ -54,3 +51,15 @@ Existing Next.js/TypeScript startup collaboration platform with MongoDB, JWT aut
 - Device fingerprinting
 - API key management for programmatic access
 - External SIEM integration
+
+## Production Checklist
+- [x] JWT_SECRET enforcement in production
+- [x] CSRF protection on state-changing requests
+- [x] Security headers (CSP, HSTS, etc.)
+- [x] Account lockout for brute force protection
+- [x] Audit logging for security events
+- [x] Google-only authentication
+- [ ] Set production JWT_SECRET (min 32 chars)
+- [ ] Configure Google OAuth credentials for production domain
+- [ ] Set up monitoring/alerting
+- [ ] Enable HTTPS
