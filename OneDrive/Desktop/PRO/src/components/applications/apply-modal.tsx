@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api-client';
+import { apiPost } from '@/lib/api-client';
 
 interface Role {
   _id: string;
@@ -82,19 +82,12 @@ export function ApplyModal({ startup, open, onOpenChange, onSuccess }: ApplyModa
     setSubmitting(true);
 
     try {
-      const response = await fetch('/api/applications', {
-          credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await apiPost('/api/applications', {
           startupId: startup._id,
           roleId: selectedRole,
           coverLetter: coverLetter.trim(),
           proposedEquity: proposedEquity ? parseFloat(proposedEquity) : undefined,
           proposedCash: proposedCash ? parseFloat(proposedCash) : undefined,
-        }),
       });
 
       const data = await response.json();

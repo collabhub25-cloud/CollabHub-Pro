@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
+import { apiPost } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,12 +29,7 @@ export function MilestonePaymentModal({ milestone, isOpen, onClose, onSuccess }:
     const handleAction = async (endpoint: string, bodyObj: any) => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/payments/tracking/${endpoint}`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ milestoneId: milestone._id, ...bodyObj })
-            });
+            const response = await apiPost(`/api/payments/tracking/${endpoint}`, { milestoneId: milestone._id, ...bodyObj });
 
             if (!response.ok) {
                 throw new Error((await response.json()).error || `Failed to ${endpoint}`);

@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api-client';
+import { apiPost } from '@/lib/api-client';
 
 interface CreateStartupModalProps {
   onSuccess?: () => void;
@@ -77,13 +77,7 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/startups', {
-          credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await apiPost('/api/startups', {
           name: formData.name,
           vision: formData.vision,
           description: formData.description,
@@ -92,7 +86,6 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
           fundingStage: formData.fundingStage,
           fundingAmount: formData.fundingAmount ? parseFloat(formData.fundingAmount) : 0,
           website: formData.website,
-        }),
       });
 
       const data = await response.json();

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiPost, apiDelete } from '@/lib/api-client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AllianceButtonProps {
@@ -98,14 +98,7 @@ export function AllianceButton({
     setActionLoading(true);
     try {
       console.log('Sending alliance request to:', targetUserId);
-      const res = await fetch('/api/alliances', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ receiverId: targetUserId }),
-      });
+      const res = await apiPost('/api/alliances', { receiverId: targetUserId });
 
       const data = await res.json();
       console.log('Alliance request response:', res.status, data);
@@ -131,14 +124,7 @@ export function AllianceButton({
 
     setActionLoading(true);
     try {
-      const res = await fetch('/api/alliances/accept', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ allianceId: status.alliance._id }),
-      });
+      const res = await apiPost('/api/alliances/accept', { allianceId: status.alliance._id });
 
       const data = await res.json();
 
@@ -161,14 +147,7 @@ export function AllianceButton({
 
     setActionLoading(true);
     try {
-      const res = await fetch('/api/alliances/reject', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ allianceId: status.alliance._id }),
-      });
+      const res = await apiPost('/api/alliances/reject', { allianceId: status.alliance._id });
 
       const data = await res.json();
 
@@ -193,12 +172,7 @@ export function AllianceButton({
 
     setActionLoading(true);
     try {
-      const res = await fetch(
-        `/api/alliances?id=${status.alliance._id}`, {
-        credentials: 'include',
-        method: 'DELETE',
-      }
-      );
+      const res = await apiDelete(`/api/alliances?id=${status.alliance._id}`);
 
       const data = await res.json();
 

@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiPost } from '@/lib/api-client';
 
 interface CreateMilestoneModalProps {
   startupId?: string;
@@ -56,18 +56,14 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
       const fetchData = async () => {
         try {
           // Fetch founder's startups
-          const startupsRes = await fetch('/api/startups', {
-          credentials: 'include',
-          });
+          const startupsRes = await apiFetch('/api/startups');
           if (startupsRes.ok) {
             const data = await startupsRes.json();
             setStartups(data.startups || []);
           }
 
           // Fetch available talents
-          const talentsRes = await fetch('/api/search/talents?limit=50', {
-          credentials: 'include',
-          });
+          const talentsRes = await apiFetch('/api/search/talents?limit=50');
           if (talentsRes.ok) {
             const data = await talentsRes.json();
             setTalents(data.talents || []);
@@ -97,20 +93,13 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
     setLoading(true);
 
     try {
-      const response = await fetch('/api/milestones', {
-          credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await apiPost('/api/milestones', {
           startupId: formData.startupId,
           assignedTo: formData.assignedTo,
           title: formData.title,
           description: formData.description,
           amount: parseFloat(formData.amount),
           dueDate: formData.dueDate,
-        }),
       });
 
       const data = await response.json();
