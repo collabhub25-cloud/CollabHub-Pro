@@ -77,17 +77,17 @@ export function TrustBadge({ score }: { score: number }) {
                         </span>
                     </div>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs p-4 space-y-3">
+                <TooltipContent className="max-w-xs p-4 space-y-3 bg-white dark:bg-slate-900 border-border">
                     <div className="flex items-center justify-between font-semibold">
                         <span className={useGradient ? 'shimmer-text' : color}>{tier}</span>
-                        <span>{score}/100</span>
+                        <span className="text-foreground">{score}/100</span>
                     </div>
                     <Progress value={score} className="h-2" />
-                    <p className="text-sm text-muted-foreground leading-snug">
+                    <p className="text-sm text-foreground leading-snug">
                         {description}
                     </p>
-                    <p className="text-xs text-muted-foreground/70 border-t pt-2">
-                        <strong>What affects trust score?</strong> Verification level, completed milestones, signed agreements, alliance count, AlloySphere verification, and dispute history.
+                    <p className="text-xs text-muted-foreground border-t pt-2">
+                        <strong className="text-foreground">What affects trust score?</strong> Verification level, completed milestones, signed agreements, alliance count, AlloySphere verification, and dispute history.
                     </p>
                 </TooltipContent>
             </Tooltip>
