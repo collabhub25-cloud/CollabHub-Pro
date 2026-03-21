@@ -32,7 +32,6 @@ import AgreementsDashboardWithBoundary from '@/components/agreements/agreements-
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
 import { VerificationProgress } from '@/components/verification/verification-progress';
 import { SearchPage } from '@/components/search/search-page';
-import { PricingPage } from '@/components/pricing/pricing-page';
 import { ProfilePage } from '@/components/profile/profile-page';
 import { MessagingPage } from '@/components/messaging/messaging-page';
 import { SettingsPage } from '@/components/settings/settings-page';
@@ -144,7 +143,6 @@ export function Dashboard({ onLogout }: DashboardProps) {
     if (activeTab === 'profile') return <ProfilePage profileId={viewProfileId} />;
     if (activeTab === 'alliances') return <AlliancePage />;
     if (activeTab === 'settings') return <SettingsPage />;
-    if (activeTab === 'subscription') return <PricingPage />;
 
     // Role-specific content rendering
     switch (user.role) {
@@ -186,13 +184,6 @@ export function Dashboard({ onLogout }: DashboardProps) {
     setViewProfileId(undefined); // Reset to show own profile
     setActiveTab('profile');
   };
-
-  const handleUpgradeClick = () => {
-    setActiveTab('subscription');
-  };
-
-  // Only founders have subscription plans
-  const userPlan = user.role === 'founder' ? (user.plan || 'free_founder') : 'free';
 
   return (
     <TooltipProvider>

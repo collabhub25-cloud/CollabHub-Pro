@@ -46,8 +46,6 @@ export interface EmptyStateProps {
 export interface SubscriptionBadgeProps {
   plan: PlanType | null;
   role?: UserRole;
-  showUpgrade?: boolean;
-  onUpgrade?: () => void;
 }
 
 export interface PlanLimitDisplayProps {
@@ -55,8 +53,6 @@ export interface PlanLimitDisplayProps {
   role?: UserRole;
   feature: 'maxProjects' | 'maxTeamMembers' | 'maxAlliances';
   currentCount: number;
-  showUpgradeCTA?: boolean;
-  onUpgrade?: () => void;
 }
 
 // ============================================
@@ -190,8 +186,7 @@ const PLAN_COLORS: Record<string, string> = {
   premium: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
 };
 
-export function SubscriptionBadge({ plan, role, showUpgrade = false, onUpgrade }: SubscriptionBadgeProps) {
-  // Non-founders don't have subscription badges
+export function SubscriptionBadge({ plan, role }: SubscriptionBadgeProps) {
   if (role && role !== 'founder') {
     return (
       <Badge className="bg-green-500 text-white font-medium">
@@ -200,33 +195,10 @@ export function SubscriptionBadge({ plan, role, showUpgrade = false, onUpgrade }
     );
   }
 
-  // Founders with no plan show "Free"
-  if (!plan || plan === 'free' || plan === 'free_founder') {
-    return (
-      <div className="flex items-center gap-2">
-        <Badge className="bg-gray-500 text-white font-medium">
-          Free
-        </Badge>
-        {showUpgrade && onUpgrade && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 text-xs text-primary"
-            onClick={onUpgrade}
-          >
-            Upgrade
-          </Button>
-        )}
-      </div>
-    );
-  }
-
-  const colorClass = PLAN_COLORS[plan] || PLAN_COLORS.free_founder;
-
   return (
     <div className="flex items-center gap-2">
-      <Badge className={`${colorClass} font-medium`}>
-        {getPlanDisplayName(plan, role)}
+      <Badge className="bg-gray-500 text-white font-medium">
+        Free
       </Badge>
     </div>
   );
@@ -237,12 +209,9 @@ export function SubscriptionBadge({ plan, role, showUpgrade = false, onUpgrade }
 // ============================================
 
 export function PlanLimitDisplay({
-  plan,
   role,
   feature,
   currentCount,
-  showUpgradeCTA = true,
-  onUpgrade
 }: PlanLimitDisplayProps) {
   // Non-founders have no limits
   if (role && role !== 'founder') {
@@ -257,10 +226,11 @@ export function PlanLimitDisplay({
     );
   }
 
-  // Get features for founder plan
-  const founderPlan = (plan?.includes('_founder') ? plan : 'free_founder') as FounderPlanType;
-  const features = FOUNDER_PLAN_FEATURES[founderPlan] || FOUNDER_PLAN_FEATURES.free_founder;
-  const limit = features[feature];
+  // Founders: 1 project, 20 team members, unlimited alliances
+  let limit = -1;
+  if (feature === 'maxProjects') limit = 1;
+  else if (feature === 'maxTeamMembers') limit = 20;
+
   const isUnlimited = limit === -1;
   const isExceeded = !isUnlimited && currentCount >= limit;
   const percentage = isUnlimited ? 0 : Math.min((currentCount / limit) * 100, 100);
@@ -284,11 +254,6 @@ export function PlanLimitDisplay({
           value={percentage}
           className={`h-2 ${isExceeded ? '[&>div]:bg-red-500' : percentage >= 80 ? '[&>div]:bg-yellow-500' : ''}`}
         />
-      )}
-      {isExceeded && showUpgradeCTA && onUpgrade && (
-        <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={onUpgrade}>
-          Upgrade for more {featureLabels[feature].toLowerCase()}
-        </Button>
       )}
     </div>
   );
@@ -392,7 +357,6 @@ export function DashboardHeader({
   subscription?: {
     plan: PlanType | null;
     role?: UserRole;
-    onUpgrade?: () => void;
   };
 }) {
   return (
@@ -408,8 +372,6 @@ export function DashboardHeader({
           <SubscriptionBadge
             plan={subscription.plan}
             role={subscription.role}
-            showUpgrade={!subscription.plan || subscription.plan === 'free' || subscription.plan === 'free_founder'}
-            onUpgrade={subscription.onUpgrade}
           />
         )}
       </div>

@@ -27,7 +27,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
-import { getPlanDisplayName } from '@/lib/subscription/features';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 
 export function SettingsPage() {
@@ -522,38 +521,6 @@ export function SettingsPage() {
                                     ))}
                                 </div>
                             )}
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* FOUNDER SUBSCRIPTION PANEL */}
-                {user?.role === 'founder' && (
-                    <Card className="col-span-1 md:col-span-2 card-3d-hover" style={{ borderColor: 'rgba(0, 71, 171, 0.15)', background: 'linear-gradient(135deg, rgba(0, 71, 171, 0.03) 0%, rgba(46, 139, 87, 0.02) 100%)' }}>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Shield className="h-5 w-5" style={{ color: 'var(--cobalt-blue)' }} />
-                                Subscription Plan
-                            </CardTitle>
-                            <CardDescription>Manage your AlloySphere limits and billing</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-background rounded-lg border">
-                                <div className="space-y-1 mb-4 sm:mb-0">
-                                    <p className="font-medium flex items-center gap-2">
-                                        Current Plan: <Badge>{getPlanDisplayName((user?.plan as any) || null) || 'Free Tier'}</Badge>
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                        You are currently on the {getPlanDisplayName((user?.plan as any) || null) || 'Free'} plan. Upgrade to unlock more features.
-                                    </p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <Button variant="outline" asChild>
-                                        <a href="#subscription" onClick={(e) => { e.preventDefault(); }}>
-                                            View Features
-                                        </a>
-                                    </Button>
-                                </div>
-                            </div>
                         </CardContent>
                     </Card>
                 )}

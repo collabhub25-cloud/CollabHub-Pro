@@ -159,8 +159,7 @@ export async function POST(request: NextRequest) {
     if (!limitCheck.allowed) {
       return NextResponse.json(
         {
-          error: `You have reached the maximum number of projects (${limitCheck.limit}) for your ${limitCheck.plan} plan. Please upgrade to create more.`,
-          currentPlan: limitCheck.plan,
+          error: `You have reached the maximum number of projects (${limitCheck.limit}) allowed per founder.`,
           limit: limitCheck.limit
         },
         { status: 403 }

@@ -272,29 +272,23 @@ export async function checkPlanLimit(
   limitType: 'maxProjects' | 'maxTeamMembers' | 'maxAlliances',
   currentCount: number
 ): Promise<{ allowed: boolean; limit: number; plan: PlanType }> {
-  await connectDB();
-
-  const user = await User.findById(userId).lean() as IUser | null;
-
-  // Non-founders have no limits
-  if (!user || user.role !== 'founder') {
-    return { allowed: true, limit: -1, plan: 'free' as PlanType };
+  // Hardcoded limits for all founders: max 1 project, max 20 team members
+  let limit = -1;
+  if (limitType === 'maxProjects') {
+    limit = 1;
+  } else if (limitType === 'maxTeamMembers') {
+    limit = 20;
   }
-
-  const subscription = await Subscription.findOne({ userId }).lean() as ISubscription | null;
-  const plan = (subscription?.plan as PlanType) || 'free_founder';
-  const features = getPlanFeatures(plan);
-  const limit = features[limitType];
 
   // -1 means unlimited
   if (limit === -1) {
-    return { allowed: true, limit: -1, plan };
+    return { allowed: true, limit: -1, plan: 'free' as PlanType };
   }
 
   return {
     allowed: currentCount < limit,
     limit,
-    plan,
+    plan: 'free' as PlanType,
   };
 }
 

@@ -23,8 +23,6 @@ export interface User {
   linkedinUrl?: string;
   portfolioUrl?: string;
   location?: string;
-  plan?: PlanType;
-  subscriptionStatus?: 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing';
   // Investor-specific fields
   investmentThesis?: string;
   preferredIndustries?: string[];

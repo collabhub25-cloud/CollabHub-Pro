@@ -18,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
-import { PricingPage } from '@/components/pricing/pricing-page';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 import { VerificationProgress } from '@/components/verification/verification-progress';
 import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
@@ -525,7 +524,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
             { id: 'overview', label: 'Overview', icon: Building2 },
             { id: 'verification', label: 'Verification', icon: Shield },
             { id: 'compliance', label: 'KYC & Compliance', icon: ShieldCheck },
-            ...(profile.role === 'founder' ? [{ id: 'subscription', label: 'Subscription', icon: CreditCard }] : []),
             ...(profile.role === 'investor' ? [{ id: 'investment', label: 'Investment Profile', icon: DollarSign }] : []),
           ].map((tab) => (
             <button
@@ -553,11 +551,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
       {/* Compliance / KYC Tab */}
       {profileTab === 'compliance' && isOwnProfile && (
         <KycDashboard />
-      )}
-
-      {/* Subscription Tab (Founder only) */}
-      {profileTab === 'subscription' && isOwnProfile && profile.role === 'founder' && (
-        <PricingPage />
       )}
 
       {/* Investment Tab (Investor only) */}

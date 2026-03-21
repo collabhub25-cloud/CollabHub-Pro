@@ -85,12 +85,6 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
     { value: '$50M+', label: 'Funds Raised' },
   ];
 
-  const pricingPlans = [
-    { name: 'Starter', price: 'Free', description: 'Perfect for getting started', features: ['1 Startup Profile', '5 Applications/Month', 'Basic Agreements', 'Community Support'], cta: 'Get Started', popular: false },
-    { name: 'Professional', price: '$49', period: '/month', description: 'For growing startups', features: ['5 Startup Profiles', 'Unlimited Applications', 'Custom Agreements', 'Escrow Payments', 'Priority Support', 'Analytics Dashboard'], cta: 'Start Free Trial', popular: true },
-    { name: 'Enterprise', price: 'Custom', description: 'For incubators & VCs', features: ['Unlimited Everything', 'White-label Options', 'API Access', 'Dedicated Manager', 'Custom Integrations', 'SLA Guarantee'], cta: 'Contact Sales', popular: false },
-  ];
-
   const testimonials = [
     { quote: "AlloySphere transformed how we build our team. Found 3 amazing co-founders through the platform.", author: "Sarah Chen", role: "Founder, TechNova AI", avatar: "SC" },
     { quote: "The verification system gives me confidence in every collaboration. Trust is everything.", author: "Marcus Johnson", role: "Full-Stack Developer", avatar: "MJ" },
@@ -162,7 +156,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
-            {['Features', 'Pricing', 'Testimonials', 'About'].map(item => (
+            {['Features', 'Testimonials', 'About'].map(item => (
               <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">{item}</a>
             ))}
           </nav>
@@ -180,7 +174,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background/95 backdrop-blur-xl">
             <div className="container mx-auto px-4 py-4 space-y-4">
-              {['Features', 'Pricing', 'Testimonials', 'About'].map(item => (
+              {['Features', 'Testimonials', 'About'].map(item => (
                 <a key={item} href={`#${item.toLowerCase()}`} className="block text-sm font-medium hover:text-primary">{item}</a>
               ))}
               <div className="flex gap-2 pt-4 border-t">
@@ -281,61 +275,6 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24">
-        <div className="container mx-auto px-4">
-          <RevealSection className="text-center mb-16">
-            <Badge variant="outline" className="mb-4 px-4 py-1.5">Pricing</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Simple, Transparent Pricing</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Start for free, upgrade as you grow. No hidden fees.</p>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
-            {pricingPlans.map((plan, index) => (
-              <RevealSection key={index} delay={0.15 * index}>
-                <motion.div
-                  whileHover={{ y: -10, scale: 1.03 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                >
-                  <Card className={`relative rounded-2xl transition-all duration-400 bg-white/40 backdrop-blur-md ${plan.popular ? 'border-2 shadow-xl' : 'border-white/20 hover:shadow-lg'}`} style={plan.popular ? { borderColor: '#2E8B57', boxShadow: '0 20px 60px rgba(46,139,87,0.12)' } : {}}>
-                  {plan.popular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <Badge className="px-4 py-1 text-white" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>Most Popular</Badge>
-                    </div>
-                  )}
-                  <CardHeader className="text-center pt-8">
-                    <CardTitle className="text-xl text-foreground">{plan.name}</CardTitle>
-                    <CardDescription className="text-muted-foreground">{plan.description}</CardDescription>
-                    <div className="mt-4">
-                      <span className="text-5xl font-bold text-foreground">{plan.price}</span>
-                      {plan.period && <span className="text-muted-foreground text-lg">{plan.period}</span>}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3.5">
-                      {plan.features.map((feature, fIndex) => (
-                        <li key={fIndex} className="flex items-center gap-2.5">
-                          <Check className="h-4 w-4 shrink-0" style={{ color: '#2E8B57' }} />
-                          <span className="text-sm text-foreground/80">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                  <CardFooter className="pb-8">
-                    {plan.popular ? (
-                      <InteractiveHoverButton text={plan.cta} onClick={onRegister} className="w-full" />
-                    ) : (
-                      <Button className="w-full rounded-xl" variant="outline" onClick={onRegister}>{plan.cta}</Button>
-                    )}
-                  </CardFooter>
-                </Card>
-                </motion.div>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials */}
       <section id="testimonials" className="py-24" style={{ background: 'linear-gradient(180deg, rgba(46,139,87,0.03) 0%, transparent 100%)' }}>
         <div className="container mx-auto px-4">
@@ -423,7 +362,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
             </div>
             {[
-              { title: 'Platform', links: ['Features', 'Pricing', 'Security', 'API'] },
+              { title: 'Platform', links: ['Features', 'Security', 'API'] },
               { title: 'Company', links: ['About', 'Careers', 'Blog', 'Contact'] },
               { title: 'Legal', links: ['Privacy Policy', 'Terms of Service', 'Cookie Policy'] },
             ].map(col => (
