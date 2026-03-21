@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
-import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
+
 import { getInitials } from '@/lib/client-utils';
 import {
   LayoutDashboard, Search, Building2, Users, Target, FileText,
@@ -249,9 +249,7 @@ export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {}
               <span className="text-sm font-medium block truncate">{user.name}</span>
               <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <span className="capitalize">{user.role}</span>
-                <span>·</span>
-                <TrustScoreIcon size={10} />
-                <span>{user.trustScore || 0}</span>
+
               </span>
             </div>
           )}

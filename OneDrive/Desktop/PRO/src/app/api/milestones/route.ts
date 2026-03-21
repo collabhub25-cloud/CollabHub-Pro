@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Milestone, Startup, User, TrustScoreLog } from '@/lib/models';
+import { Milestone, Startup, User } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { createLogger } from '@/lib/logger';
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     const milestones = await Milestone.find(query)
       .populate('startupId', 'name industry stage logo')
-      .populate('assignedTo', 'name email avatar trustScore')
+      .populate('assignedTo', 'name email avatar')
       .sort({ dueDate: 1 })
       .limit(limit);
 
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     await milestone.populate([
       { path: 'startupId', select: 'name industry stage' },
-      { path: 'assignedTo', select: 'name email avatar trustScore' },
+      { path: 'assignedTo', select: 'name email avatar' },
     ]);
 
     log.info(`New milestone created: ${milestone.title} for ${startup.name}`);
@@ -256,24 +256,10 @@ export async function PUT(request: NextRequest) {
       { new: true }
     ).populate([
       { path: 'startupId', select: 'name industry stage' },
-      { path: 'assignedTo', select: 'name email avatar trustScore' },
+      { path: 'assignedTo', select: 'name email avatar' },
     ]);
 
-    // Update trust score on milestone completion
-    if (status === 'completed' && updatedMilestone) {
-      await TrustScoreLog.create({
-        userId: milestone.assignedTo,
-        startupId: milestone.startupId,
-        scoreChange: 2,
-        reason: 'Milestone completed successfully',
-        category: 'milestone',
-        createdAt: new Date(),
-      });
 
-      await User.findByIdAndUpdate(milestone.assignedTo, {
-        $inc: { trustScore: 2 }
-      });
-    }
 
     return NextResponse.json({
       success: true,

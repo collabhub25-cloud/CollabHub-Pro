@@ -12,7 +12,7 @@ export async function GET(
 
         // Fetch user without sensitive fields
         const user = await User.findById(id).select(
-            '_id name role bio skills experience githubUrl linkedinUrl portfolioUrl location avatar joinedAt trustScore verificationLevel'
+            '_id name role bio skills experience githubUrl linkedinUrl portfolioUrl location avatar joinedAt verificationLevel'
         );
 
         if (!user) {

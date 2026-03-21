@@ -65,7 +65,7 @@ export async function GET(
 
     // Get other user details
     const otherUser = await User.findById(otherUserId)
-      .select('name avatar role trustScore verificationLevel')
+      .select('name avatar role verificationLevel')
       .lean();
 
     // Mark messages as read
@@ -88,8 +88,7 @@ export async function GET(
         name: otherUser.name,
         avatar: otherUser.avatar,
         role: otherUser.role,
-        trustScore: otherUser.trustScore,
-        verificationLevel: otherUser.verificationLevel,
+
       } : null,
       messages: paginatedMessages.map(m => ({
         _id: m._id,

@@ -27,7 +27,7 @@ import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
 import { ApplyModal } from '@/components/applications/apply-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { TrustBadge } from '@/components/profile/trust-badge';
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
@@ -55,7 +55,7 @@ interface SearchResult {
   industry?: string;
   stage?: string;
   fundingStage?: string;
-  trustScore?: number;
+
   founderId?: { _id: string; name: string; email: string };
   rolesNeeded?: Role[];
   isActive?: boolean;
@@ -81,7 +81,6 @@ interface SearchFilters {
   fundingStage: string[];
   skills: string[];
   verificationLevel: string[];
-  trustScoreRange: [number, number];
   ticketSizeRange: [number, number];
 }
 
@@ -110,7 +109,6 @@ export function SearchPage() {
     fundingStage: [],
     skills: [],
     verificationLevel: [],
-    trustScoreRange: [0, 100],
     ticketSizeRange: [0, 1000000],
   });
 
@@ -136,8 +134,7 @@ export function SearchPage() {
       if (filters.industry.length) params.set('industry', filters.industry.join(','));
       if (filters.stage.length) params.set('stage', filters.stage.join(','));
       if (filters.fundingStage.length) params.set('fundingStage', filters.fundingStage.join(','));
-      if (filters.trustScoreRange[0] > 0) params.set('minTrustScore', filters.trustScoreRange[0].toString());
-      if (filters.trustScoreRange[1] < 100) params.set('maxTrustScore', filters.trustScoreRange[1].toString());
+
 
       const response = await fetch(`/api/search/${activeTab}?${params.toString()}`, {
         credentials: 'include',
@@ -185,7 +182,6 @@ export function SearchPage() {
       fundingStage: [],
       skills: [],
       verificationLevel: [],
-      trustScoreRange: [0, 100],
       ticketSizeRange: [0, 1000000],
     });
   };
@@ -203,8 +199,7 @@ export function SearchPage() {
   const activeFilterCount =
     filters.industry.length +
     filters.stage.length +
-    filters.fundingStage.length +
-    (filters.trustScoreRange[0] > 0 || filters.trustScoreRange[1] < 100 ? 1 : 0);
+    0;
 
   const isTalent = user?.role === 'talent';
 
@@ -272,20 +267,7 @@ export function SearchPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Trust Score Range */}
-                <div className="space-y-3">
-                  <Label>Trust Score Range</Label>
-                  <Slider
-                    value={filters.trustScoreRange}
-                    onValueChange={(v) => handleFilterChange('trustScoreRange', v)}
-                    max={100}
-                    step={5}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{filters.trustScoreRange[0]}</span>
-                    <span>{filters.trustScoreRange[1]}</span>
-                  </div>
-                </div>
+
 
                 {/* Industry Filter */}
                 <div className="space-y-3">
@@ -379,9 +361,7 @@ export function SearchPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold">{result.name}</h3>
-                              {result.trustScore !== undefined && (
-                                <TrustBadge score={result.trustScore} />
-                              )}
+
                               {result.verificationLevel !== undefined && result.verificationLevel > 0 && (
                                 <Badge variant="outline" className="text-xs">
                                   Level {result.verificationLevel}

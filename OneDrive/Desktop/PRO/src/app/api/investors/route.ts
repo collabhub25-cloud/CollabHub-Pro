@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // If specific investor ID requested
     if (investorId) {
       const investor = await Investor.findById(investorId)
-        .populate('userId', 'name email avatar trustScore verificationLevel');
+        .populate('userId', 'name email avatar verificationLevel');
 
       if (!investor) {
         return NextResponse.json(
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     // Get current user's investor profile
     const investor = await Investor.findOne({ userId: payload.userId })
-      .populate('userId', 'name email avatar trustScore verificationLevel bio location');
+      .populate('userId', 'name email avatar verificationLevel bio location');
 
     if (!investor) {
       return NextResponse.json({
@@ -67,8 +67,8 @@ export async function GET(request: NextRequest) {
       industry: { $in: investor.preferredIndustries || [] },
       fundingStage: { $in: investor.stagePreference || [] },
     })
-      .populate('founderId', 'name avatar trustScore')
-      .sort({ trustScore: -1 })
+      .populate('founderId', 'name avatar')
+      .sort({ createdAt: -1 })
       .limit(20);
 
     return NextResponse.json({
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
-    await investor.populate('userId', 'name email avatar trustScore verificationLevel');
+    await investor.populate('userId', 'name email avatar verificationLevel');
 
     log.info(`New investor profile created: ${user.email}`);
 
@@ -219,7 +219,7 @@ export async function PUT(request: NextRequest) {
       { userId: payload.userId },
       { $set: updateData },
       { new: true }
-    ).populate('userId', 'name email avatar trustScore verificationLevel');
+    ).populate('userId', 'name email avatar verificationLevel');
 
     if (!investor) {
       return NextResponse.json(

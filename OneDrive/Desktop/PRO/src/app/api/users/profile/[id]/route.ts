@@ -42,7 +42,7 @@ export async function GET(
       role: user.role,
       avatar: user.avatar,
       bio: user.bio,
-      trustScore: user.trustScore,
+
       verificationLevel: user.verificationLevel,
       location: user.location,
       createdAt: user.createdAt,
@@ -75,7 +75,7 @@ export async function GET(
     if (user.role === 'founder') {
       // Get startups
       const startups = await Startup.find({ founderId: id, isActive: true })
-        .select('name vision description stage industry fundingStage trustScore logo')
+        .select('name vision description stage industry fundingStage logo')
         .lean();
       
       publicProfile.startups = startups;

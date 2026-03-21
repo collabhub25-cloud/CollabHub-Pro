@@ -17,8 +17,8 @@ export async function GET(
         await connectDB();
 
         const startup = await Startup.findById(id)
-            .populate('founderId', 'name email role avatar trustScore verificationLevel')
-            .populate('team', 'name email role avatar trustScore')
+            .populate('founderId', 'name email role avatar verificationLevel')
+            .populate('team', 'name email role avatar')
             .lean();
 
         if (!startup) {

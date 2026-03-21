@@ -25,8 +25,7 @@ export async function GET(request: NextRequest) {
     const industry = searchParams.get('industry');
     const stage = searchParams.get('stage');
     const fundingStage = searchParams.get('fundingStage');
-    const minTrustScore = searchParams.get('minTrustScore');
-    const maxTrustScore = searchParams.get('maxTrustScore');
+
     const location = searchParams.get('location');
 
     // Validate and limit pagination
@@ -75,11 +74,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (minTrustScore || maxTrustScore) {
-      const min = minTrustScore ? Math.max(0, Math.min(100, parseInt(minTrustScore))) : 0;
-      const max = maxTrustScore ? Math.max(0, Math.min(100, parseInt(maxTrustScore))) : 100;
-      filter.trustScore = { $gte: min, $lte: max };
-    }
+
 
     if (location) {
       // SECURITY FIX: Escape regex in location
@@ -89,7 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build sort (validate sortBy to prevent injection)
-    const validSortFields = ['createdAt', 'trustScore', 'name', 'updatedAt'];
+    const validSortFields = ['createdAt', 'name', 'updatedAt'];
     const safeSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     const sort: Record<string, 1 | -1> = {};
     sort[safeSortBy] = sortOrder as 1 | -1;
@@ -97,7 +92,7 @@ export async function GET(request: NextRequest) {
     // Execute query with pagination
     const [startups, total] = await Promise.all([
       Startup.find(filter)
-        .populate('founderId', '_id name email avatar trustScore')
+        .populate('founderId', '_id name email avatar')
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
@@ -118,7 +113,7 @@ export async function GET(request: NextRequest) {
         industry,
         stage,
         fundingStage,
-        trustScoreRange: minTrustScore || maxTrustScore ? { min: minTrustScore, max: maxTrustScore } : null,
+
         location,
       },
     });

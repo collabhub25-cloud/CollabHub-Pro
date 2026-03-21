@@ -17,7 +17,7 @@ export interface IUser extends Document {
     role: UserRole;
     avatar?: string;
     verificationLevel: VerificationLevel;
-    trustScore: number;
+
     kycStatus: KYCStatus;
     kycLevel: KYCLevel;
     kycVerifiedAt?: Date;
@@ -51,7 +51,7 @@ const UserSchema = new Schema<IUser>(
         role: { type: String, enum: ['founder', 'talent', 'investor', 'admin'], required: true },
         avatar: { type: String },
         verificationLevel: { type: Number, enum: [0, 1, 2, 3, 4, 5], default: 0 },
-        trustScore: { type: Number, default: 50, min: 0, max: 100 },
+
         kycStatus: { type: String, enum: ['not_submitted', 'pending', 'verified', 'rejected'], default: 'not_submitted' },
         kycLevel: { type: Number, enum: [0, 1, 2], default: 0 },
         kycVerifiedAt: { type: Date },
@@ -78,6 +78,6 @@ const UserSchema = new Schema<IUser>(
 // Indexes
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
-UserSchema.index({ trustScore: -1 });
+
 
 export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

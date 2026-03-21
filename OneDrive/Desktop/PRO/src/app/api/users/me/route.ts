@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     
     if (user.role === 'founder') {
       const startups = await Startup.find({ founderId: decoded.userId })
-        .select('name stage industry trustScore isActive')
+        .select('name stage industry isActive')
         .lean();
       roleSpecificData = { startups };
     }

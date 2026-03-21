@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
     if (startupId) query.startupId = startupId;
 
     const requests = await AccessRequest.find(query)
-      .populate('investorId', 'name email avatar role trustScore verificationLevel')
+      .populate('investorId', 'name email avatar role verificationLevel')
       .populate('startupId', 'name industry stage logo vision description')
       .sort({ createdAt: -1 })
       .lean();

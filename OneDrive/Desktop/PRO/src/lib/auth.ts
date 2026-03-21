@@ -210,7 +210,6 @@ export function sanitizeUser(user: IUser) {
     role: user.role,
     avatar: user.avatar || undefined,
     verificationLevel: user.verificationLevel as 0 | 1 | 2 | 3,
-    trustScore: user.trustScore,
     kycStatus: user.kycStatus,
     bio: user.bio || undefined,
     skills: user.skills || [],

@@ -54,11 +54,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Startup not found' }, { status: 404 });
         }
 
-        // Bump trust score when verified (+20, capped at 100)
-        if (verified && startup.trustScore < 100) {
-            startup.trustScore = Math.min(100, startup.trustScore + 20);
-            await startup.save();
-        }
+
 
         return NextResponse.json({ startup, message: `Startup ${verified ? 'verified' : 'unverified'} successfully` });
     } catch (error) {

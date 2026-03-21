@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Alliance, User, Notification, TrustScoreLog } from '@/lib/models';
+import { Alliance, User, Notification } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
 import { validateInput, AllianceRequestSchema } from '@/lib/validation/schemas';
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
         status: 'accepted',
         $or: [{ requesterId: userId }, { receiverId: userId }],
       })
-        .populate('requesterId', 'name email role avatar trustScore verificationLevel')
-        .populate('receiverId', 'name email role avatar trustScore verificationLevel')
+        .populate('requesterId', 'name email role avatar verificationLevel')
+        .populate('receiverId', 'name email role avatar verificationLevel')
         .sort({ updatedAt: -1 })
         .lean();
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         status: 'pending',
         receiverId: userId,
       })
-        .populate('requesterId', 'name email role avatar trustScore verificationLevel')
+        .populate('requesterId', 'name email role avatar verificationLevel')
         .sort({ createdAt: -1 })
         .lean();
 
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         status: 'pending',
         requesterId: userId,
       })
-        .populate('receiverId', 'name email role avatar trustScore verificationLevel')
+        .populate('receiverId', 'name email role avatar verificationLevel')
         .sort({ createdAt: -1 })
         .lean();
 

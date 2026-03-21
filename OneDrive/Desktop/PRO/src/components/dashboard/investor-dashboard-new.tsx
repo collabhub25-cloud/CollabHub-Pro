@@ -13,7 +13,7 @@ import {
   Loader2, Bell, PieChart, BarChart3, Eye, MessageSquare, Star, MapPin
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
+
 import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -120,11 +120,7 @@ export function InvestorDashboardNew() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="flex items-center gap-2 px-3 py-1.5">
-            <TrustScoreIcon size={14} />
-            <span className="font-semibold">{user?.trustScore || 0}</span>
-            <span className="text-muted-foreground">Trust Score</span>
-          </Badge>
+
         </div>
       </div>
 
@@ -342,10 +338,7 @@ function DealItem({ deal }: { deal: any }) {
         )}
       </div>
       <div className="text-right">
-        <div className="flex items-center gap-1">
-          <TrustScoreIcon size={12} />
-          <span className="text-sm font-medium">{startup.trustScore || 0}</span>
-        </div>
+
       </div>
     </div>
   );

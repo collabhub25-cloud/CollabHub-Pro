@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Get participant details
     const participantIds = conversations.flatMap(c => c.participants);
     const participants = await User.find({ _id: { $in: participantIds } })
-      .select('name avatar role trustScore verificationLevel')
+      .select('name avatar role verificationLevel')
       .lean();
 
     const participantMap = new Map(participants.map(p => [p._id.toString(), p]));
@@ -49,8 +49,7 @@ export async function GET(request: NextRequest) {
           name: otherUser.name,
           avatar: otherUser.avatar,
           role: otherUser.role,
-          trustScore: otherUser.trustScore,
-          verificationLevel: otherUser.verificationLevel,
+
         } : null,
         lastMessage: conv.lastMessage,
         lastMessageAt: conv.lastMessageAt,

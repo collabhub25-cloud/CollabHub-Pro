@@ -14,7 +14,6 @@ export interface User {
   role: UserRole;
   avatar?: string;
   verificationLevel: 0 | 1 | 2 | 3;
-  trustScore: number;
   kycStatus: 'pending' | 'verified' | 'rejected';
   bio?: string;
   skills?: string[];

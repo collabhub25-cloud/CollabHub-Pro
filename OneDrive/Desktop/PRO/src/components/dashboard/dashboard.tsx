@@ -27,7 +27,7 @@ import { InvestorDashboard } from './investor-dashboard';
 import { AdminDashboard } from './admin-dashboard';
 import { DashboardSidebar } from './sidebar';
 import { Logo } from '@/components/ui/logo';
-import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
+
 import AgreementsDashboardWithBoundary from '@/components/agreements/agreements-dashboard';
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
 import { VerificationProgress } from '@/components/verification/verification-progress';

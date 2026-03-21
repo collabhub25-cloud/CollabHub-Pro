@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     await application.populate([
       { path: 'startupId', select: 'name industry stage logo' },
-      { path: 'talentId', select: 'name email avatar skills trustScore verificationLevel' },
+      { path: 'talentId', select: 'name email avatar skills verificationLevel' },
     ]);
 
     log.info(`New application: ${user.email} applied to ${startup.name}`);
@@ -241,11 +241,17 @@ export async function PUT(request: NextRequest) {
       { new: true }
     ).populate([
       { path: 'startupId', select: 'name industry stage' },
-      { path: 'talentId', select: 'name email avatar skills trustScore verificationLevel' },
+      { path: 'talentId', select: 'name email avatar skills verificationLevel' },
     ]);
 
-    // If accepted, add the talent to the startup's team
+    // If accepted, add the talent to the startup's team (max 20 members)
     if (status === 'accepted') {
+      if (startup.team && startup.team.length >= 20) {
+        return NextResponse.json(
+          { error: 'Startup has reached the maximum team size of 20 members' },
+          { status: 400 }
+        );
+      }
       await Startup.findByIdAndUpdate(startup._id, {
         $addToSet: { team: application.talentId }
       });

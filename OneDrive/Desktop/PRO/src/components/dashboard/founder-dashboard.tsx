@@ -64,7 +64,7 @@ interface Startup {
   stage: string;
   industry: string;
   fundingStage: string;
-  trustScore: number;
+
   team: { _id: string; name: string }[];
   founderId: { _id: string; name: string; email: string };
   AlloySphereVerified?: boolean;
@@ -322,8 +322,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch('/api/startups', {
-        credentials: 'include',
+      const res = await apiFetch('/api/startups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -360,8 +359,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/startups', {
-        credentials: 'include',
+      const res = await apiFetch('/api/startups', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -392,8 +390,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/startups?id=${showDeleteStartup._id}`, {
-        credentials: 'include',
+      const res = await apiFetch(`/api/startups?id=${showDeleteStartup._id}`, {
         method: 'DELETE',
 
       });
@@ -536,7 +533,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             { label: 'Active Milestones', value: activeMilestones.length, icon: '🎯', gradient: 'rgba(0,0,0,0.03)' },
             { label: 'Funding Raised', value: totalRaisedDisplay, icon: '💰', gradient: 'rgba(0,0,0,0.03)' },
             { label: 'Agreements', value: agreements.length, icon: '📄', gradient: 'rgba(0,0,0,0.03)' },
-            { label: 'Trust Score', value: `${user?.trustScore || 50}`, icon: '⭐', gradient: 'rgba(0,0,0,0.03)' },
           ].map((stat) => (
             <div key={stat.label} className="p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] cursor-default" style={{ background: stat.gradient, backdropFilter: 'blur(12px)', border: '1px solid rgba(0,0,0,0.25)' }}>
               <div className="text-2xl mb-2">{stat.icon}</div>
@@ -805,21 +801,22 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My Startups</h1>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <InteractiveHoverButton text="Create Startup" onClick={() => setShowCreateStartup(true)} disabled={(user?.verificationLevel || 0) < 1} className="w-40" />
-                </div>
-              </TooltipTrigger>
-              {(user?.verificationLevel || 0) < 1 && (
-                <TooltipContent>
-                  <p>You need to complete your profile (Level 1) to create a startup.</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          {startups.length === 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <InteractiveHoverButton text="Create Startup" onClick={() => setShowCreateStartup(true)} disabled={(user?.verificationLevel || 0) < 1} className="w-40" />
+                  </div>
+                </TooltipTrigger>
+                {(user?.verificationLevel || 0) < 1 && (
+                  <TooltipContent>
+                    <p>You need to complete your profile (Level 1) to create a startup.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
 
         {loading ? (
@@ -857,14 +854,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">{startup.vision}</p>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center text-sm">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span>{startup.team?.length || 1} members</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Star className="h-4 w-4 text-amber-500" />
-                      <span>{startup.trustScore}</span>
                     </div>
                   </div>
                   <Separator />

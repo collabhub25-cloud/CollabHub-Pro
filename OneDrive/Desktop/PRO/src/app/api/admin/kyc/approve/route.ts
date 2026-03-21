@@ -41,8 +41,7 @@ export async function POST(request: NextRequest) {
             user.kycVerifiedAt = new Date();
             user.kycVerifiedBy = authResult.user.userId;
 
-            // Automatic Trust Score boost
-            user.trustScore = Math.min(100, (user.trustScore || 50) + 20);
+
             user.verificationLevel = Math.max(user.verificationLevel, verification.level);
 
             await user.save();

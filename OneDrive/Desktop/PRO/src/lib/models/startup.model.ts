@@ -38,7 +38,7 @@ export interface IStartup extends Document {
     fundingStage: FundingStage;
     fundingAmount?: number;
     revenue?: number;
-    trustScore: number;
+
     logo?: string;
     website?: string;
     pitchDeck?: string;
@@ -64,7 +64,7 @@ const StartupSchema = new Schema<IStartup>(
         fundingStage: { type: String, enum: ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'], required: true },
         fundingAmount: { type: Number },
         revenue: { type: Number },
-        trustScore: { type: Number, default: 50, min: 0, max: 100 },
+
         logo: { type: String },
         website: { type: String },
         pitchDeck: { type: String },
@@ -80,7 +80,7 @@ const StartupSchema = new Schema<IStartup>(
 StartupSchema.index({ founderId: 1 });
 StartupSchema.index({ industry: 1 });
 StartupSchema.index({ fundingStage: 1 });
-StartupSchema.index({ trustScore: -1 });
+
 StartupSchema.index({ stage: 1 });
 
 export const Startup = mongoose.models.Startup || mongoose.model<IStartup>('Startup', StartupSchema);

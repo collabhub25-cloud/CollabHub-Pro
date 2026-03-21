@@ -20,7 +20,7 @@ import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 import { VerificationProgress } from '@/components/verification/verification-progress';
-import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
+
 import { PremiumGithub, PremiumLinkedIn, PremiumGlobe } from '@/components/ui/social-icons';
 import { KycDashboard } from '@/components/kyc/kyc-dashboard';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
@@ -34,7 +34,7 @@ interface ProfileData {
   role: 'talent' | 'founder' | 'investor';
   avatar?: string;
   bio?: string;
-  trustScore: number;
+
   verificationLevel: number;
   location?: string;
   createdAt: string;
@@ -51,7 +51,7 @@ interface ProfileData {
     vision: string;
     stage: string;
     industry: string;
-    trustScore: number;
+
     logo?: string;
     AlloySphereVerified?: boolean;
     AlloySphereVerifiedAt?: string;
@@ -430,10 +430,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                   <Shield className="h-3 w-3 mr-1" />
                   Level {profile.verificationLevel} - {verificationBadge.label}
                 </Badge>
-                <div className="flex items-center gap-1">
-                  <TrustScoreIcon size={16} />
-                  <span className="font-semibold">{profile.trustScore || 0}</span>
-                </div>
+
                 {profile.allianceCount !== undefined && profile.allianceCount > 0 && (
                   <div className="flex items-center gap-1 text-sm">
                     <Users className="h-4 w-4 text-primary" />
@@ -561,58 +558,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
       {/* Overview Tab Content */}
       {(profileTab === 'overview' || !isOwnProfile) && (
         <>
-          {/* Recent Trust Activity — 3D hover */}
-          <Card className="card-3d-hover bg-white/5 dark:bg-black/20 backdrop-blur-xl border-white/10 dark:border-white/5">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="h-5 w-5 icon-float" style={{ color: 'var(--sea-green)' }} />
-                Recent Trust Activity
-              </CardTitle>
-              <CardDescription>What affects this trust score</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {profile.verificationLevel >= 1 && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="h-2 w-2 rounded-full shrink-0" style={{ background: 'var(--sea-green)' }} />
-                    <span className="text-muted-foreground">Email verified</span>
-                    <span className="ml-auto font-medium" style={{ color: 'var(--sea-green)' }}>+5</span>
-                  </div>
-                )}
-                {profile.verificationLevel >= 2 && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="h-2 w-2 rounded-full shrink-0" style={{ background: 'var(--sea-green)' }} />
-                    <span className="text-muted-foreground">Identity verified (Level 2)</span>
-                    <span className="ml-auto font-medium" style={{ color: 'var(--sea-green)' }}>+10</span>
-                  </div>
-                )}
-                {profile.verificationLevel >= 3 && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="h-2 w-2 rounded-full shrink-0" style={{ background: 'var(--sea-green)' }} />
-                    <span className="text-muted-foreground">Full KYC cleared (Level 3+)</span>
-                    <span className="ml-auto font-medium" style={{ color: 'var(--sea-green)' }}>+15</span>
-                  </div>
-                )}
-                {(profile.allianceCount || 0) > 0 && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="h-2 w-2 rounded-full shrink-0" style={{ background: 'var(--cobalt-blue)' }} />
-                    <span className="text-muted-foreground">{profile.allianceCount} alliance{(profile.allianceCount || 0) > 1 ? 's' : ''} formed</span>
-                    <span className="ml-auto font-medium" style={{ color: 'var(--cobalt-blue)' }}>+{(profile.allianceCount || 0) * 2}</span>
-                  </div>
-                )}
-                {(profile.trustScore || 0) >= 50 && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-purple-500 shrink-0" />
-                    <span className="text-muted-foreground">Agreements & milestones completed</span>
-                    <span className="ml-auto text-purple-600 font-medium">+{Math.max(0, (profile.trustScore || 0) - 30)}</span>
-                  </div>
-                )}
-                {(profile.trustScore || 0) === 0 && profile.verificationLevel === 0 && (
-                  <p className="text-sm text-muted-foreground">No trust activity yet. Verify your email to start building trust.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
 
           {/* Social Links Section (Editable) */}
           {isOwnProfile && (

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     // If requesting a specific startup by ID
     if (startupId) {
       const startup = await Startup.findById(startupId)
-        .populate('founderId', 'name email avatar trustScore verificationLevel')
+        .populate('founderId', 'name email avatar verificationLevel')
         .populate('team', 'name email avatar skills');
 
       if (!startup) {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     const startups = await Startup.find(query)
-      .populate('founderId', 'name email avatar trustScore verificationLevel')
+      .populate('founderId', 'name email avatar verificationLevel')
       .populate('team', 'name email avatar skills')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -152,16 +152,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check plan limits
-    const existingStartupCount = await Startup.countDocuments({ founderId: payload.userId, isActive: true });
-    const limitCheck = await checkPlanLimit(payload.userId, 'maxProjects', existingStartupCount);
+    // Enforce one startup per founder limit
+    const existingStartupCount = await Startup.countDocuments({ founderId: payload.userId });
 
-    if (!limitCheck.allowed) {
+    if (existingStartupCount >= 1) {
       return NextResponse.json(
-        {
-          error: `You have reached the maximum number of projects (${limitCheck.limit}) allowed per founder.`,
-          limit: limitCheck.limit
-        },
+        { error: 'Founders are limited to creating one startup.' },
         { status: 403 }
       );
     }
@@ -204,14 +200,13 @@ export async function POST(request: NextRequest) {
       logo: logo?.trim() || undefined,
       team: [payload.userId],
       rolesNeeded: rolesNeeded || [],
-      trustScore: user.trustScore,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
     await startup.populate([
-      { path: 'founderId', select: 'name email avatar trustScore' },
+      { path: 'founderId', select: 'name email avatar' },
       { path: 'team', select: 'name email avatar' },
     ]);
 
@@ -305,7 +300,7 @@ export async function PUT(request: NextRequest) {
       { $set: safeUpdateData },
       { new: true }
     ).populate([
-      { path: 'founderId', select: 'name email avatar trustScore' },
+      { path: 'founderId', select: 'name email avatar' },
       { path: 'team', select: 'name email avatar' },
     ]);
 

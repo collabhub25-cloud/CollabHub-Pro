@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Alliance, User, Notification, TrustScoreLog } from '@/lib/models';
+import { Alliance, User, Notification } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { validateInput, AllianceActionSchema } from '@/lib/validation/schemas';
 
@@ -62,25 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update trust scores for both users (+2 each)
-    await User.findByIdAndUpdate(alliance.requesterId, { $inc: { trustScore: 2 } });
-    await User.findByIdAndUpdate(alliance.receiverId, { $inc: { trustScore: 2 } });
 
-    // Log trust score changes
-    await TrustScoreLog.create([
-      {
-        userId: alliance.requesterId,
-        scoreChange: 2,
-        reason: 'Alliance formed with another user',
-        category: 'alliance',
-      },
-      {
-        userId: alliance.receiverId,
-        scoreChange: 2,
-        reason: 'Alliance formed with another user',
-        category: 'alliance',
-      },
-    ]);
 
     // Get both users' info
     const accepter = await User.findById(decoded.userId).select('name').lean();
@@ -108,7 +90,7 @@ export async function POST(request: NextRequest) {
         updatedAt: alliance.updatedAt,
       },
       notification,
-      trustScoreChange: 2,
+
     });
   } catch (error) {
     console.error('Error accepting alliance:', error);

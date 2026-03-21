@@ -67,10 +67,10 @@ export default function StartupEditPage({
             if (payload.fundingAmount) payload.fundingAmount = Number(payload.fundingAmount);
             else delete payload.fundingAmount;
 
-            const res = await fetch(`/api/startups/${id}`, {
+            const { apiFetch } = await import('@/lib/api-client');
+            const res = await apiFetch(`/api/startups/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify(payload),
             });
 

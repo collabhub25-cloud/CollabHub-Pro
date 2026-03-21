@@ -65,7 +65,7 @@ interface Startup {
   vision: string;
   industry: string;
   stage: string;
-  trustScore: number;
+
   rolesNeeded: { title: string; skills: string[] }[];
 }
 
@@ -253,7 +253,6 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
             { title: 'Pending Applications', value: pendingApplications.length, sub: 'Awaiting response', icon: Clock, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)' },
             { title: 'Total Earnings', value: `$${totalEarnings.toLocaleString()}`, sub: 'From completed tasks', icon: DollarSign, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)', tooltip: 'Based on your completed milestones.' },
             { title: 'Next Deadline', value: nextDeadline, sub: 'Upcoming milestone', icon: Calendar, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)', truncate: true },
-            { title: 'Trust Score', value: user?.trustScore || 50, sub: 'Your reputation', icon: Zap, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)', showProgress: true },
           ].map((stat, index) => (
             <div data-aos="fade-up" data-aos-delay={index * 100} key={stat.title} className="group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg" style={{ background: `linear-gradient(135deg, ${stat.bg} 0%, rgba(255,255,255,0.9) 100%)`, backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.2)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transformStyle: 'preserve-3d' }}>
               <div className="flex items-center justify-between mb-3">
@@ -272,11 +271,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
-              {stat.showProgress && (
-                <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${user?.trustScore || 50}%`, background: 'linear-gradient(90deg, #2E8B57 0%, #0047AB 100%)' }} />
-                </div>
-              )}
+
             </div>
           ))}
         </div>
@@ -383,8 +378,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: 'rgba(46,139,87,0.08)' }}>
-                          <Zap className="h-3 w-3" style={{ color: '#2E8B57' }} />
-                          <span className="text-sm font-medium" style={{ color: '#2E8B57' }}>{startup.trustScore}</span>
+                          <span className="text-sm font-medium" style={{ color: '#2E8B57' }}><Shield className="h-3 w-3 inline mr-1" />Verified</span>
                         </div>
                         <Button
                           size="sm"
@@ -433,7 +427,6 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               <p className="text-muted-foreground">{user?.email}</p>
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Badge className="bg-primary">Level {user?.verificationLevel}</Badge>
-                <Badge variant="outline">Trust: {user?.trustScore}</Badge>
               </div>
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
@@ -979,10 +972,7 @@ function TalentProjects() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span>{project.team?.length || 1} members</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-primary" />
-                    <span>Trust: {project.trustScore ?? 0}</span>
-                  </div>
+
                 </div>
               </CardContent>
             </Card>

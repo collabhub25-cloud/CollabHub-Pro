@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     const applications = await Application.find(query)
       .populate('startupId', 'name industry stage logo')
-      .populate('talentId', 'name email avatar skills trustScore verificationLevel bio location')
+      .populate('talentId', 'name email avatar skills verificationLevel bio location')
       .sort({ createdAt: -1 });
 
     // Group by status for convenience

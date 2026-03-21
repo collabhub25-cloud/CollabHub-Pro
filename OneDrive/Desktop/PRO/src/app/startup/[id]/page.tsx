@@ -21,7 +21,7 @@ interface StartupData {
     fundingStage: string;
     fundingAmount?: number;
     revenue?: number;
-    trustScore: number;
+
     logo?: string;
     website?: string;
     isActive: boolean;
@@ -33,7 +33,7 @@ interface StartupData {
         name: string;
         role: string;
         avatar?: string;
-        trustScore: number;
+
     };
     team?: Array<{
         _id: string;
@@ -330,9 +330,7 @@ export default function StartupPage({
                                 {startup.industry} · {startup.stage} · {startup.fundingStage}
                             </p>
                             <div className="flex gap-3 mt-3">
-                                <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30 shadow-sm">
-                                    ⭐ {startup.trustScore ?? 0}
-                                </span>
+
                                 <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm border ${startup.isActive ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'}`}>
                                     {startup.isActive ? '● Active' : 'Inactive'}
                                 </span>
@@ -403,7 +401,7 @@ export default function StartupPage({
                         {/* Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {[
-                                ['Trust Score', `${startup.trustScore ?? 0}`, 'bg-blue-50 dark:bg-blue-900/10 border-blue-200/50 dark:border-blue-800/30'],
+
                                 ['Stage', startup.stage, 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'],
                                 ['Agreements', `${agreementCount}`, 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'],
                                 ['Funding', startup.fundingStage, 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'],
@@ -456,7 +454,7 @@ export default function StartupPage({
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{(startup.founderId as any).name}</p>
-                                        <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400 font-medium">Trust Score: <span className="text-blue-600 dark:text-blue-400">{(startup.founderId as any).trustScore}</span></p>
+
                                     </div>
                                 </button>
                             </section>
@@ -610,9 +608,7 @@ export default function StartupPage({
                                                     <button onClick={() => router.push(`/profile/${req.investorId?._id}`)} className="text-sm font-bold hover:underline text-gray-900 dark:text-gray-100">
                                                         {req.investorId?.name || 'Unknown Investor'}
                                                     </button>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        Trust: {req.investorId?.trustScore ?? 0}/100
-                                                    </p>
+
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">

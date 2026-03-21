@@ -14,7 +14,7 @@ import {
   Building2, MapPin, Star, Eye, MessageSquare, Award
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
+
 import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -154,11 +154,7 @@ export function TalentDashboardNew() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="flex items-center gap-2 px-3 py-1.5">
-            <TrustScoreIcon size={14} />
-            <span className="font-semibold">{user?.trustScore || 0}</span>
-            <span className="text-muted-foreground">Trust Score</span>
-          </Badge>
+
         </div>
       </div>
 

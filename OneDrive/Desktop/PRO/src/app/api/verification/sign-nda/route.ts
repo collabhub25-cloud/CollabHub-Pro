@@ -105,10 +105,7 @@ export async function POST(request: NextRequest) {
       await user.save();
     }
 
-    // Update trust score for completing NDA
-    await User.findByIdAndUpdate(decoded.userId, {
-      $inc: { trustScore: 5 },
-    });
+
 
     // Create notification
     await Notification.create({

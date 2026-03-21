@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       passwordHash,
       role,
       verificationLevel: 0,
-      trustScore: 50,
+
       kycStatus: 'pending',
       isEmailVerified: false,
       verificationOtpHash: otpHash,

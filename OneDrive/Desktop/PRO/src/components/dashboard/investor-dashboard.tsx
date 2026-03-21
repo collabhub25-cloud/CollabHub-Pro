@@ -50,7 +50,7 @@ interface FundingRound {
     industry: string;
     stage: string;
     logo?: string;
-    trustScore?: number;
+
     founderId?: { _id: string; name: string };
   };
   roundName: string;
@@ -103,7 +103,7 @@ interface Startup {
   name: string;
   industry: string;
   stage: string;
-  trustScore: number;
+
   fundingStage: string;
   logo?: string;
   description?: string;
@@ -421,7 +421,6 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
             { title: 'Total Invested', value: `$${portfolioStats.totalInvested.toLocaleString()}`, sub: `${portfolioStats.activeInvestments} investments`, icon: TrendingUp, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)' },
             { title: 'Portfolio Equity', value: `${portfolioStats.totalEquity.toFixed(4)}%`, sub: 'Across all investments', icon: Briefcase, iconColor: '#2A2623', bg: 'rgba(42,38,35,0.04)' },
             { title: 'Open Rounds', value: fundingRounds.length, sub: 'Available for investment', icon: Building2, iconColor: '#0047AB', bg: 'rgba(0,71,171,0.06)' },
-            { title: 'Trust Score', value: user?.trustScore || 50, sub: 'Your reputation', icon: Zap, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)', showProgress: true },
           ].map((stat, index) => (
             <div key={stat.title} className="group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg" style={{ background: `linear-gradient(135deg, ${stat.bg} 0%, rgba(255,255,255,0.9) 100%)`, backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.2)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transformStyle: 'preserve-3d', animationDelay: `${index * 80}ms` }}>
               <div className="flex items-center justify-between mb-3">
@@ -436,11 +435,6 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               </div>
               <div className="text-xl font-semibold">{stat.value}</div>
               <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
-              {stat.showProgress && (
-                <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${user?.trustScore || 50}%`, background: 'linear-gradient(90deg, #2E8B57 0%, #0047AB 100%)' }} />
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -513,10 +507,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                           {((round.raisedAmount / round.targetAmount) * 100).toFixed(0)}% filled
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-primary" />
-                        <span className="text-sm">{round.startupId.trustScore || 50}</span>
-                      </div>
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -685,14 +676,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                         <span className="text-muted-foreground">Stage</span>
                         <span className="font-medium capitalize">{startup.stage}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Trust Score</span>
-                        <div className="flex items-center gap-1">
-                          <Zap className="h-3 w-3 text-primary" />
-                          <span>{startup.trustScore}</span>
-                        </div>
-                      </div>
-                      <Progress value={startup.trustScore} className="h-2" />
+
                       <div className="flex gap-2 pt-2">
                         <Button
                           className="flex-1"
@@ -1101,7 +1085,6 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <p className="text-muted-foreground">{user?.email}</p>
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Badge className="bg-primary">Level {user?.verificationLevel}</Badge>
-                <Badge variant="outline">Trust: {user?.trustScore}</Badge>
               </div>
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">

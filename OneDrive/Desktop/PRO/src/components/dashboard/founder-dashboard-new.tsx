@@ -14,7 +14,7 @@ import {
   CheckCircle2, Clock, Circle, MessageSquare, Eye
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { TrustScoreIcon } from '@/components/ui/trust-score-icon';
+
 import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -421,10 +421,7 @@ export function FounderDashboardNew() {
                         </div>
                       </td>
                       <td className="py-3 px-3">
-                        <div className="flex items-center gap-1">
-                          <TrustScoreIcon size={12} />
-                          <span className="text-sm font-medium">{app.talentId?.trustScore || 0}</span>
-                        </div>
+
                       </td>
                       <td className="py-3 px-3 text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(app.createdAt), { addSuffix: true })}

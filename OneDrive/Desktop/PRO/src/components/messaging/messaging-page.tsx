@@ -25,7 +25,7 @@ interface Conversation {
     name: string;
     avatar?: string;
     role: string;
-    trustScore: number;
+
     verificationLevel: number;
   } | null;
   lastMessage: string;
@@ -216,7 +216,7 @@ export function MessagingPage() {
               _id: messageUserId,
               name: 'Loading...',
               role: 'talent',
-              trustScore: 0,
+
               verificationLevel: 0,
             },
             lastMessage: '',

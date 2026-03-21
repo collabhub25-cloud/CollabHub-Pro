@@ -21,7 +21,7 @@ interface UserProfile {
     location?: string;
     avatar?: string;
     joinedAt?: string;
-    trustScore?: number;
+
     verificationLevel?: string;
 }
 
@@ -171,18 +171,6 @@ export default function ProfilePage() {
                             <CardTitle className="text-lg">Platform Status</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-muted-foreground">Trust Score</span>
-                                    <span className="font-medium">{profile.trustScore || 50}/100</span>
-                                </div>
-                                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-primary"
-                                        style={{ width: `${profile.trustScore || 50}%` }}
-                                    />
-                                </div>
-                            </div>
 
                             <div>
                                 <span className="text-sm text-muted-foreground block mb-1">Verification Level</span>

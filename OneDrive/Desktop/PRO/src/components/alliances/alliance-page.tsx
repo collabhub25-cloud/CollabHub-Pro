@@ -25,7 +25,7 @@ interface Alliance {
     email: string;
     role: string;
     avatar?: string;
-    trustScore: number;
+
     verificationLevel: number;
   };
   receiverId: {
@@ -34,7 +34,7 @@ interface Alliance {
     email: string;
     role: string;
     avatar?: string;
-    trustScore: number;
+
     verificationLevel: number;
   };
   status: string;
@@ -121,7 +121,7 @@ export function AlliancePage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success('Alliance accepted! Trust score +2');
+        toast.success('Alliance accepted!');
         fetchAlliances(activeTab);
       } else {
         toast.error(data.error || 'Failed to accept');
@@ -310,9 +310,7 @@ export function AlliancePage() {
                                 >
                                   {verificationBadge.label}
                                 </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  Trust: {partner.trustScore}
-                                </span>
+
                               </div>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {alliance.type === 'accepted' && `Alliance since ${formatDate(alliance.updatedAt)}`}

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         const investments = await FundingRound.find({
             'investors.userId': userId,
         })
-            .populate('startupId', 'name industry stage logo trustScore isActive')
+            .populate('startupId', 'name industry stage logo isActive')
             .lean();
 
         let totalInvested = 0;

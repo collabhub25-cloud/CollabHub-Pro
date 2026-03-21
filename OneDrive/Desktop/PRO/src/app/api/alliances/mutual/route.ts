@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     const mutualUsers = await User.find({
       _id: { $in: mutualIds },
     })
-      .select('name email role avatar trustScore verificationLevel')
+      .select('name email role avatar verificationLevel')
       .lean();
 
     return NextResponse.json({
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         name: u.name,
         role: u.role,
         avatar: u.avatar,
-        trustScore: u.trustScore,
+
         verificationLevel: u.verificationLevel,
       })),
     });
