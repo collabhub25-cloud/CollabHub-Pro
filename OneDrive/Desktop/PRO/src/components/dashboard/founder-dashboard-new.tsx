@@ -24,10 +24,12 @@ interface DashboardData {
   activities: any[];
   talentRecommendations: any[];
   investorRecommendations: any[];
+  fundingRounds: any[];
   stats: {
     fundingRaised: number;
     fundingTarget: number;
     pendingApplications: number;
+    totalExpenditure: number;
   };
 }
 
@@ -48,82 +50,76 @@ export function FounderDashboardNew() {
     try {
       setLoading(true);
       
-      const [startupsRes, applicationsRes, searchTalentRes, searchInvestorsRes] = await Promise.all([
+      const [startupsRes, applicationsRes, searchTalentRes, searchInvestorsRes, fundingRes, notificationsRes, milestonesRes] = await Promise.all([
         apiFetch('/api/startups'),
         apiFetch('/api/applications/received'),
         apiFetch('/api/users?role=talent&limit=5'),
         apiFetch('/api/users?role=investor&limit=5'),
+        apiFetch('/api/funding/create-round'),
+        apiFetch('/api/notifications?limit=10'),
+        apiFetch('/api/milestones'),
       ]);
 
       const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
       const applications = applicationsRes.ok ? await applicationsRes.json() : [];
-      let talentData = searchTalentRes.ok ? await searchTalentRes.json() : [];
-      let investorData = searchInvestorsRes.ok ? await searchInvestorsRes.json() : [];
+      const talentData = searchTalentRes.ok ? await searchTalentRes.json() : [];
+      const investorData = searchInvestorsRes.ok ? await searchInvestorsRes.json() : [];
+      const fundingData = fundingRes.ok ? await fundingRes.json() : { rounds: [] };
+      const notifData = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
+      const milestonesData = milestonesRes.ok ? await milestonesRes.json() : { milestones: [] };
 
       const startups = startupsData.startups || startupsData || [];
       const startup = Array.isArray(startups) ? startups[0] : startups;
       const appList = Array.isArray(applications) ? applications : applications.applications || [];
       const talentList = Array.isArray(talentData) ? talentData : talentData.users || [];
       const investorList = Array.isArray(investorData) ? investorData : investorData.users || [];
-      
+      const rounds = fundingData.rounds || [];
+      const notifications = notifData.notifications || [];
+      const milestonesList = milestonesData.milestones || [];
+
       const pendingApps = appList.filter((a: any) => a.status === 'pending');
 
-      // Generate some mock activities based on applications and startup data to make the feed lively
-      const mockActivities = [
-        ...appList.slice(0, 3).map((app: any) => ({
-          id: `app-${app._id}`,
-          type: 'application',
-          title: `New application from ${app.talentId?.name || 'Talent'}`,
-          description: `Applied for ${app.roleTitle || 'Role'} role`,
-          date: app.createdAt,
-          icon: UserPlus,
-          color: 'text-blue-500',
-          bg: 'bg-blue-500/10'
-        })),
-        {
-          id: 'act-1',
-          type: 'system',
-          title: 'AI Portfolio Optimization Complete',
-          description: 'Your startup profile has been analyzed and optimized for search.',
-          date: new Date(Date.now() - 3600000).toISOString(),
-          icon: Sparkles,
-          color: 'text-purple-500',
-          bg: 'bg-purple-500/10'
-        },
-        {
-          id: 'act-2',
-          type: 'funding',
-          title: 'Investor View Detected',
-          description: 'An anonymous verified investor viewed your pitch deck.',
-          date: new Date(Date.now() - 86400000).toISOString(),
-          icon: Activity,
-          color: 'text-emerald-500',
-          bg: 'bg-emerald-500/10'
-        }
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Build real activity feed from notifications
+      const realActivities = notifications.slice(0, 6).map((notif: any) => {
+        let icon = Bell;
+        let color = 'text-blue-500';
+        let bg = 'bg-blue-500/10';
+        if (notif.type?.includes('application')) { icon = UserPlus; color = 'text-blue-500'; bg = 'bg-blue-500/10'; }
+        else if (notif.type?.includes('milestone')) { icon = Target; color = 'text-emerald-500'; bg = 'bg-emerald-500/10'; }
+        else if (notif.type?.includes('funding') || notif.type?.includes('invest')) { icon = Landmark; color = 'text-yellow-600'; bg = 'bg-yellow-500/10'; }
+        else if (notif.type?.includes('alliance')) { icon = Users; color = 'text-purple-500'; bg = 'bg-purple-500/10'; }
+        return {
+          id: notif._id,
+          type: notif.type,
+          title: notif.title || 'Notification',
+          description: notif.message || '',
+          date: notif.createdAt,
+          icon,
+          color,
+          bg,
+        };
+      });
 
-      // If APIs don't return enough people, mock some AI recommendations for visual demonstration of the premium UI
-      const mockTalent = talentList.length > 0 ? talentList : [
-        { _id: 't1', name: 'Alex Rivera', role: 'Full Stack Engineer', skills: ['React', 'Node.js', 'AWS'], avatar: '', matchScore: 98 },
-        { _id: 't2', name: 'Sarah Chen', role: 'UX/UI Designer', skills: ['Figma', 'Prototyping'], avatar: '', matchScore: 94 },
-        { _id: 't3', name: 'James Wilson', role: 'Growth Marketer', skills: ['SEO', 'Paid Ads'], avatar: '', matchScore: 89 }
-      ];
-
-      const mockInvestors = investorList.length > 0 ? investorList : [
-        { _id: 'i1', name: 'Apex Ventures', role: 'Seed Fund', sectors: ['SaaS', 'Fintech'], avatar: '', matchScore: 96 },
-        { _id: 'i2', name: 'Elena Rostova', role: 'Angel Investor', sectors: ['AI', 'B2B'], avatar: '', matchScore: 91 },
-      ];
+      // Calculate total funding raised from real rounds
+      const totalRaised = rounds.reduce((sum: number, r: any) => sum + (r.raisedAmount || 0), 0);
+      const totalTarget = rounds.reduce((sum: number, r: any) => sum + (r.targetAmount || 0), 0);
+      // Calculate total milestone expenditure (completed milestones)
+      const totalExpenditure = milestonesList
+        .filter((m: any) => m.status === 'completed')
+        .reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
 
       setData({
         startup,
         applications: appList,
-        activities: mockActivities,
-        talentRecommendations: mockTalent,
-        investorRecommendations: mockInvestors,
+        activities: realActivities,
+        talentRecommendations: talentList,
+        investorRecommendations: investorList,
+        fundingRounds: rounds,
         stats: {
-          fundingRaised: startup?.fundingRaised || 1250000,
-          fundingTarget: startup?.fundingTarget || 5000000,
+          fundingRaised: totalRaised,
+          fundingTarget: totalTarget || 0,
           pendingApplications: pendingApps.length,
+          totalExpenditure,
         },
       });
     } catch (error) {
@@ -173,53 +169,92 @@ export function FounderDashboardNew() {
         {/* Left Column (Main Focus) */}
         <div className="lg:col-span-8 space-y-6">
           
-          {/* Funding Raised Widget (Hero Card) */}
+          {/* Funding Overview (Hero Card) */}
           <Card className="overflow-hidden relative border-0 shadow-2xl bg-gradient-to-br from-background via-background to-muted/20 pb-2">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
             
-            <CardContent className="p-8 relative z-10">
+            <CardContent className="p-6 md:p-8 relative z-10">
               <div className="flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
-                <div className="space-y-4">
+                <div className="space-y-4 flex-1">
                   <div className="flex items-center gap-2">
                     <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                       <Landmark className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold tracking-tight">Funding Secured</h2>
-                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Series Seed</p>
+                      <h2 className="text-lg font-semibold tracking-tight">Total Funding</h2>
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                        {data?.fundingRounds?.length || 0} Round{(data?.fundingRounds?.length || 0) !== 1 ? 's' : ''}
+                      </p>
                     </div>
                   </div>
                   
                   <div>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/60">
+                      <span className="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/60">
                         {formatCurrency(data?.stats.fundingRaised || 0)}
                       </span>
-                      <span className="text-lg text-muted-foreground font-medium">
-                        / {formatCurrency(data?.stats.fundingTarget || 0)}
-                      </span>
+                      {data?.stats.fundingTarget ? (
+                        <span className="text-lg text-muted-foreground font-medium">
+                          / {formatCurrency(data.stats.fundingTarget)}
+                        </span>
+                      ) : null}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      <span className="text-emerald-500 font-semibold inline-flex items-center">
-                        <TrendingUp className="h-3 w-3 mr-1" /> +12% 
-                      </span> compared to last month
-                    </p>
                   </div>
+
+                  {/* Expenditure */}
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2.5 w-2.5 rounded-full bg-emerald-500"></div>
+                      <span className="text-muted-foreground">Raised: <span className="font-semibold text-foreground">{formatCurrency(data?.stats.fundingRaised || 0)}</span></span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2.5 w-2.5 rounded-full bg-orange-500"></div>
+                      <span className="text-muted-foreground">Spent: <span className="font-semibold text-foreground">{formatCurrency(data?.stats.totalExpenditure || 0)}</span></span>
+                    </div>
+                  </div>
+
+                  {/* Investors who funded */}
+                  {data?.fundingRounds && data.fundingRounds.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Investors</p>
+                      <div className="flex flex-wrap gap-2">
+                        {data.fundingRounds.flatMap((r: any) => r.investors || []).slice(0, 5).map((inv: any, i: number) => (
+                          <div key={inv.investorId?._id || i} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/60 border border-border/40">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={inv.investorId?.avatar} />
+                              <AvatarFallback className="text-[8px] bg-primary/10">{getInitials(inv.investorId?.name || 'I')}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-[11px] font-medium">{inv.investorId?.name || 'Investor'}</span>
+                          </div>
+                        ))}
+                        {data.fundingRounds.flatMap((r: any) => r.investors || []).length === 0 && (
+                          <span className="text-xs text-muted-foreground italic">No investors yet</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="w-full md:w-48 self-center">
-                  <div className="relative aspect-square flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="40" className="stroke-muted/30" strokeWidth="8" fill="none" />
-                      <circle cx="50" cy="50" r="40" className="stroke-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)] transition-all duration-1000 ease-out" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * fundingProgress) / 100} strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-3xl font-bold">{fundingProgress}%</span>
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Target</span>
+                {data?.stats.fundingTarget ? (
+                  <div className="w-full md:w-40 self-center">
+                    <div className="relative aspect-square flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" className="stroke-muted/30" strokeWidth="8" fill="none" />
+                        <circle cx="50" cy="50" r="40" className="stroke-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)] transition-all duration-1000 ease-out" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * fundingProgress) / 100} strokeLinecap="round" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-bold">{fundingProgress}%</span>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Target</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="w-full md:w-40 self-center flex flex-col items-center justify-center text-center p-4">
+                    <Landmark className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                    <p className="text-xs text-muted-foreground">Create a funding round to track progress</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -237,7 +272,11 @@ export function FounderDashboardNew() {
                     </div>
                     <CardTitle className="text-base font-semibold">Recent Applications</CardTitle>
                   </div>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer">
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer"
+                    onClick={() => setActiveTab('applications')}
+                  >
                     View All
                   </Badge>
                 </div>
@@ -296,27 +335,37 @@ export function FounderDashboardNew() {
                 </div>
               </CardHeader>
               <CardContent className="pt-4 px-6 relative">
-                <div className="absolute left-[35px] top-4 bottom-4 w-px bg-border/50"></div>
-                <div className="space-y-6 relative">
-                  {data?.activities.slice(0, 4).map((activity: any) => {
-                    const ActIcon = activity.icon;
-                    return (
-                      <div key={activity.id} className="flex gap-4 relative">
-                        <div className={`mt-0.5 relative z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-sm shrink-0 border border-background ring-4 ring-background ${activity.bg}`}>
-                          <ActIcon className={`h-3.5 w-3.5 ${activity.color}`} />
-                        </div>
-                        <div className="flex flex-col">
-                          <p className="text-sm font-semibold">{activity.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{activity.description}</p>
-                          <p className="text-[10px] font-medium text-muted-foreground/70 mt-1 uppercase tracking-wider flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDistanceToNow(new Date(activity.date), { addSuffix: true })}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {data?.activities && data.activities.length > 0 ? (
+                  <>
+                    <div className="absolute left-[35px] top-4 bottom-4 w-px bg-border/50"></div>
+                    <div className="space-y-6 relative">
+                      {data.activities.slice(0, 4).map((activity: any) => {
+                        const ActIcon = activity.icon;
+                        return (
+                          <div key={activity.id} className="flex gap-4 relative">
+                            <div className={`mt-0.5 relative z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-sm shrink-0 border border-background ring-4 ring-background ${activity.bg}`}>
+                              <ActIcon className={`h-3.5 w-3.5 ${activity.color}`} />
+                            </div>
+                            <div className="flex flex-col">
+                              <p className="text-sm font-semibold">{activity.title}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{activity.description}</p>
+                              <p className="text-[10px] font-medium text-muted-foreground/70 mt-1 uppercase tracking-wider flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {formatDistanceToNow(new Date(activity.date), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Activity className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                    <p className="text-sm font-medium">No recent activity</p>
+                    <p className="text-xs text-muted-foreground mt-1">Your activity will appear here.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -356,34 +405,38 @@ export function FounderDashboardNew() {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <div className="space-y-4">
-                {data?.talentRecommendations.map((talent: any) => (
-                  <div key={talent._id} className="p-3 rounded-xl bg-muted/40 hover:bg-muted/80 transition-colors border border-border/30 cursor-pointer group">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8 border border-border/50">
-                          <AvatarImage src={talent.avatar} />
-                          <AvatarFallback className="text-xs bg-primary/5">{getInitials(talent.name)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-semibold leading-tight">{talent.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{talent.role}</p>
+              {data?.talentRecommendations && data.talentRecommendations.length > 0 ? (
+                <div className="space-y-4">
+                  {data.talentRecommendations.map((talent: any) => (
+                    <div key={talent._id} className="p-3 rounded-xl bg-muted/40 hover:bg-muted/80 transition-colors border border-border/30 cursor-pointer group">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8 border border-border/50">
+                            <AvatarImage src={talent.avatar} />
+                            <AvatarFallback className="text-xs bg-primary/5">{getInitials(talent.name)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-semibold leading-tight">{talent.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{talent.role || 'Talent'}</p>
+                          </div>
                         </div>
                       </div>
-                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] px-1.5 py-0">
-                        {talent.matchScore}% Match
-                      </Badge>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {talent.skills?.slice(0, 3).map((skill: string) => (
+                          <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded-sm bg-background border border-border/50 text-muted-foreground">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {talent.skills?.slice(0, 3).map((skill: string) => (
-                        <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded-sm bg-background border border-border/50 text-muted-foreground">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <UserPlus className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                  <p className="text-xs text-muted-foreground">No talent on the platform yet</p>
+                </div>
+              )}
               <Button variant="ghost" className="w-full mt-3 text-xs text-primary hover:text-primary hover:bg-primary/5">
                 View all pipeline matches
               </Button>
@@ -402,34 +455,38 @@ export function FounderDashboardNew() {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <div className="space-y-4">
-                {data?.investorRecommendations.map((investor: any) => (
-                  <div key={investor._id} className="p-3 rounded-xl bg-muted/40 hover:bg-muted/80 transition-colors border border-border/30 cursor-pointer group">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8 border border-border/50">
-                          <AvatarImage src={investor.avatar} />
-                          <AvatarFallback className="text-xs bg-emerald-500/10 text-emerald-600">{getInitials(investor.name)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-semibold leading-tight">{investor.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{investor.role || 'Investor'}</p>
+              {data?.investorRecommendations && data.investorRecommendations.length > 0 ? (
+                <div className="space-y-4">
+                  {data.investorRecommendations.map((investor: any) => (
+                    <div key={investor._id} className="p-3 rounded-xl bg-muted/40 hover:bg-muted/80 transition-colors border border-border/30 cursor-pointer group">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8 border border-border/50">
+                            <AvatarImage src={investor.avatar} />
+                            <AvatarFallback className="text-xs bg-emerald-500/10 text-emerald-600">{getInitials(investor.name)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-semibold leading-tight">{investor.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{investor.role || 'Investor'}</p>
+                          </div>
                         </div>
                       </div>
-                      <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] px-1.5 py-0">
-                        {investor.matchScore}% Fit
-                      </Badge>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {investor.sectors?.slice(0, 2).map((sector: string) => (
+                          <span key={sector} className="text-[9px] px-1.5 py-0.5 rounded-sm bg-background border border-border/50 text-muted-foreground">
+                            {sector}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {investor.sectors?.slice(0, 2).map((sector: string) => (
-                        <span key={sector} className="text-[9px] px-1.5 py-0.5 rounded-sm bg-background border border-border/50 text-muted-foreground">
-                          {sector}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Target className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                  <p className="text-xs text-muted-foreground">No investors on the platform yet</p>
+                </div>
+              )}
               <Button variant="ghost" className="w-full mt-3 text-xs text-primary hover:text-primary hover:bg-primary/5">
                 Explore capital network
               </Button>

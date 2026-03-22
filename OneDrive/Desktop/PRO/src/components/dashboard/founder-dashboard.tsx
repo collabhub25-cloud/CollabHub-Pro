@@ -1113,25 +1113,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             onSuccess={fetchData}
           />
         )}
-        {/* Unsigned Agreement Warning */}
-        {milestones.length > 0 && agreements.filter(a => a.status === 'active').length === 0 && (
-          <Card className="border-yellow-500/50 bg-yellow-500/5">
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
-                <div>
-                  <p className="font-medium">No Active Agreements</p>
-                  <p className="text-sm text-muted-foreground">
-                    You have milestones without a signed agreement. Sign an agreement for legal protection.
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => useUIStore.getState().setActiveTab('agreements')}>
-                View Agreements
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Milestones</h1>
           <CreateMilestoneModal onSuccess={fetchData} />
