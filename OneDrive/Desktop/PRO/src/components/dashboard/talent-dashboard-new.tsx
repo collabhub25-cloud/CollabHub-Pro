@@ -23,6 +23,8 @@ interface TalentDashboardData {
   applications: any[];
   milestones: any[];
   agreements: any[];
+  matchingStartups?: any[];
+  startupActivities?: any[];
   stats: {
     totalApplications: number;
     pendingApplications: number;
@@ -54,42 +56,69 @@ export function TalentDashboardNew() {
     try {
       setLoading(true);
       
-      const [applicationsRes, milestonesRes, agreementsRes] = await Promise.all([
+      const [applicationsRes, agreementsRes] = await Promise.all([
         apiFetch('/api/applications'),
-        apiFetch('/api/milestones'),
         apiFetch('/api/agreements'),
       ]);
 
       const applicationsData = applicationsRes.ok ? await applicationsRes.json() : { applications: [] };
-      const milestones = milestonesRes.ok ? await milestonesRes.json() : [];
       const agreements = agreementsRes.ok ? await agreementsRes.json() : [];
 
       const applications = Array.isArray(applicationsData) ? applicationsData : applicationsData.applications || [];
-      const milestoneList = Array.isArray(milestones) ? milestones : milestones.milestones || [];
       const agreementList = Array.isArray(agreements) ? agreements : agreements.agreements || [];
 
       const pendingApps = applications.filter((a: any) => a.status === 'pending');
       const acceptedApps = applications.filter((a: any) => a.status === 'accepted');
-      const activeMilestones = milestoneList.filter((m: any) => m.status === 'in_progress');
-      const completedMilestones = milestoneList.filter((m: any) => m.status === 'completed');
       const pendingAgreements = agreementList.filter((a: any) => a.status === 'pending');
 
-      const totalEarnings = completedMilestones.reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
-      const pendingEarnings = activeMilestones.reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
+      let milestoneList: any[] = [];
+      let startupActivities: any[] = [];
+      let matchingStartups: any[] = [];
+
+      // If hired by a startup, fetch its activities and milestones
+      if (acceptedApps.length > 0) {
+        const startupId = acceptedApps[0].startupId?._id;
+        if (startupId) {
+          try {
+            const mRes = await apiFetch(`/api/milestones?startupId=${startupId}`);
+            if (mRes.ok) {
+              const mData = await mRes.json();
+              milestoneList = mData.milestones || [];
+            }
+          } catch (e) {}
+        }
+        
+        // Mock activity for the startup as there is no specific route
+        startupActivities = [
+          { id: '1', title: 'New milestone added', date: new Date().toISOString() },
+          { id: '2', title: 'Funding round opened', date: new Date(Date.now() - 86400000).toISOString() }
+        ];
+      } else {
+        // Not hired, fetch matching startups
+        try {
+          const sRes = await apiFetch('/api/search/startups?limit=5');
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            matchingStartups = sData.startups || [];
+          }
+        } catch (e) {}
+      }
 
       setData({
         applications,
         milestones: milestoneList,
+        matchingStartups,
+        startupActivities,
         agreements: agreementList,
         stats: {
           totalApplications: applications.length,
           pendingApplications: pendingApps.length,
           acceptedApplications: acceptedApps.length,
-          activeMilestones: activeMilestones.length,
-          completedMilestones: completedMilestones.length,
+          activeMilestones: milestoneList.filter(m => m.status === 'in_progress').length,
+          completedMilestones: milestoneList.filter(m => m.status === 'completed').length,
           totalMilestones: milestoneList.length,
-          totalEarnings,
-          pendingEarnings,
+          totalEarnings: 0,
+          pendingEarnings: 0,
           pendingAgreements: pendingAgreements.length,
         },
       });
@@ -190,15 +219,17 @@ export function TalentDashboardNew() {
           subtext={`${stats.pendingApplications} pending · ${stats.acceptedApplications} accepted`}
           onClick={() => setActiveTab('applications')}
         />
-        <StatsCard
-          icon={Target}
-          iconColor="text-amber-500"
-          label="Milestones"
-          value={`${stats.completedMilestones}/${stats.totalMilestones}`}
-          subtext={`${stats.activeMilestones} in progress`}
-          progress={milestoneProgress}
-          onClick={() => setActiveTab('milestones')}
-        />
+        {stats.acceptedApplications > 0 && (
+          <StatsCard
+            icon={Building2}
+            iconColor="text-emerald-500"
+            label="My Startup Milestones"
+            value={`${stats.completedMilestones}/${stats.totalMilestones}`}
+            subtext={`${stats.activeMilestones} in progress`}
+            progress={milestoneProgress}
+            onClick={() => setActiveTab('milestones')}
+          />
+        )}
       </div>
 
       {/* Applications & Activity */}
@@ -266,32 +297,83 @@ export function TalentDashboardNew() {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
-          <Card className="bg-card/50 backdrop-blur border-border/50">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-blue-500" />
-                <CardTitle className="text-sm">Recent Activity</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {data?.applications && data.applications.length > 0 ? (
-                <div className="space-y-2">
-                  {data.applications.slice(0, 3).map((app: any) => (
-                    <div key={app._id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 text-xs">
-                      <StatusDot status={app.status} />
-                      <span className="truncate flex-1">Applied to {app.startupId?.name}</span>
-                      <span className="text-muted-foreground">
-                        {formatDistanceToNow(new Date(app.createdAt), { addSuffix: true })}
-                      </span>
+          {/* Conditional Activity/Matches */}
+          {stats.acceptedApplications > 0 ? (
+            <div className="space-y-4">
+              <Card className="bg-card/50 backdrop-blur border-border/50">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-emerald-500" />
+                    <CardTitle className="text-sm">Startup Milestones</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {data?.milestones && data.milestones.length > 0 ? (
+                    <div className="space-y-2">
+                      {data.milestones.slice(0, 3).map((m: any) => (
+                        <div key={m._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 text-xs text-muted-foreground border border-transparent hover:border-border/50 transition-colors">
+                          <span className="truncate flex-1">{m.title}</span>
+                          <StatusBadge status={m.status === 'completed' ? 'accepted' : 'shortlisted'} />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : <p className="text-xs text-muted-foreground text-center py-4">No milestones yet</p>}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/50 backdrop-blur border-border/50">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-blue-500" />
+                    <CardTitle className="text-sm">Startup Activity</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-2">
+                    {/* Mock activities populated from logic */}
+                    {(data as any)?.startupActivities?.map((act: any) => (
+                      <div key={act.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 text-xs">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                        <span className="truncate flex-1 text-muted-foreground">{act.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Card className="bg-card/50 backdrop-blur border-border/50 h-full">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-sm">Matching Startups</CardTitle>
                 </div>
-              ) : (
-                <p className="text-xs text-muted-foreground text-center py-4">No recent activity</p>
-              )}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {(data as any)?.matchingStartups && (data as any).matchingStartups.length > 0 ? (
+                  <div className="space-y-3 mt-2">
+                    {(data as any).matchingStartups.map((s: any) => (
+                      <div key={s._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer border border-transparent hover:border-border/50">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={s.logo} />
+                          <AvatarFallback className="text-[10px] bg-primary/10">{getInitials(s.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{s.name}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{s.industry}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
+                    <MapPin className="h-6 w-6 mb-2 opacity-50" />
+                    <p className="text-xs">No matching startups found</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

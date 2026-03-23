@@ -521,7 +521,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
             { id: 'overview', label: 'Overview', icon: Building2 },
             { id: 'verification', label: 'Verification', icon: Shield },
             { id: 'compliance', label: 'KYC & Compliance', icon: ShieldCheck },
-            ...(profile.role === 'investor' ? [{ id: 'investment', label: 'Investment Profile', icon: DollarSign }] : []),
           ].map((tab) => (
             <button
               key={tab.id}
@@ -548,11 +547,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
       {/* Compliance / KYC Tab */}
       {profileTab === 'compliance' && isOwnProfile && (
         <KycDashboard />
-      )}
-
-      {/* Investment Tab (Investor only) */}
-      {profileTab === 'investment' && isOwnProfile && profile.role === 'investor' && (
-        <InvestmentProfileSection userId={profile._id} />
       )}
 
       {/* Overview Tab Content */}
@@ -671,7 +665,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
               {(isOwnProfile || profile.experience) && (
                 <Card className="card-3d-hover bg-white/5 dark:bg-black/20 backdrop-blur-xl border-white/10 dark:border-white/5">
                   <CardHeader>
-                    <CardTitle>Experience</CardTitle>
+                    <CardTitle>Past Work Achievements</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {isEditing ? (

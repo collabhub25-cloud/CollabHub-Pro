@@ -26,6 +26,28 @@ export function KycDashboard() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [selectedDocType, setSelectedDocType] = useState('');
+
+    useEffect(() => {
+        if (user && !selectedDocType) {
+            setSelectedDocType(user.role === 'founder' ? 'kyc-registration' : 'kyc-cin');
+        }
+    }, [user, selectedDocType]);
+
+    const getDocName = (type: string) => {
+        const map: Record<string, string> = {
+            'kyc-registration': 'Startup Registration',
+            'kyc-gstn': 'GSTN ID',
+            'kyc-pan': 'PAN of Startup',
+            'kyc-cin': 'CIN Proof',
+            'kyc-networth': 'Net Worth Certificate',
+            'kyc-income': 'Source of Income',
+            'kyc-funds': 'Investment Funds',
+            'kyc-business': 'Business Document',
+            'kyc-id': 'Personal ID',
+        };
+        return map[type] || type;
+    };
 
     const fetchStatus = useCallback(async () => {
         try {
@@ -60,10 +82,8 @@ export function KycDashboard() {
         try {
             const formData = new FormData();
             formData.append('document', file);
-            // For founders, determine type based on what's missing, or default
-            const docType = user?.role === 'founder' && !data?.documents?.find(d => d.type === 'kyc-business')
-                ? 'business' : 'id';
-            formData.append('type', docType);
+            // Document type is selected by user
+            formData.append('type', selectedDocType);
 
             const response = await fetch('/api/kyc', {
                 method: 'POST',
@@ -153,7 +173,32 @@ export function KycDashboard() {
                                 : 'Upload a valid Government ID to verify your investor profile'}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1">
+                    <CardContent className="flex-1 flex flex-col gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-foreground/80">Select Document Type</label>
+                            <select 
+                                className="w-full p-2.5 border rounded-lg bg-background text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                value={selectedDocType}
+                                onChange={(e) => setSelectedDocType(e.target.value)}
+                            >
+                                {user?.role === 'founder' ? (
+                                    <>
+                                        <option value="kyc-registration">Startup Registration Document</option>
+                                        <option value="kyc-gstn">GSTN ID</option>
+                                        <option value="kyc-pan">PAN of Startup</option>
+                                        <option value="kyc-id">Personal ID Proof</option>
+                                    </>
+                                ) : (
+                                    <>
+                                        <option value="kyc-cin">CIN Proof</option>
+                                        <option value="kyc-networth">Net Worth Certificate</option>
+                                        <option value="kyc-income">Source of Income Verification</option>
+                                        <option value="kyc-funds">Proof of Investment Funds</option>
+                                        <option value="kyc-id">Personal ID Proof</option>
+                                    </>
+                                )}
+                            </select>
+                        </div>
                         <div
                             {...getRootProps()}
                             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 h-full flex flex-col items-center justify-center
@@ -210,7 +255,7 @@ export function KycDashboard() {
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                         <div>
                                             <p className="font-medium flex items-center gap-2">
-                                                {doc.type === 'kyc-business' ? 'Business Registration' : 'Personal ID'}
+                                                {getDocName(doc.type)}
                                                 <Badge variant="outline" className="text-caption uppercase">{doc.status.replace('_', ' ')}</Badge>
                                             </p>
                                             <p className="text-xs text-muted-foreground mt-1 text-balance">

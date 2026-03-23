@@ -39,24 +39,25 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'File size exceeds 5MB limit.' }, { status: 400 });
         }
 
-        // Determine the level and constraint target based on the role and input type
-        // Founder level 1 = Business KYC, level 2 = Personal ID
-        // Investor level 1 = Personal ID
-        let verifType: 'kyc-id' | 'kyc-business' = 'kyc-id';
-        let level = 1;
+        // Verify based on role and type
+        let verifType = type as string;
+        let level = type === 'kyc-id' ? 1 : 2; 
 
-        if (role === 'founder' && type === 'business') {
-            verifType = 'kyc-business';
-            level = 1;
-        } else if (role === 'founder' && type === 'id') {
-            verifType = 'kyc-id';
-            level = 2;
-        } else if (role === 'investor' && type === 'id') {
-            verifType = 'kyc-id';
-            level = 1;
-        } else {
-            return NextResponse.json({ error: 'Invalid document type context for your role.' }, { status: 400 });
+        // For founder: kyc-registration, kyc-gstn, kyc-pan, kyc-id
+        // For investor: kyc-cin, kyc-networth, kyc-income, kyc-funds, kyc-id
+        const founderTypes = ['kyc-registration', 'kyc-gstn', 'kyc-pan', 'kyc-id', 'business', 'id'];
+        const investorTypes = ['kyc-cin', 'kyc-networth', 'kyc-income', 'kyc-funds', 'kyc-id', 'id'];
+        
+        if (role === 'founder' && !founderTypes.includes(type)) {
+            return NextResponse.json({ error: 'Invalid document type for founder.' }, { status: 400 });
         }
+        if (role === 'investor' && !investorTypes.includes(type)) {
+            return NextResponse.json({ error: 'Invalid document type for investor.' }, { status: 400 });
+        }
+
+        // Backward compatibility
+        if (type === 'business') verifType = 'kyc-registration';
+        if (type === 'id') verifType = 'kyc-id';
 
         // Buffer processing
         const arrayBuffer = await file.arrayBuffer();
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
 
         const verifications = await Verification.find({
             userId: authResult.user.userId,
-            type: { $in: ['kyc-id', 'kyc-business'] }
+            type: { $in: ['kyc-id', 'kyc-business', 'kyc-registration', 'kyc-gstn', 'kyc-pan', 'kyc-cin', 'kyc-networth', 'kyc-income', 'kyc-funds'] }
         }).sort({ createdAt: -1 });
 
         const user = await User.findById(authResult.user.userId).select('kycStatus kycLevel');

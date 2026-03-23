@@ -75,6 +75,8 @@ const typeIcons: Record<string, typeof FileText> = {
   skill_test: FileText,
   resume: FileCheck,
   kyc: Upload,
+  'kyc-id': Upload,
+  'kyc-business': Upload,
   nda: PenTool,
 };
 
@@ -178,7 +180,7 @@ export function VerificationProgress() {
       toast.error('Please enter document URL');
       return;
     }
-    await submitVerification('kyc', {
+    await submitVerification(dialogType || 'kyc-id', {
       documents: [{ type: documentType, url: documentUrl }],
     });
     setDocumentUrl('');
@@ -460,7 +462,7 @@ export function VerificationProgress() {
                       level.status === 'submitted' || level.status === 'under_review' ? 'View' :
                         level.type === 'skill_test' ? 'Take Test' :
                           level.type === 'resume' ? 'Upload' :
-                            level.type === 'kyc' ? 'Upload' :
+                            level.type.startsWith('kyc') ? 'Upload' :
                               level.type === 'nda' ? 'Sign' : 'Start'}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
@@ -482,7 +484,7 @@ export function VerificationProgress() {
           </DialogHeader>
 
           {/* KYC Upload */}
-          {dialogType === 'kyc' && (
+          {dialogType.startsWith('kyc') && (
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Document Type</Label>
