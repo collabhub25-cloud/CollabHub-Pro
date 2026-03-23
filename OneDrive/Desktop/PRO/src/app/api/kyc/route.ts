@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
 
         const { userId, role } = authResult.user;
 
-        // Only Founders and Investors need to submit KYC directly here under this role abstraction
-        if (role !== 'founder' && role !== 'investor') {
-            return NextResponse.json({ error: 'Role not authorized for Business KYC flow' }, { status: 403 });
+        // Founders, Investors, and Talents need to submit KYC here
+        if (role !== 'founder' && role !== 'investor' && role !== 'talent') {
+            return NextResponse.json({ error: 'Role not authorized for KYC flow' }, { status: 403 });
         }
 
         await connectDB();
