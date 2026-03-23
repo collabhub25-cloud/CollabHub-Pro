@@ -45,14 +45,19 @@ export async function POST(request: NextRequest) {
 
         // For founder: kyc-registration, kyc-gstn, kyc-pan, kyc-id
         // For investor: kyc-cin, kyc-networth, kyc-income, kyc-funds, kyc-id
+        // For talent: kyc-nda
         const founderTypes = ['kyc-registration', 'kyc-gstn', 'kyc-pan', 'kyc-id', 'business', 'id'];
         const investorTypes = ['kyc-cin', 'kyc-networth', 'kyc-income', 'kyc-funds', 'kyc-id', 'id'];
+        const talentTypes = ['kyc-nda'];
         
         if (role === 'founder' && !founderTypes.includes(type)) {
             return NextResponse.json({ error: 'Invalid document type for founder.' }, { status: 400 });
         }
         if (role === 'investor' && !investorTypes.includes(type)) {
             return NextResponse.json({ error: 'Invalid document type for investor.' }, { status: 400 });
+        }
+        if (role === 'talent' && !talentTypes.includes(type)) {
+            return NextResponse.json({ error: 'Invalid document type for talent.' }, { status: 400 });
         }
 
         // Backward compatibility
@@ -111,7 +116,7 @@ export async function GET(request: NextRequest) {
 
         const verifications = await Verification.find({
             userId: authResult.user.userId,
-            type: { $in: ['kyc-id', 'kyc-business', 'kyc-registration', 'kyc-gstn', 'kyc-pan', 'kyc-cin', 'kyc-networth', 'kyc-income', 'kyc-funds'] }
+            type: { $in: ['kyc-id', 'kyc-business', 'kyc-registration', 'kyc-gstn', 'kyc-pan', 'kyc-cin', 'kyc-networth', 'kyc-income', 'kyc-funds', 'kyc-nda'] }
         }).sort({ createdAt: -1 });
 
         const user = await User.findById(authResult.user.userId).select('kycStatus kycLevel');

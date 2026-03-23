@@ -30,7 +30,7 @@ export function KycDashboard() {
 
     useEffect(() => {
         if (user && !selectedDocType) {
-            setSelectedDocType(user.role === 'founder' ? 'kyc-registration' : 'kyc-cin');
+            setSelectedDocType(user.role === 'founder' ? 'kyc-registration' : user.role === 'talent' ? 'kyc-nda' : 'kyc-cin');
         }
     }, [user, selectedDocType]);
 
@@ -45,6 +45,7 @@ export function KycDashboard() {
             'kyc-funds': 'Investment Funds',
             'kyc-business': 'Business Document',
             'kyc-id': 'Personal ID',
+            'kyc-nda': 'Signed Platform NDA Form',
         };
         return map[type] || type;
     };
@@ -170,7 +171,7 @@ export function KycDashboard() {
                         <CardDescription>
                             {user?.role === 'founder'
                                 ? 'Upload your business formation documents or Personal ID'
-                                : 'Upload a valid Government ID to verify your investor profile'}
+                                : user?.role === 'talent' ? 'Upload the signed Platform NDA form' : 'Upload a valid Government ID to verify your investor profile'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col gap-4">
@@ -187,6 +188,10 @@ export function KycDashboard() {
                                         <option value="kyc-gstn">GSTN ID</option>
                                         <option value="kyc-pan">PAN of Startup</option>
                                         <option value="kyc-id">Personal ID Proof</option>
+                                    </>
+                                ) : user?.role === 'talent' ? (
+                                    <>
+                                        <option value="kyc-nda">Signed NDA Form</option>
                                     </>
                                 ) : (
                                     <>

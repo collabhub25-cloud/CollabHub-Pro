@@ -6,7 +6,7 @@ import { UserRole } from './user.model';
 // ============================================
 export type VerificationLevelType = 0 | 1 | 2 | 3 | 4 | 5;
 export type VerificationStatus = 'pending' | 'submitted' | 'under_review' | 'approved' | 'rejected';
-export type VerificationType = 'profile' | 'skill_test' | 'resume' | 'kyc-id' | 'kyc-business' | 'kyc-registration' | 'kyc-gstn' | 'kyc-pan' | 'kyc-cin' | 'kyc-networth' | 'kyc-income' | 'kyc-funds' | 'nda';
+export type VerificationType = 'profile' | 'skill_test' | 'resume' | 'kyc-id' | 'kyc-business' | 'kyc-registration' | 'kyc-gstn' | 'kyc-pan' | 'kyc-cin' | 'kyc-networth' | 'kyc-income' | 'kyc-funds' | 'kyc-nda' | 'nda';
 
 // Role-based verification level definitions
 export const VERIFICATION_LEVELS = {
@@ -65,7 +65,7 @@ const VerificationSchema = new Schema<IVerification>(
     {
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         role: { type: String, enum: ['founder', 'talent', 'investor', 'admin'], required: true },
-        type: { type: String, enum: ['profile', 'skill_test', 'resume', 'kyc-id', 'kyc-business', 'kyc-registration', 'kyc-gstn', 'kyc-pan', 'kyc-cin', 'kyc-networth', 'kyc-income', 'kyc-funds', 'nda'], required: true },
+        type: { type: String, enum: ['profile', 'skill_test', 'resume', 'kyc-id', 'kyc-business', 'kyc-registration', 'kyc-gstn', 'kyc-pan', 'kyc-cin', 'kyc-networth', 'kyc-income', 'kyc-funds', 'kyc-nda', 'nda'], required: true },
         level: { type: Number, enum: [0, 1, 2, 3, 4, 5], required: true },
         status: { type: String, enum: ['pending', 'submitted', 'under_review', 'approved', 'rejected'], default: 'pending' },
         userEmail: { type: String },
