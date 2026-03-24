@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore, useUIStore } from '@/store';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,7 @@ interface TalentDashboardData {
 export function TalentDashboardNew() {
   const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<TalentDashboardData | null>(null);
   const [applicationFilter, setApplicationFilter] = useState('all');
@@ -94,12 +96,22 @@ export function TalentDashboardNew() {
           { id: '2', title: 'Funding round opened', date: new Date(Date.now() - 86400000).toISOString() }
         ];
       } else {
-        // Not hired, fetch matching startups
+        // Not hired, fetch matching startups based on user skills
         try {
-          const sRes = await apiFetch('/api/search/startups?limit=5');
+          const userSkills = user?.skills?.join(',') || '';
+          const skillsParam = userSkills ? `&skills=${encodeURIComponent(userSkills)}` : '';
+          const sRes = await apiFetch(`/api/search/startups?limit=5${skillsParam}`);
           if (sRes.ok) {
             const sData = await sRes.json();
             matchingStartups = sData.startups || [];
+          }
+          // If no skill-matched results, fallback to all active startups
+          if (matchingStartups.length === 0) {
+            const fallbackRes = await apiFetch('/api/search/startups?limit=5');
+            if (fallbackRes.ok) {
+              const fallbackData = await fallbackRes.json();
+              matchingStartups = fallbackData.startups || [];
+            }
           }
         } catch (e) {}
       }
@@ -353,15 +365,19 @@ export function TalentDashboardNew() {
                 {(data as any)?.matchingStartups && (data as any).matchingStartups.length > 0 ? (
                   <div className="space-y-3 mt-2">
                     {(data as any).matchingStartups.map((s: any) => (
-                      <div key={s._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer border border-transparent hover:border-border/50">
+                      <div key={s._id} onClick={() => router.push(`/startup/${s._id}`)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer border border-transparent hover:border-border/50">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={s.logo} />
                           <AvatarFallback className="text-[10px] bg-primary/10">{getInitials(s.name)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{s.name}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{s.industry}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{s.industry} · {s.stage}</p>
+                          {s.rolesNeeded?.filter((r: any) => r.status === 'open').length > 0 && (
+                            <p className="text-[10px] text-emerald-500 font-medium">{s.rolesNeeded.filter((r: any) => r.status === 'open').length} open role{s.rolesNeeded.filter((r: any) => r.status === 'open').length > 1 ? 's' : ''}</p>
+                          )}
                         </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
                     ))}
                   </div>

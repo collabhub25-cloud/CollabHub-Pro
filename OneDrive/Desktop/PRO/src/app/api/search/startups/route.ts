@@ -83,6 +83,20 @@ export async function GET(request: NextRequest) {
       filter.$or.push({ 'location': { $regex: safeLocation, $options: 'i' } });
     }
 
+    // Skill-based matching for talent recommendations
+    const skills = searchParams.get('skills');
+    if (skills) {
+      const skillList = skills.split(',').map(s => escapeRegex(s.trim().toLowerCase())).filter(Boolean);
+      if (skillList.length > 0) {
+        const skillPatterns = skillList.map(s => new RegExp(s, 'i'));
+        filter.$or = filter.$or || [];
+        filter.$or.push(
+          { skillsNeeded: { $in: skillPatterns } },
+          { 'rolesNeeded.skills': { $in: skillPatterns } }
+        );
+      }
+    }
+
     // Build sort (validate sortBy to prevent injection)
     const validSortFields = ['createdAt', 'name', 'updatedAt'];
     const safeSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';

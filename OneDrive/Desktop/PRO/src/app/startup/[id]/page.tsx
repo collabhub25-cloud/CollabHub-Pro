@@ -104,13 +104,13 @@ export default function StartupPage({
         { id: 'overview', label: 'Overview', icon: Building2 },
         { id: 'team', label: 'Team', icon: Users },
         { id: 'funding', label: 'Funding', icon: DollarSign },
-        { id: 'agreements', label: 'Agreements', icon: FileText },
         { id: 'milestones', label: 'Milestones', icon: Target },
     ];
     
     const tabs = [...baseTabs];
     if (isFounder) {
         tabs.splice(2, 0, { id: 'applications', label: 'Applications', icon: Briefcase });
+        tabs.push({ id: 'agreements', label: 'Agreements', icon: FileText });
         tabs.push({ id: 'settings', label: 'Settings', icon: Settings });
     }
 
@@ -193,7 +193,7 @@ export default function StartupPage({
 
     // Fetch agreements when Agreements tab is active
     useEffect(() => {
-        if (activeTab !== 'agreements') return;
+        if (activeTab !== 'agreements' || !isFounder) return;
         const fetchAgreements = async () => {
             setAgreementsLoading(true);
             try {
@@ -740,7 +740,7 @@ export default function StartupPage({
                     </div>
                 )}
 
-                {activeTab === 'agreements' && (
+                {activeTab === 'agreements' && isFounder && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Agreements ({agreementCount})</h2>
