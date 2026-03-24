@@ -2,15 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
-import dynamic from 'next/dynamic';
-
-// Dynamically import shader background to prevent SSR issues
-const AnoAI = dynamic(() => import('@/components/ui/animated-shader-background'), {
-    ssr: false,
-    loading: () => null,
-});
 
 interface RoleSignupPageProps {
     role: 'founder' | 'investor' | 'talent';
@@ -19,96 +12,150 @@ interface RoleSignupPageProps {
     subtitle: string;
 }
 
-const roleMeta: Record<string, { emoji: string; color: string }> = {
-    founder: { emoji: '🚀', color: '#2E8B57' },
-    investor: { emoji: '📊', color: '#0047AB' },
-    talent: { emoji: '💡', color: '#7C3AED' },
-};
+const roles = [
+    { id: 'founder' as const, label: 'FOUNDER', emoji: '🚀', color: '#2E8B57' },
+    { id: 'investor' as const, label: 'INVESTOR', emoji: '🏛️', color: '#0047AB' },
+    { id: 'talent' as const, label: 'TALENT', emoji: '🧠', color: '#7C3AED' },
+];
 
 export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
     const [isLoading, setIsLoading] = useState(false);
-
-    const meta = roleMeta[role] || roleMeta.founder;
+    const meta = roles.find(r => r.id === role) || roles[0];
 
     const handleGoogleSignUp = () => {
         setIsLoading(true);
-        // Redirect to our server-side Google OAuth endpoint
         window.location.href = `/api/auth/google?role=${role}&mode=signup`;
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-background text-foreground">
+        <div className="min-h-screen flex flex-col lg:flex-row text-foreground relative overflow-hidden signup-bg">
             <style>{`
                 @keyframes signup-gradient { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
                 .signup-bg { background: linear-gradient(135deg, rgba(46,139,87,0.04), rgba(0,71,171,0.03), rgba(124,58,237,0.02), rgba(46,139,87,0.04)); background-size: 400% 400%; animation: signup-gradient 15s ease infinite; }
             `}</style>
-
-            {/* Nav */}
-            <header className="border-b border-border/50" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)' }}>
-                <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', boxShadow: '0 4px 15px rgba(46,139,87,0.3)' }}>
-                            <Logo size={20} className="text-white drop-shadow-md" />
-                        </div>
+            
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+                <div className="absolute rounded-full opacity-20" style={{ width: 400, height: 400, top: '-15%', right: '-10%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', filter: 'blur(80px)' }} />
+                <div className="absolute rounded-full opacity-15" style={{ width: 300, height: 300, bottom: '-10%', left: '-5%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', filter: 'blur(60px)' }} />
+            </div>
+            {/* Left Side Branding */}
+            <div className="hidden lg:flex flex-col justify-center p-16 lg:w-[45%] xl:w-[50%] relative">
+                <div className="absolute top-8 left-8">
+                     <Link href="/" className="flex items-center gap-2">
+                        <Logo size={24} className="text-[#111]" />
+                        <span className="text-lg font-bold tracking-tight">AlloySphere</span>
                     </Link>
-                    <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
                 </div>
-            </header>
 
-            <main className="flex-1 flex items-center justify-center px-6 py-12 relative signup-bg">
-                <AnoAI />
+                <div className="max-w-lg mx-auto z-10 w-full pl-0 xl:pl-10">
+                    <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-xs font-bold" style={{ background: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>
+                        THE INNOVATION NETWORK
+                    </div>
+                    <h1 className="text-5xl font-extrabold tracking-tight mb-6 leading-tight text-[#111]">
+                        Architecting the future of <span className="italic text-[#085340]">connected</span> capital.
+                    </h1>
+                    <p className="text-lg text-gray-600 mb-12 max-w-md">
+                        Join the ecosystem where high-growth founders meet sophisticated investors and elite talent.
+                    </p>
 
-                <div className="w-full max-w-sm relative z-10">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}20`, color: meta.color }}>
-                            <span>{meta.emoji}</span> {title} Account
-                        </div>
-                        <h2 className="text-2xl font-bold tracking-tight mb-1">Create your account</h2>
-                        <p className="text-sm text-muted-foreground">{subtitle}</p>
+                    {/* Image placeholders matching the layout visual */}
+                    <div className="flex gap-4 items-end mt-8 relative">
+                         <div className="w-[200px] h-[260px] bg-gray-200 rounded-2xl overflow-hidden shadow-lg border border-gray-300 relative z-20">
+                             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/modern_glass_office_1774367778077.png')" }}></div>
+                         </div>
+                         <div className="w-[240px] h-[200px] bg-gray-300 rounded-2xl overflow-hidden shadow-xl border border-gray-300 relative z-10 transform translate-x-[-20px] translate-y-[-20px]">
+                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/green_building_1774367889748.png')" }}></div>
+                         </div>
+                    </div>
+                </div>
+
+                <div className="absolute bottom-8 left-8 text-xs text-gray-400">
+                    © {new Date().getFullYear()} AlloySphere Inc. Engineered for Innovation.
+                </div>
+            </div>
+
+            {/* Right Side Form */}
+            <main className="flex-1 flex flex-col justify-center items-center p-6 relative">
+                 <div className="w-full max-w-md lg:hidden mb-12 flex justify-center">
+                     <Link href="/" className="flex items-center gap-2">
+                        <Logo size={24} className="text-[#111]" />
+                        <span className="text-lg font-bold tracking-tight">AlloySphere</span>
+                    </Link>
+                 </div>
+                 
+                 <div className="w-full max-w-md mx-auto bg-white p-10 rounded-[2rem] shadow-xl shadow-gray-200/50">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl mb-8">
+                        <Logo size={20} className="text-[#111]" />
+                        <span className="font-bold text-lg tracking-tight">AlloySphere</span>
                     </div>
 
-                    {/* Google Sign Up - Primary and only method */}
-                    <button
-                        type="button"
-                        onClick={handleGoogleSignUp}
-                        disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 hover:shadow-lg disabled:opacity-50 text-white group"
-                        style={{ background: 'linear-gradient(135deg, #2E8B57 0%, #0047AB 100%)', boxShadow: '0 4px 14px rgba(46,139,87,0.3)' }}
-                    >
-                        {isLoading ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                            <>
-                                <svg width="20" height="20" viewBox="0 0 24 24">
-                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#fff" />
-                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff" fillOpacity="0.9" />
-                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff" fillOpacity="0.8" />
-                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff" fillOpacity="0.85" />
-                                </svg>
-                                Continue with Google
-                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                            </>
-                        )}
-                    </button>
+                    <h2 className="text-3xl font-bold tracking-tight mb-2 text-[#111]">Create an account</h2>
+                    <p className="text-gray-500 mb-8">{subtitle || 'Join the AlloySphere network.'}</p>
 
-                    <p className="text-center text-sm mt-6 text-muted-foreground">
+                    <div className="mb-8">
+                        <label className="block text-sm font-semibold mb-3 text-gray-800">Select your role</label>
+                        <div className="flex gap-3">
+                            {roles.map((r) => (
+                                <Link
+                                    key={r.id}
+                                    href={`/signup/${r.id}`}
+                                    className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 transition-all ${
+                                        role === r.id
+                                            ? 'border-transparent bg-gray-100'
+                                            : 'border-transparent bg-gray-50 hover:bg-gray-100 text-gray-400'
+                                    }`}
+                                >
+                                    <span className="text-xl opacity-80">{r.emoji}</span>
+                                    <span className="text-xs font-bold tracking-wider text-gray-600">{r.label}</span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative flex items-center justify-center mb-8">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div className="relative bg-white px-4 text-xs font-bold text-gray-400 tracking-wider">
+                            CONTINUE WITH
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <button
+                            type="button"
+                            onClick={handleGoogleSignUp}
+                            disabled={isLoading}
+                            className="w-full flex items-center justify-center gap-3 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-bold transition-colors disabled:opacity-50"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                <>
+                                    <svg width="20" height="20" viewBox="0 0 24 24">
+                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                                    </svg>
+                                    Continue with Google
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <p className="text-center text-sm font-medium text-gray-600 mt-8">
                         Already have an account?{' '}
-                        <Link href="/login" className="font-medium hover:underline text-foreground">Sign in</Link>
+                        <Link href="/login" className="font-bold text-emerald-800 hover:text-emerald-900">Sign in</Link>
                     </p>
+                 </div>
 
-                    <p className="text-center text-xs mt-4 text-muted-foreground">
-                        By signing up, you agree to our{' '}
-                        <Link href="/terms" className="hover:underline">Terms of Service</Link>
-                        {' '}and{' '}
-                        <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
-                    </p>
+                <div className="mt-8 flex gap-4 text-xs font-semibold text-gray-500">
+                    <Link href="/privacy" className="hover:text-gray-800">Privacy Policy</Link>
+                    <Link href="/terms" className="hover:text-gray-800">Terms of Service</Link>
+                    <Link href="/help" className="hover:text-gray-800">Help Center</Link>
                 </div>
             </main>
-
-            <footer className="border-t border-border/50 py-4 text-center text-xs text-muted-foreground" style={{ background: 'rgba(255,255,255,0.8)' }}>
-                © {new Date().getFullYear()} AlloySphere. All rights reserved.
-            </footer>
         </div>
     );
 }

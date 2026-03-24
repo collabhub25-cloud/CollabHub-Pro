@@ -3,19 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Rocket, Users, Shield, Zap, ChevronRight, Check, Star,
-  TrendingUp, Handshake, FileCheck, Award, Building2,
-  Lightbulb, Target, Globe, Menu, X, ArrowDown, Sparkles, Github, Linkedin, Instagram
-} from 'lucide-react';
-import { ErrorBoundary, PageSkeleton } from '@/components/common/loading-error-handlers';
+import { Shield, Menu, X, ArrowRight, Share2, Globe, Sparkles, Code2, Terminal } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
-import { PremiumHero } from '@/components/ui/hero';
 import { motion } from 'framer-motion';
-import { PremiumGithub, PremiumLinkedIn, PremiumInstagram } from '@/components/ui/social-icons';
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -69,101 +59,46 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const features = [
-    { icon: <Shield className="h-6 w-6" />, title: 'Verified Talent Pool', description: '4-level verification system ensuring quality collaborations' },
-    { icon: <Handshake className="h-6 w-6" />, title: 'Smart Agreements', description: 'Automated NDA, Work, Equity, and SAFE agreements' },
-    { icon: <TrendingUp className="h-6 w-6" />, title: 'Milestone Tracking', description: 'Escrow-based payments with milestone verification' },
-    { icon: <Award className="h-6 w-6" />, title: 'Trust Score Engine', description: 'Reputation scoring based on performance metrics' },
-    { icon: <Building2 className="h-6 w-6" />, title: 'Investor Deal Flow', description: 'Curated startup pipeline for investors' },
-    { icon: <FileCheck className="h-6 w-6" />, title: 'KYC & Compliance', description: 'Built-in verification and legal compliance' },
-  ];
-
-  const stats = [
-    { value: '2,500+', label: 'Active Startups' },
-    { value: '10,000+', label: 'Verified Talents' },
-    { value: '500+', label: 'Investors' },
-    { value: '$50M+', label: 'Funds Raised' },
-  ];
-
-  const testimonials = [
-    { quote: "AlloySphere transformed how we build our team. Found 3 amazing co-founders through the platform.", author: "Sarah Chen", role: "Founder, TechNova AI", avatar: "SC" },
-    { quote: "The verification system gives me confidence in every collaboration. Trust is everything.", author: "Marcus Johnson", role: "Full-Stack Developer", avatar: "MJ" },
-    { quote: "Finally, a platform that understands startup fundraising. The investor dashboard is brilliant.", author: "David Park", role: "Angel Investor", avatar: "DP" },
-  ];
-
   return (
-    <div className="min-h-screen bg-transparent overflow-x-hidden">
-      {/* Cinematic CSS Animations */}
+    <div className="min-h-screen bg-transparent overflow-x-hidden relative">
       <style>{`
         @keyframes hero-gradient { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        @keyframes float-particle { 0%,100% { transform: translateY(0) rotate(0deg); opacity: 0.3; } 50% { transform: translateY(-30px) rotate(180deg); opacity: 0.7; } }
-        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(46,139,87,0.2); } 50% { box-shadow: 0 0 60px rgba(46,139,87,0.4), 0 0 120px rgba(0,71,171,0.1); } }
-        @keyframes scroll-indicator { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(8px); opacity: 1; } }
-        @keyframes border-shine {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
         .hero-bg { background: linear-gradient(135deg, rgba(46,139,87,0.08), rgba(0,71,171,0.06), rgba(124,58,237,0.04), rgba(46,139,87,0.08)); background-size: 400% 400%; animation: hero-gradient 15s ease infinite; }
-        .feature-card { transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); position: relative; overflow: hidden; }
-        .feature-card::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          background: linear-gradient(90deg, transparent, rgba(46,139,87,0.2), rgba(0,71,171,0.2), transparent);
-          background-size: 200% 100%;
-          animation: border-shine 4s linear infinite;
-          z-index: -1;
-          border-radius: inherit;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-        .feature-card:hover::before { opacity: 1; }
-        .stat-item { transition: transform 0.3s ease; }
-        .stat-item:hover { transform: scale(1.08); }
-        .testimonial-card { transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); position: relative; overflow: hidden; }
-        .testimonial-card::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          background: linear-gradient(90deg, transparent, rgba(46,139,87,0.2), rgba(0,71,171,0.2), transparent);
-          background-size: 200% 100%;
-          animation: border-shine 4s linear infinite;
-          z-index: -1;
-          border-radius: inherit;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-        .testimonial-card:hover::before { opacity: 1; }
+        .feature-card { transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
       `}</style>
+
+      {/* Background container following previous design */}
+      <div className="absolute inset-0 -z-10 hero-bg" />
+
+      <div className="absolute inset-0 pointer-events-none -z-10" aria-hidden="true">
+        <div className="absolute rounded-full opacity-20" style={{ width: 500, height: 500, top: '-5%', right: '-5%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', filter: 'blur(90px)' }} />
+        <div className="absolute rounded-full opacity-15" style={{ width: 400, height: 400, bottom: '20%', left: '-10%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', filter: 'blur(80px)' }} />
+      </div>
 
       {/* Navigation - Glass Effect */}
       <header
-        className="sticky top-0 z-50 w-full border-b transition-all duration-300"
+        className="sticky top-0 z-50 w-full transition-all duration-300 border-none"
         style={{
-          background: scrolled ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.6)',
-          backdropFilter: 'blur(20px)',
-          borderColor: scrolled ? 'rgba(0,0,0,0.08)' : 'transparent',
+          background: scrolled ? 'rgba(255,255,255,0.85)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(20px)' : 'none',
           boxShadow: scrolled ? '0 4px 30px rgba(0,0,0,0.04)' : 'none',
         }}
       >
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="container mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
           <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', boxShadow: '0 4px 15px rgba(46,139,87,0.3)' }}>
-              <Logo size={20} className="text-white drop-shadow-md" />
-            </div>
+            <Logo size={24} className="text-foreground" />
             <span className="text-xl font-bold tracking-tight">AlloySphere</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8">
-            {['Features', 'Testimonials', 'About'].map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">{item}</a>
+          <nav className="hidden md:flex items-center gap-8 translate-x-12">
+            {['Features', 'Solutions', 'Network', 'Pricing'].map(item => (
+              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative">{item}</a>
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" onClick={onLogin} className="font-medium">Log In</Button>
-            <InteractiveHoverButton text="Get Started" onClick={onRegister} className="w-36" />
+          <div className="hidden md:flex items-center gap-4">
+            <Button variant="ghost" onClick={onLogin} className="font-medium hover:bg-transparent hover:text-primary">Sign In</Button>
+            <InteractiveHoverButton text="Get Started" onClick={onRegister} className="w-32 bg-[#0d3b2e] hover:bg-[#1a5b48] text-white rounded-xl border-none font-medium h-10" />
           </div>
 
           <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -172,212 +107,214 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden border-t bg-background/95 backdrop-blur-xl">
+          <div className="md:hidden border-t bg-background/95 backdrop-blur-xl absolute w-full left-0">
             <div className="container mx-auto px-4 py-4 space-y-4">
-              {['Features', 'Testimonials', 'About'].map(item => (
+              {['Features', 'Solutions', 'Network', 'Pricing'].map(item => (
                 <a key={item} href={`#${item.toLowerCase()}`} className="block text-sm font-medium hover:text-primary">{item}</a>
               ))}
               <div className="flex gap-2 pt-4 border-t">
-                <Button variant="outline" className="flex-1" onClick={onLogin}>Log In</Button>
-                <InteractiveHoverButton text="Get Started" onClick={onRegister} className="flex-1" />
+                <Button variant="outline" className="flex-1" onClick={onLogin}>Sign In</Button>
+                <InteractiveHoverButton text="Get Started" onClick={onRegister} className="flex-1 bg-[#0d3b2e] text-white border-none" />
               </div>
             </div>
           </div>
         )}
       </header>
 
-      {/* Hero Section - Animated PremiumHero */}
-      <PremiumHero onRegister={onRegister} onDemo={onLogin} />
+      <main className="container mx-auto px-6 lg:px-12 pt-12 pb-24">
+        {/* Hero Section */}
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 min-h-[70vh]">
+          {/* Left Content */}
+          <div className="flex-1 max-w-2xl pt-10">
+            <RevealSection delay={0.1}>
+              <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>
+                <Sparkles className="h-3 w-3" /> THE INNOVATION NETWORK
+              </div>
+              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-[#111]">
+                Accelerate  your startup<br />
+                with <span style={{ color: '#005b82' }}>AlloySphere.</span><br />
+              </h1>
+              <p className="text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
+                The ultimate collaboration ecosystem connecting visionary founders, elite talent, and strategic investors to build the future of the web.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Button 
+                  onClick={onRegister} 
+                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl border-none text-white shadow-lg shadow-emerald-900/20 group transition-all hover:scale-[1.02]"
+                  style={{ background: '#085340' }}
+                >
+                  Join the Network
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button 
+                  variant="secondary"
+                  onClick={onLogin}
+                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 transition-all hover:scale-[1.02]"
+                >
+                  Sign In
+                </Button>
+              </div>
+            </RevealSection>
+          </div>
 
-      {/* Features Section */}
-      <section id="features" className="py-24">
-        <div className="container mx-auto px-4">
-          <RevealSection className="text-center mb-16">
-            <Badge variant="outline" className="mb-4 px-4 py-1.5">Features</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Everything You Need to Build</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Comprehensive tools for founders, talents, and investors to collaborate
-              effectively and build successful startups.
-            </p>
+          {/* Right Content - Generated Dashboard Image */}
+          <div className="flex-1 w-full lg:w-auto h-full min-h-[500px] flex justify-end">
+            <RevealSection delay={0.3} className="w-full h-full xl:w-[680px] xl:h-[580px]">
+              <div className="w-full h-full rounded-[2rem] bg-white shadow-2xl shadow-gray-200/50 flex flex-col items-center justify-center relative overflow-hidden">
+                <img src="/images/dashboard_ui_preview_1774367513473.png" alt="AlloySphere Dashboard Overview" className="w-[110%] h-[110%] object-cover object-top opacity-95 transition-transform duration-700 hover:scale-105" />
+              </div>
+            </RevealSection>
+          </div>
+        </div>
+
+        {/* Feature Grid Section */}
+        <div className="mt-32">
+          <RevealSection delay={0.1}>
+            <h2 className="text-3xl font-bold mb-2">Engineered for AlloySphere</h2>
+            <p className="text-muted-foreground mb-12">Uncompromising collaboration for the next generation of startups.</p>
           </RevealSection>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {features.map((feature, index) => (
-              <RevealSection key={index} delay={0.1 * index}>
-                <motion.div
-                  whileHover={{ y: -8, scale: 1.02, rotateZ: 0.5 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className="feature-card p-6 rounded-2xl bg-white/40 border border-white/20 h-full cursor-default backdrop-blur-md"
-                >
-                  <div className="h-14 w-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.1) 0%, rgba(0,71,171,0.08) 100%)', color: '#2E8B57' }}>
-                    {feature.icon}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Unified Tech Stack - Span 2 */}
+            <RevealSection delay={0.2} className="md:col-span-2">
+              <div className="bg-white rounded-[2rem] p-8 h-full shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100/50 text-emerald-600 flex items-center justify-center mb-6">
+                  <Terminal className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">Unified Ecosystem</h3>
+                <p className="text-muted-foreground text-sm max-w-sm mb-8 leading-relaxed">
+                  Connect founders, talent, and investors in one seamless environment. We handle the networking complexity so you can focus on building.
+                </p>
+                {/* Code placeholder visually mimicking the dark editor */}
+                <div className="w-full h-40 bg-[#1e1e1e] rounded-xl overflow-hidden p-6 relative">
+                   <div className="opacity-60 font-mono text-xs flex flex-col gap-2">
+                     <div className="flex gap-4"><span className="text-blue-400">import</span> <span className="text-indigo-300">{`{ Configuration }`}</span> <span className="text-blue-400">from</span> <span className="text-orange-300">'@alloysphere/core'</span></div>
+                     <div className="flex gap-4"><span className="text-blue-400">export const</span> <span className="text-blue-200">config</span> <span className="text-white">=</span> <span className="text-blue-400">new</span> <span className="text-yellow-200">Configuration</span>{`({`}</div>
+                     <div className="flex gap-4 ml-4"><span className="text-blue-300">environment:</span> <span className="text-orange-300">'production'</span>,</div>
+                     <div className="flex gap-4 ml-4"><span className="text-blue-300">edge:</span> <span className="text-blue-400">true</span>,</div>
+                     <div className="flex gap-4 ml-4"><span className="text-blue-300">security:</span> <span className="text-blue-400">true</span></div>
+                     <div className="flex gap-4">{`})`}</div>
+                   </div>
+                   {/* Blur mask to emulate the screenshot's blurred right edge */}
+                   <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#1e1e1e] to-transparent" />
+                </div>
+              </div>
+            </RevealSection>
+
+            {/* Encrypted Core - Span 1 */}
+            <RevealSection delay={0.3} className="md:col-span-1">
+              <div className="bg-[#f0f6fc] rounded-[2rem] p-8 h-full flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div>
+                  <div className="text-blue-600 mb-6 mt-2">
+                    <Shield className="w-7 h-7" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                </motion.div>
-              </RevealSection>
-            ))}
+                  <h3 className="text-xl font-bold text-blue-900 mb-3">Secure Collaboration</h3>
+                  <p className="text-blue-800/70 text-sm leading-relaxed mb-6">
+                    Enterprise-grade security for every interaction. Your startup's data privacy is our architectural priority.
+                  </p>
+                </div>
+                
+                {/* Trusted By module */}
+                <div className="pt-6 border-t border-blue-200/50">
+                  <div className="flex -space-x-3 mb-3">
+                    <div className="w-10 h-10 rounded-full border-2 border-[#f0f6fc] bg-gray-200" />
+                    <div className="w-10 h-10 rounded-full border-2 border-[#f0f6fc] bg-gray-300" />
+                    <div className="w-10 h-10 rounded-full border-2 border-[#f0f6fc] bg-slate-400" />
+                  </div>
+                  <p className="text-xs text-blue-800/60 font-medium">Trusted by 2,000+ teams</p>
+                </div>
+              </div>
+            </RevealSection>
+
+            {/* AI-Optimized - Span 1 */}
+            <RevealSection delay={0.4} className="md:col-span-1">
+              <div className="bg-white rounded-[2rem] p-8 h-full shadow-sm hover:shadow-md transition-shadow">
+                 <div className="text-indigo-600 mb-6 mt-2">
+                    <Code2 className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">AI-Matched Connections</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Integrated AI algorithms for lightning-fast matchmaking between profiles and opportunities.
+                  </p>
+              </div>
+            </RevealSection>
+
+            {/* Global Network - Span 2 */}
+            <RevealSection delay={0.5} className="md:col-span-2">
+              <div className="bg-white rounded-[2rem] p-8 h-full shadow-sm flex flex-col md:flex-row hover:shadow-md transition-shadow">
+                <div className="flex-1 md:pr-8 mb-6 md:mb-0">
+                  <h3 className="text-xl font-bold mb-3">Global Startup Network</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    A curated network ensuring high-fidelity connections for founders anywhere on the planet.
+                  </p>
+                </div>
+                {/* Map placeholder */}
+                 <div className="flex-1 rounded-2xl bg-gray-100 flex items-center justify-center min-h-[160px]">
+                    <Globe className="w-12 h-12 text-gray-300" />
+                 </div>
+              </div>
+            </RevealSection>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* How It Works */}
-      <section className="py-24 relative" style={{ background: 'linear-gradient(180deg, rgba(46,139,87,0.03) 0%, transparent 100%)' }}>
-        <div className="container mx-auto px-4">
-          <RevealSection className="text-center mb-16">
-            <Badge variant="outline" className="mb-4 px-4 py-1.5">How It Works</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Simple Steps to Get Started</h2>
-          </RevealSection>
-
-          <RevealSection delay={0.2}>
-            <Tabs defaultValue="founder" className="max-w-4xl mx-auto">
-              <TabsList className="grid w-full grid-cols-3 mb-8 h-12 rounded-xl">
-                <TabsTrigger value="founder" className="rounded-lg">For Founders</TabsTrigger>
-                <TabsTrigger value="talent" className="rounded-lg">For Talent</TabsTrigger>
-                <TabsTrigger value="investor" className="rounded-lg">For Investors</TabsTrigger>
-              </TabsList>
-              {[
-                { key: 'founder', steps: [
-                  { step: 1, title: 'Create Your Startup', desc: 'Define your vision, stage, and roles needed' },
-                  { step: 2, title: 'Review Applications', desc: 'Browse verified talent and their portfolios' },
-                  { step: 3, title: 'Sign Agreements', desc: 'Automated NDA and work agreements' },
-                  { step: 4, title: 'Track Milestones', desc: 'Manage deliverables and escrow payments' },
-                ]},
-                { key: 'talent', steps: [
-                  { step: 1, title: 'Complete Profile', desc: 'Build your professional profile and portfolio' },
-                  { step: 2, title: 'Get Verified', desc: 'Pass skill tests and KYC verification' },
-                  { step: 3, title: 'Apply to Startups', desc: 'Find opportunities matching your skills' },
-                  { step: 4, title: 'Deliver & Get Paid', desc: 'Complete milestones and receive payment' },
-                ]},
-                { key: 'investor', steps: [
-                  { step: 1, title: 'Set Preferences', desc: 'Define investment criteria and ticket size' },
-                  { step: 2, title: 'Browse Deal Flow', desc: 'Access curated startup opportunities' },
-                  { step: 3, title: 'Due Diligence', desc: 'Review trust scores and metrics' },
-                  { step: 4, title: 'Invest & Track', desc: 'Complete deals and monitor progress' },
-                ]},
-              ].map(tab => (
-                <TabsContent key={tab.key} value={tab.key} className="space-y-4">
-                  {tab.steps.map((item) => (
-                    <div key={item.step} className="flex items-start gap-4 p-5 rounded-xl transition-all duration-300 hover:bg-accent/50" style={{ border: '1px solid rgba(0,0,0,0.04)' }}>
-                      <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>
-                        {item.step}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-base text-foreground">{item.title}</h4>
-                        <p className="text-sm text-muted-foreground mt-0.5">{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </TabsContent>
-              ))}
-            </Tabs>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonials" className="py-24" style={{ background: 'linear-gradient(180deg, rgba(46,139,87,0.03) 0%, transparent 100%)' }}>
-        <div className="container mx-auto px-4">
-          <RevealSection className="text-center mb-16">
-            <Badge variant="outline" className="mb-4 px-4 py-1.5">Testimonials</Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">Trusted by Thousands</h2>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <RevealSection key={index} delay={0.15 * index}>
-                <motion.div
-                  whileHover={{ y: -5, scale: 1.01 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      {/* CTA Bottom Section */}
+      <section className="container mx-auto px-6 lg:px-12 py-12">
+        <RevealSection delay={0.2}>
+          <div className="bg-[#1a1c1e] text-white rounded-[2.5rem] py-16 px-10 md:px-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
+            <div className="relative z-10 max-w-xl text-center md:text-left">
+              <h2 className="text-4xl md:text-5xl font-bold mb-8 tracking-tight">
+                Ready to build the <span className="text-emerald-400">future?</span>
+              </h2>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Button 
+                  onClick={onRegister}
+                  className="w-full sm:w-auto px-8 h-12 text-sm font-bold bg-emerald-200 text-emerald-950 hover:bg-emerald-300 rounded-xl"
                 >
-                  <Card className="testimonial-card border-white/20 rounded-2xl h-full bg-white/40 backdrop-blur-md">
-                  <CardContent className="pt-8 pb-8">
-                    <div className="flex gap-1 mb-5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <p className="text-muted-foreground mb-6 leading-relaxed italic">&quot;{testimonial.quote}&quot;</p>
-                    <div className="flex items-center gap-3">
-                      <div className="h-11 w-11 rounded-full flex items-center justify-center font-semibold text-white text-sm" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>
-                        {testimonial.avatar}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm text-foreground">{testimonial.author}</div>
-                        <div className="text-xs text-muted-foreground">{testimonial.role}</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                </motion.div>
-              </RevealSection>
-            ))}
+                  Get Started Now
+                </Button>
+                <Button 
+                  onClick={onLogin}
+                  variant="outline"
+                  className="w-full sm:w-auto px-8 h-12 text-sm font-medium border-gray-600 text-white hover:bg-white/10 hover:text-white rounded-xl bg-transparent"
+                >
+                  Contact Sales
+                </Button>
+              </div>
+            </div>
+            
+            {/* Geometric diamond graphic placeholder */}
+            <div className="hidden md:flex relative z-10 w-64 h-64 items-center justify-center opacity-80 right-10">
+              <div className="w-40 h-40 border-8 border-emerald-900 absolute rotate-45 transform origin-center scale-[1]" />
+              <div className="w-40 h-40 border-8 border-emerald-800 absolute top-[25px] rotate-45 transform origin-center scale-[1]" />
+              <div className="w-40 h-40 border-8 border-emerald-700 absolute top-[50px] rotate-45 transform origin-center scale-[1]" />
+              <div className="w-40 h-40 bg-emerald-600 absolute top-[75px] rotate-45 transform origin-center" />
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Cinematic */}
-      <section className="py-24 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #2E8B57 0%, #0047AB 60%, #1a1a2e 100%)' }}>
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute rounded-full opacity-20" style={{ width: 400, height: 400, top: '-15%', right: '-10%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', filter: 'blur(80px)' }} />
-          <div className="absolute rounded-full opacity-15" style={{ width: 300, height: 300, bottom: '-10%', left: '-5%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', filter: 'blur(60px)' }} />
-        </div>
-        <RevealSection className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white tracking-tight">
-            Ready to Build Your Dream Team?
-          </h2>
-          <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of founders, talents, and investors building the future together.
-          </p>
-          <InteractiveHoverButton text="Get Started Free" onClick={onRegister} className="w-56 p-3.5 text-lg border-white/20" />
         </RevealSection>
       </section>
 
-      <footer id="about" className="py-16 border-t relative overflow-hidden">
-        {/* Subtle background glow for social area */}
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)' }}>
-                  <Logo size={20} className="text-white drop-shadow-md" />
-                </div>
-                <span className="text-xl font-bold tracking-tight">AlloySphere</span>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                The AI-powered startup collaboration platform connecting verified talents,
-                founders, and investors.
-              </p>
-              
-              {/* Premium Social Links Area */}
-              <div className="pt-4">
-                <h4 className="text-sm font-semibold mb-3">Connect With Us</h4>
-                <div className="flex gap-3">
-                  <PremiumLinkedIn href="#" />
-                  <PremiumGithub href="#" />
-                  <PremiumInstagram href="#" />
-                </div>
-              </div>
+      {/* Footer */}
+      <footer className="w-full py-8 text-sm mt-10" style={{ background: '#f8fafc' }}>
+        <div className="container mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 md:items-start text-center md:text-left">
+            <div className="font-bold flex items-center gap-2">
+                AlloySphere
             </div>
-            {[
-              { title: 'Platform', links: ['Features', 'Security', 'API'] },
-              { title: 'Company', links: ['About', 'Careers', 'Blog', 'Contact'] },
-              { title: 'Legal', links: ['Privacy Policy', 'Terms of Service', 'Cookie Policy'] },
-            ].map(col => (
-              <div key={col.title}>
-                <h4 className="font-semibold mb-4">{col.title}</h4>
-                <ul className="space-y-2.5 text-sm text-muted-foreground">
-                  {col.links.map(link => (
-                    <li key={link}><a href="#" className="hover:text-foreground transition-colors">{link}</a></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <span className="text-muted-foreground text-xs">© {new Date().getFullYear()} AlloySphere Inc. Engineered for Innovation.</span>
           </div>
-          <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-            © 2025 AlloySphere. All rights reserved.
+
+          <div className="flex gap-6 text-muted-foreground font-medium text-xs">
+            <a href="#" className="hover:text-foreground">Privacy</a>
+            <a href="#" className="hover:text-foreground">Terms</a>
+            <a href="#" className="hover:text-foreground">Security</a>
+            <a href="#" className="hover:text-foreground">Status</a>
+          </div>
+
+          <div className="flex gap-4">
+             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-300 transition-colors cursor-pointer"><Share2 className="w-4 h-4" /></div>
+             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-300 transition-colors cursor-pointer"><Globe className="w-4 h-4" /></div>
           </div>
         </div>
       </footer>
