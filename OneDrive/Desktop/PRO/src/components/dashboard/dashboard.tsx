@@ -158,7 +158,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       case 'talent':
         // Talent-specific tabs
         if (activeTab === 'applications' || activeTab === 'projects' || 
-            activeTab === 'milestones' || activeTab === 'agreements') {
+            activeTab === 'agreements') {
           return <TalentDashboard activeTab={activeTab} />;
         }
         return <TalentDashboardNew />;
@@ -224,14 +224,6 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {/* Search Button */}
-                <button
-                  onClick={() => setActiveTab('search')}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground bg-muted/50 hover:bg-muted rounded-lg transition-colors"
-                >
-                  <Search className="h-4 w-4" />
-                  <span className="hidden md:inline">Discover Talent</span>
-                </button>
 
                 {/* Notifications */}
                 <NotificationDropdown />

@@ -58,7 +58,6 @@ const getNavigation = (role: string) => {
       ],
       workspace: [
         { id: 'applications', label: 'My Applications', icon: Briefcase, countKey: 'applications' },
-        { id: 'milestones', label: 'Milestones', icon: Target },
         { id: 'agreements', label: 'Agreements', icon: FileText, countKey: 'agreements' },
       ],
       finance: [],
