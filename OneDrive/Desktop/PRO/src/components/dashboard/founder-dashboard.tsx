@@ -1185,20 +1185,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Funding</h1>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <InteractiveHoverButton text="Create Funding Round" onClick={() => setShowCreateFundingRound(true)} disabled={(user?.verificationLevel || 0) < 2} className="w-52" />
-                </div>
-              </TooltipTrigger>
-              {(user?.verificationLevel || 0) < 2 && (
-                <TooltipContent>
-                  <p>You need Business KYC (Level 2) to raise capital.</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <InteractiveHoverButton text="Create Funding Round" onClick={() => setShowCreateFundingRound(true)} className="w-52" />
         </div>
 
         {/* Create Funding Round Modal */}

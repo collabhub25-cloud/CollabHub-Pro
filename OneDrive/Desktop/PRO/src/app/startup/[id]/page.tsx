@@ -21,6 +21,9 @@ interface StartupData {
     fundingStage: string;
     fundingAmount?: number;
     revenue?: number;
+    skillsNeeded?: string[];
+    pastProgress?: string;
+    achievements?: string;
 
     logo?: string;
     website?: string;
@@ -94,6 +97,14 @@ export default function StartupPage({
     const [showAccessModal, setShowAccessModal] = useState(false);
     const [accessMessage, setAccessMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    const [showRoleModal, setShowRoleModal] = useState(false);
+    const [newRole, setNewRole] = useState({
+        title: '',
+        description: '',
+        skills: '',
+        compensationType: 'mixed'
+    });
 
     const activeTab = searchParams.get('tab') || 'overview';
     const isFounder = user?._id === (startup?.founderId as any)?._id;
@@ -268,6 +279,39 @@ export default function StartupPage({
             }
         } catch {
             toast.error('Failed to send request');
+        }
+        setSubmitting(false);
+    };
+
+    const handleAddRole = async () => {
+        setSubmitting(true);
+        try {
+            const rolePayload = {
+                title: newRole.title,
+                description: newRole.description,
+                skills: newRole.skills.split(',').map(s => s.trim()).filter(Boolean),
+                compensationType: newRole.compensationType,
+                status: 'open'
+            };
+            
+            const updatedRoles = [...(startup?.rolesNeeded || []), rolePayload];
+            const res = await fetch(`/api/startups/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rolesNeeded: updatedRoles }),
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                setStartup(data.startup);
+                setShowRoleModal(false);
+                setNewRole({ title: '', description: '', skills: '', compensationType: 'mixed' });
+                toast.success('Role added successfully!');
+            } else {
+                toast.error('Failed to add role');
+            }
+        } catch {
+            toast.error('An error occurred');
         }
         setSubmitting(false);
     };
@@ -465,6 +509,65 @@ export default function StartupPage({
                                 <Globe className="h-4 w-4" /> {startup.website}
                             </a>
                         )}
+
+                        {startup.skillsNeeded && startup.skillsNeeded.length > 0 && (
+                            <section className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
+                                <h2 className="text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">Skills Needed</h2>
+                                <div className="flex gap-2 flex-wrap">
+                                    {startup.skillsNeeded.map(s => (
+                                        <span key={s} className="text-sm font-medium px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/30">{s}</span>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {startup.pastProgress && (
+                            <section className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
+                                <h2 className="text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">Past Progress</h2>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-600 dark:text-gray-400">{startup.pastProgress}</p>
+                            </section>
+                        )}
+
+                        {startup.achievements && (
+                            <section className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
+                                <h2 className="text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">Achievements</h2>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-600 dark:text-gray-400">{startup.achievements}</p>
+                            </section>
+                        )}
+
+                        {/* Open Roles section moved to overview */}
+                        <div className="mt-8">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Open Roles</h3>
+                                {isFounder && (
+                                    <button onClick={() => setShowRoleModal(true)} className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
+                                        + Add Role
+                                    </button>
+                                )}
+                            </div>
+                            {startup.rolesNeeded && startup.rolesNeeded.filter(r => r.status === 'open').length > 0 ? (
+                                <div className="space-y-4">
+                                    {startup.rolesNeeded.filter(r => r.status === 'open').map((role, i) => (
+                                        <div key={i} className="p-5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
+                                            <div className="flex justify-between items-start">
+                                                <p className="text-base font-bold text-gray-900 dark:text-gray-100">{role.title}</p>
+                                                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800/30">
+                                                    {role.compensationType}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm mt-2 text-gray-600 dark:text-gray-400 leading-relaxed">{role.description}</p>
+                                            <div className="flex gap-2 mt-4 flex-wrap">
+                                                {role.skills.map(s => (
+                                                    <span key={s} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">{s}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500">No open roles at the moment.</p>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -496,25 +599,6 @@ export default function StartupPage({
                             </div>
                         )}
 
-                        {/* Open Roles */}
-                        {startup.rolesNeeded && startup.rolesNeeded.filter(r => r.status === 'open').length > 0 && (
-                            <div className="mt-8">
-                                <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">Open Roles</h3>
-                                <div className="space-y-4">
-                                    {startup.rolesNeeded.filter(r => r.status === 'open').map((role, i) => (
-                                        <div key={i} className="p-5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            <p className="text-base font-bold text-gray-900 dark:text-gray-100">{role.title}</p>
-                                            <p className="text-sm mt-2 text-gray-600 dark:text-gray-400 leading-relaxed">{role.description}</p>
-                                            <div className="flex gap-2 mt-4 flex-wrap">
-                                                {role.skills.map(s => (
-                                                    <span key={s} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">{s}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
 
@@ -841,6 +925,72 @@ export default function StartupPage({
                                             Send Request
                                         </>
                                     )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Add Role Modal */}
+            {showRoleModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => !submitting && setShowRoleModal(false)}>
+                    <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl w-full max-w-md shadow-xl border border-gray-200 dark:border-gray-800" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4">Add Open Role</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5">Role Title</label>
+                                <input
+                                    value={newRole.title}
+                                    onChange={e => setNewRole({ ...newRole, title: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-xl text-sm border bg-background focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="e.g., Frontend Developer"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5">Description</label>
+                                <textarea
+                                    value={newRole.description}
+                                    onChange={e => setNewRole({ ...newRole, description: e.target.value })}
+                                    rows={3}
+                                    className="w-full px-3 py-2 rounded-xl text-sm border bg-background focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                                    placeholder="Role description and responsibilities"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5">Skills (comma-separated)</label>
+                                <input
+                                    value={newRole.skills}
+                                    onChange={e => setNewRole({ ...newRole, skills: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-xl text-sm border bg-background focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="e.g., React, TypeScript, CSS"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5">Compensation Type</label>
+                                <select
+                                    value={newRole.compensationType}
+                                    onChange={e => setNewRole({ ...newRole, compensationType: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-xl text-sm border bg-background focus:ring-2 focus:ring-blue-500 outline-none"
+                                >
+                                    <option value="equity">Equity Only</option>
+                                    <option value="cash">Cash Only</option>
+                                    <option value="mixed">Mixed</option>
+                                </select>
+                            </div>
+                            <div className="flex gap-3 pt-2 mt-4">
+                                <button
+                                    onClick={() => setShowRoleModal(false)}
+                                    disabled={submitting}
+                                    className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAddRole}
+                                    disabled={submitting || !newRole.title || !newRole.description}
+                                    className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
+                                >
+                                    {submitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'Add Role'}
                                 </button>
                             </div>
                         </div>

@@ -25,6 +25,9 @@ export default function StartupEditPage({
         fundingStage: '',
         fundingAmount: '',
         website: '',
+        skillsNeeded: '',
+        pastProgress: '',
+        achievements: '',
     });
 
     useEffect(() => {
@@ -50,6 +53,9 @@ export default function StartupEditPage({
                     fundingStage: s.fundingStage || '',
                     fundingAmount: s.fundingAmount?.toString() || '',
                     website: s.website || '',
+                    skillsNeeded: s.skillsNeeded?.join(', ') || '',
+                    pastProgress: s.pastProgress || '',
+                    achievements: s.achievements || '',
                 });
             } catch (err: any) {
                 setError(err.message);
@@ -66,6 +72,12 @@ export default function StartupEditPage({
             const payload: Record<string, any> = { ...form };
             if (payload.fundingAmount) payload.fundingAmount = Number(payload.fundingAmount);
             else delete payload.fundingAmount;
+
+            if (payload.skillsNeeded) {
+                payload.skillsNeeded = payload.skillsNeeded.split(',').map((s: string) => s.trim()).filter(Boolean);
+            } else {
+                payload.skillsNeeded = [];
+            }
 
             const { apiFetch } = await import('@/lib/api-client');
             const res = await apiFetch(`/api/startups/${id}`, {
@@ -141,6 +153,41 @@ export default function StartupEditPage({
                             rows={4}
                             className="w-full px-3.5 py-2.5 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
                             maxLength={2000}
+                        />
+                    </div>
+
+                    {/* Skills Needed */}
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">Skills Needed (comma-separated)</label>
+                        <input
+                            value={form.skillsNeeded}
+                            onChange={(e) => setForm({ ...form, skillsNeeded: e.target.value })}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
+                            placeholder="e.g., React, Node.js, Marketing"
+                        />
+                    </div>
+
+                    {/* Past Progress */}
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">Past Progress</label>
+                        <textarea
+                            value={form.pastProgress}
+                            onChange={(e) => setForm({ ...form, pastProgress: e.target.value })}
+                            rows={3}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
+                            placeholder="What have you accomplished so far?"
+                        />
+                    </div>
+
+                    {/* Achievements */}
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">Achievements</label>
+                        <textarea
+                            value={form.achievements}
+                            onChange={(e) => setForm({ ...form, achievements: e.target.value })}
+                            rows={3}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background border border-border"
+                            placeholder="Key milestones, awards, or metrics reached"
                         />
                     </div>
 

@@ -39,6 +39,10 @@ export interface IStartup extends Document {
     fundingAmount?: number;
     revenue?: number;
 
+    skillsNeeded: string[];
+    pastProgress?: string;
+    achievements?: string;
+
     logo?: string;
     website?: string;
     pitchDeck?: string;
@@ -64,6 +68,10 @@ const StartupSchema = new Schema<IStartup>(
         fundingStage: { type: String, enum: ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c', 'ipo'], required: true },
         fundingAmount: { type: Number },
         revenue: { type: Number },
+
+        skillsNeeded: [{ type: String }],
+        pastProgress: { type: String },
+        achievements: { type: String },
 
         logo: { type: String },
         website: { type: String },

@@ -69,7 +69,8 @@ export async function PATCH(
 
         const allowedFields = [
             'name', 'vision', 'description', 'stage', 'industry',
-            'fundingStage', 'fundingAmount', 'website', 'logo', 'isActive'
+            'fundingStage', 'fundingAmount', 'website', 'logo', 'isActive',
+            'skillsNeeded', 'pastProgress', 'achievements', 'rolesNeeded'
         ];
 
         const updates: Record<string, any> = {};
