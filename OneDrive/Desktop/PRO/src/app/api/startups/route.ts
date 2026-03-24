@@ -285,7 +285,8 @@ export async function PUT(request: NextRequest) {
 
     // SECURITY: Only allow specific fields to be updated (whitelist pattern)
     const allowedFields = ['name', 'vision', 'description', 'stage', 'industry',
-      'fundingStage', 'fundingAmount', 'revenue', 'website', 'isActive'];
+      'fundingStage', 'fundingAmount', 'revenue', 'website', 'isActive',
+      'skillsNeeded', 'pastProgress', 'achievements'];
     const safeUpdateData: Record<string, unknown> = { updatedAt: new Date() };
 
     for (const field of allowedFields) {
