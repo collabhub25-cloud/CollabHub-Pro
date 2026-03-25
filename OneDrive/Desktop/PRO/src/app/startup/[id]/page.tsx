@@ -840,7 +840,7 @@ export default function StartupPage({
                                                 agreement.status === 'signed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                                                 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                                             }`}>
-                                                {agreement.status.replace('_', ' ')}
+                                                {(agreement.status || 'pending').replace('_', ' ')}
                                             </span>
                                         </div>
                                         <div className="space-y-2 mt-4">

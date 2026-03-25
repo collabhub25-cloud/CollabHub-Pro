@@ -358,7 +358,11 @@ export function SearchPage() {
                       key={result._id}
                       className="hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => {
-                        viewProfile(result._id);
+                        if (activeTab === 'startups') {
+                          router.push(`/startup/${result._id}`);
+                        } else {
+                          viewProfile(result._id);
+                        }
                       }}
                     >
                       <CardContent className="p-6">
