@@ -50,32 +50,43 @@ export function FounderDashboardNew() {
     try {
       setLoading(true);
       
-      const [startupsRes, applicationsRes, searchTalentRes, searchInvestorsRes, fundingRes, notificationsRes, milestonesRes] = await Promise.all([
+      const [startupsRes, searchTalentRes, searchInvestorsRes, notificationsRes] = await Promise.all([
         apiFetch('/api/startups'),
-        apiFetch('/api/applications/received'),
         apiFetch('/api/search/talents?limit=5'),
         apiFetch('/api/search/investors?limit=5'),
-        apiFetch('/api/funding/create-round'),
         apiFetch('/api/notifications?limit=10'),
-        apiFetch('/api/milestones'),
       ]);
 
       const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
-      const applications = applicationsRes.ok ? await applicationsRes.json() : [];
       const talentData = searchTalentRes.ok ? await searchTalentRes.json() : [];
       const investorData = searchInvestorsRes.ok ? await searchInvestorsRes.json() : [];
-      const fundingData = fundingRes.ok ? await fundingRes.json() : { rounds: [] };
       const notifData = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
-      const milestonesData = milestonesRes.ok ? await milestonesRes.json() : { milestones: [] };
 
       const startups = startupsData.startups || startupsData || [];
       const startup = Array.isArray(startups) ? startups[0] : startups;
-      const appList = Array.isArray(applications) ? applications : applications.applications || [];
       const talentList = Array.isArray(talentData) ? talentData : talentData.talents || [];
       const investorList = Array.isArray(investorData) ? investorData : investorData.investors || [];
-      const rounds = fundingData.rounds || [];
       const notifications = notifData.notifications || [];
-      const milestonesList = milestonesData.milestones || [];
+
+      let appList: any[] = [];
+      let rounds: any[] = [];
+      let milestonesList: any[] = [];
+
+      if (startup?._id) {
+        const [applicationsRes, fundingRes, milestonesRes] = await Promise.all([
+          apiFetch(`/api/applications/received?startupId=${startup._id}`),
+          apiFetch(`/api/funding/create-round?startupId=${startup._id}`),
+          apiFetch(`/api/milestones?startupId=${startup._id}`),
+        ]);
+
+        const applications = applicationsRes.ok ? await applicationsRes.json() : [];
+        const fundingData = fundingRes.ok ? await fundingRes.json() : { rounds: [] };
+        const milestonesData = milestonesRes.ok ? await milestonesRes.json() : { milestones: [] };
+
+        appList = Array.isArray(applications) ? applications : applications.applications || [];
+        rounds = fundingData.rounds || [];
+        milestonesList = milestonesData.milestones || [];
+      }
 
       const pendingApps = appList.filter((a: any) => a.status === 'pending');
 
