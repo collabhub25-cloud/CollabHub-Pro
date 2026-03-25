@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store';
+import { LiquidButton } from '@/components/ui/liquid-glass-button';
 import { toast } from 'sonner';
 
 const roles = [
@@ -77,11 +78,11 @@ function LoginForm() {
             </div>
 
             <div className="flex flex-col gap-3">
-                <button
+                <LiquidButton
                     type="button"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-3 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-bold transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-bold transition-colors disabled:opacity-50"
                 >
                     {isLoading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -96,7 +97,7 @@ function LoginForm() {
                             Continue with Google
                         </>
                     )}
-                </button>
+                </LiquidButton>
             </div>
 
             <p className="text-center text-sm font-medium text-gray-600 mt-8">

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+import { LiquidButton } from '@/components/ui/liquid-glass-button';
 import { Shield, Menu, X, ArrowRight, Share2, Globe, Sparkles, Code2, Terminal } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import { motion } from 'framer-motion';
@@ -139,21 +140,20 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </p>
               
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Button 
+                <LiquidButton 
                   onClick={onRegister} 
-                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl border-none text-white shadow-lg shadow-emerald-900/20 group transition-all hover:scale-[1.02]"
-                  style={{ background: '#085340' }}
+                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl group transition-all"
                 >
                   Join the Network
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <Button 
-                  variant="secondary"
+                </LiquidButton>
+                <LiquidButton 
+                  variant="outline"
                   onClick={onLogin}
-                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 transition-all hover:scale-[1.02]"
+                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 transition-all"
                 >
                   Sign In
-                </Button>
+                </LiquidButton>
               </div>
             </RevealSection>
           </div>
@@ -268,19 +268,19 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                 Ready to build the <span className="text-emerald-400">future?</span>
               </h2>
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Button 
+                <LiquidButton 
                   onClick={onRegister}
                   className="w-full sm:w-auto px-8 h-12 text-sm font-bold bg-emerald-200 text-emerald-950 hover:bg-emerald-300 rounded-xl"
                 >
                   Get Started Now
-                </Button>
-                <Button 
+                </LiquidButton>
+                <LiquidButton 
                   onClick={onLogin}
                   variant="outline"
                   className="w-full sm:w-auto px-8 h-12 text-sm font-medium border-gray-600 text-white hover:bg-white/10 hover:text-white rounded-xl bg-transparent"
                 >
                   Contact Sales
-                </Button>
+                </LiquidButton>
               </div>
             </div>
             

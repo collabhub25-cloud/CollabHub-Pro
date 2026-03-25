@@ -11,7 +11,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "db:mock": "npx tsx scripts/generate_mock_data.ts"
+    "db:mock": "npx tsx scripts/generate_mock_data.ts",
+    "db:seed-production": "npx tsx scripts/seed-production.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
