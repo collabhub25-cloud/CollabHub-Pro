@@ -18,6 +18,11 @@ export interface IAgreement extends Document {
         startDate?: Date;
         endDate?: Date;
         compensation?: number;
+        valuation?: number;
+        discount?: number;
+        investmentAmount?: number;
+        interestRate?: number;
+        maturityDate?: Date;
     };
     content: string; // The core text body of the agreement
     status: AgreementStatus;
@@ -52,6 +57,11 @@ const AgreementSchema = new Schema<IAgreement>(
             startDate: { type: Date },
             endDate: { type: Date },
             compensation: { type: Number },
+            valuation: { type: Number },
+            discount: { type: Number },
+            investmentAmount: { type: Number },
+            interestRate: { type: Number },
+            maturityDate: { type: Date },
         },
         content: { type: String, required: true },
         status: { type: String, enum: ['draft', 'sent', 'signed', 'active', 'disputed', 'completed'], default: 'draft' },
