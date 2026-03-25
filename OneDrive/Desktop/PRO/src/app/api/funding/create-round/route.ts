@@ -123,7 +123,14 @@ export async function GET(request: NextRequest) {
     if (status) query.status = status;
 
     const rounds = await FundingRound.find(query)
-      .populate('startupId', 'name industry stage logo')
+      .populate({
+        path: 'startupId',
+        select: 'name industry stage logo founderId',
+        populate: {
+          path: 'founderId',
+          select: '_id name email'
+        }
+      })
       .populate('investors.investorId', 'name email avatar')
       .sort({ createdAt: -1 })
       .lean();

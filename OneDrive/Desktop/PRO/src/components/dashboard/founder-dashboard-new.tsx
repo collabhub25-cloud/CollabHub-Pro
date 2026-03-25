@@ -53,8 +53,8 @@ export function FounderDashboardNew() {
       const [startupsRes, applicationsRes, searchTalentRes, searchInvestorsRes, fundingRes, notificationsRes, milestonesRes] = await Promise.all([
         apiFetch('/api/startups'),
         apiFetch('/api/applications/received'),
-        apiFetch('/api/users?role=talent&limit=5'),
-        apiFetch('/api/users?role=investor&limit=5'),
+        apiFetch('/api/search/talents?limit=5'),
+        apiFetch('/api/search/investors?limit=5'),
         apiFetch('/api/funding/create-round'),
         apiFetch('/api/notifications?limit=10'),
         apiFetch('/api/milestones'),
@@ -71,8 +71,8 @@ export function FounderDashboardNew() {
       const startups = startupsData.startups || startupsData || [];
       const startup = Array.isArray(startups) ? startups[0] : startups;
       const appList = Array.isArray(applications) ? applications : applications.applications || [];
-      const talentList = Array.isArray(talentData) ? talentData : talentData.users || [];
-      const investorList = Array.isArray(investorData) ? investorData : investorData.users || [];
+      const talentList = Array.isArray(talentData) ? talentData : talentData.talents || [];
+      const investorList = Array.isArray(investorData) ? investorData : investorData.investors || [];
       const rounds = fundingData.rounds || [];
       const notifications = notifData.notifications || [];
       const milestonesList = milestonesData.milestones || [];

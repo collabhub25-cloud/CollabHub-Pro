@@ -32,7 +32,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 
-type SearchType = 'founders' | 'talents' | 'investors';
+type SearchType = 'startups' | 'founders' | 'talents' | 'investors';
 
 interface Role {
   _id: string;
@@ -96,7 +96,8 @@ export function SearchPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
-  const [activeTab, setActiveTabState] = useState<SearchType>('founders');
+  const isInvestor = user?.role === 'investor';
+  const [activeTab, setActiveTabState] = useState<SearchType>(isInvestor ? 'startups' : 'founders');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -142,7 +143,7 @@ export function SearchPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setResults(data.founders || data.talents || data.investors || []);
+        setResults(data.startups || data.founders || data.talents || data.investors || []);
         setTotalPages(data.pagination.pages);
         setPage(pageNum);
       }
@@ -238,6 +239,10 @@ export function SearchPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
+          <TabsTrigger value="startups" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Startups
+          </TabsTrigger>
           <TabsTrigger value="founders" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Founders
@@ -287,8 +292,8 @@ export function SearchPage() {
                   </ScrollArea>
                 </div>
 
-                {/* Stage Filter (for Founders) */}
-                {activeTab === 'founders' && (
+                {/* Stage Filter (for Startups and Founders) */}
+                {(activeTab === 'founders' || activeTab === 'startups') && (
                   <>
                     <div className="space-y-3">
                       <Label>Startup Stage</Label>
@@ -373,7 +378,7 @@ export function SearchPage() {
                                   Level {result.verificationLevel}
                                 </Badge>
                               )}
-                              {!result.isActive && activeTab === 'founders' && (
+                              {!result.isActive && (activeTab === 'founders' || activeTab === 'startups') && (
                                 <Badge variant="outline" className="text-xs text-yellow-600">
                                   Inactive
                                 </Badge>
@@ -415,8 +420,8 @@ export function SearchPage() {
                               ))}
                             </div>
 
-                            {/* Roles available for founders */}
-                            {activeTab === 'founders' && result.rolesNeeded && result.rolesNeeded.length > 0 && (
+                            {/* Roles available for Founders/Startups */}
+                            {(activeTab === 'founders' || activeTab === 'startups') && result.rolesNeeded && result.rolesNeeded.length > 0 && (
                               <div className="mt-3">
                                 <p className="text-xs text-muted-foreground mb-1">Open Roles:</p>
                                 <div className="flex flex-wrap gap-1">
@@ -429,7 +434,7 @@ export function SearchPage() {
                               </div>
                             )}
 
-                            {activeTab === 'founders' && result.founderId && (
+                            {(activeTab === 'founders' || activeTab === 'startups') && result.founderId && (
                               <p className="text-xs text-muted-foreground mt-2">
                                 Founded by {result.founderId.name}
                               </p>
@@ -446,8 +451,8 @@ export function SearchPage() {
                           </div>
                           <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
 
-                            {/* Apply button for Talent viewing Founders */}
-                            {activeTab === 'founders' && isTalent && user?._id !== result.founderId?._id && (
+                            {/* Apply button for Talent viewing Founders/Startups */}
+                            {(activeTab === 'founders' || activeTab === 'startups') && isTalent && user?._id !== result.founderId?._id && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -481,7 +486,7 @@ export function SearchPage() {
                             )}
 
                             {/* Alliance button for Founders - connect with founder */}
-                            {activeTab === 'founders' && result.founderId && user?._id !== result.founderId?._id && (
+                            {(activeTab === 'founders' || activeTab === 'startups') && result.founderId && user?._id !== result.founderId?._id && (
                               <AllianceButton
                                 targetUserId={result.founderId._id}
                                 compact={true}
