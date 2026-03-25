@@ -612,7 +612,9 @@ export default function StartupPage({
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{member.name}</p>
-                                            <p className="text-xs uppercase tracking-wider font-semibold mt-0.5 text-gray-500 dark:text-gray-400">{member.role}</p>
+                                            <p className="text-xs uppercase tracking-wider font-semibold mt-0.5 text-gray-500 dark:text-gray-400">
+                                                {member.skills?.length > 0 ? member.skills.slice(0, 2).join(' • ') : member.role}
+                                            </p>
                                         </div>
                                     </button>
                                 ))}
@@ -857,9 +859,15 @@ export default function StartupPage({
                                                 ))}
                                             </div>
                                         </div>
-                                        {agreement.terms && (
+                                        {agreement.terms && Object.keys(agreement.terms).length > 0 && (
                                             <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{agreement.terms}</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {Object.entries(agreement.terms).map(([key, value]) => (
+                                                        <span key={key} className="text-xs bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded border border-gray-100 dark:border-gray-700">
+                                                            <strong className="text-gray-700 dark:text-gray-300 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</strong> {String(value)}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
