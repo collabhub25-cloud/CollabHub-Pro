@@ -74,6 +74,8 @@ export default function StartupPage({
     const [appsLoading, setAppsLoading] = useState(false);
     const [agreements, setAgreements] = useState<any[]>([]);
     const [agreementsLoading, setAgreementsLoading] = useState(false);
+    const [milestones, setMilestones] = useState<any[]>([]);
+    const [milestonesLoading, setMilestonesLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -210,6 +212,26 @@ export default function StartupPage({
         };
         fetchAgreements();
     }, [activeTab, id, isFounder]);
+
+    // Fetch milestones when Milestones tab is active
+    useEffect(() => {
+        if (activeTab !== 'milestones') return;
+        const fetchMilestones = async () => {
+            setMilestonesLoading(true);
+            try {
+                const res = await fetch(`/api/milestones?startupId=${id}`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    setMilestones(data.milestones || []);
+                }
+            } catch (err) {
+                console.error('Error fetching milestones:', err);
+            } finally {
+                setMilestonesLoading(false);
+            }
+        };
+        fetchMilestones();
+    }, [activeTab, id]);
 
     const handleUpdateApplication = async (appId: string, status: string) => {
         try {
@@ -733,10 +755,53 @@ export default function StartupPage({
                 {activeTab === 'milestones' && (
                     <div className="space-y-4">
                         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Milestones</h2>
-                        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 text-center shadow-sm">
-                            <Target className="h-8 w-8 mx-auto text-gray-300 dark:text-gray-600 mb-2" />
-                            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Milestones for this startup will appear here.{isFounder ? ' Create milestones to track deliverables.' : ''}</p>
-                        </div>
+                        {milestonesLoading ? (
+                            <div className="flex justify-center py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                            </div>
+                        ) : milestones.length === 0 ? (
+                            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 text-center shadow-sm">
+                                <Target className="h-8 w-8 mx-auto text-gray-300 dark:text-gray-600 mb-2" />
+                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No milestones yet.{isFounder ? ' Create milestones to track deliverables.' : ''}</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {milestones.map((milestone: any) => (
+                                    <div key={milestone._id} className="flex items-center justify-between px-5 py-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-200">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                                                milestone.status === 'completed' ? 'bg-green-50 dark:bg-green-900/20 text-green-600' :
+                                                milestone.status === 'in_progress' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' :
+                                                'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                                            }`}>
+                                                {milestone.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> :
+                                                 milestone.status === 'in_progress' ? <Clock className="h-5 w-5" /> :
+                                                 <Target className="h-5 w-5" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{milestone.title}</p>
+                                                {milestone.description && (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-md truncate">{milestone.description}</p>
+                                                )}
+                                                {milestone.dueDate && (
+                                                    <p className="text-xs text-gray-400 mt-1">Due: {new Date(milestone.dueDate).toLocaleDateString()}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`text-xs px-2.5 py-1 rounded-lg capitalize font-semibold ${
+                                                milestone.status === 'completed' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' :
+                                                milestone.status === 'in_progress' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' :
+                                                'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                                            }`}>{(milestone.status || 'pending').replace('_', ' ')}</span>
+                                            {milestone.amount > 0 && (
+                                                <p className="text-xs font-mono mt-1 text-gray-500">₹{milestone.amount?.toLocaleString()}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -757,7 +822,7 @@ export default function StartupPage({
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2">
                                 {agreements.map((agreement: any) => (
-                                    <div key={agreement._id} className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                                    <div key={agreement._id} className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
@@ -765,7 +830,9 @@ export default function StartupPage({
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-gray-900 dark:text-gray-100">{agreement.type} Agreement</h3>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(agreement.createdAt).toLocaleDateString()}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Signed on {new Date(agreement.signedAt || agreement.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
@@ -778,14 +845,23 @@ export default function StartupPage({
                                         </div>
                                         <div className="space-y-2 mt-4">
                                             <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Parties</p>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-col gap-1.5">
                                                 {agreement.parties?.map((party: any) => (
-                                                    <div key={party._id} className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 border border-white dark:border-gray-900 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300" title={party.name}>
-                                                        {party.name?.charAt(0) || '?'}
+                                                    <div key={party._id} className="flex items-center gap-2">
+                                                        <div className="h-7 w-7 rounded-full bg-gray-100 dark:bg-gray-800 border border-white dark:border-gray-900 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 shrink-0">
+                                                            {party.name?.charAt(0) || '?'}
+                                                        </div>
+                                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{party.name || 'Unknown'}</span>
+                                                        <span className="text-xs text-gray-400 capitalize">({party.role || 'party'})</span>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
+                                        {agreement.terms && (
+                                            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{agreement.terms}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

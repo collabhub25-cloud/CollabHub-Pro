@@ -293,7 +293,7 @@ export function AllianceButton({
 
     case 'none':
     default:
-      const isLocked = (user?.verificationLevel || 0) < 2;
+      const isLocked = (user?.verificationLevel || 0) < 1;
       return (
         <TooltipProvider>
           <Tooltip>

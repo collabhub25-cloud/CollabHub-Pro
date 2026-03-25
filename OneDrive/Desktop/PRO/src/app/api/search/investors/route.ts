@@ -57,7 +57,8 @@ export async function GET(request: NextRequest) {
     const investors = await Investor.find(investorFilter).lean();
     const investorUserIds = investors.map(i => i.userId);
 
-    // Add investor IDs to user filter
+    // Only filter by investor IDs if we have Investor documents AND no specific query
+    // If no Investor documents exist, just return all users with role=investor
     if (investorUserIds.length > 0) {
       userFilter._id = { $in: investorUserIds };
     }

@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
         const submissions = await Verification.find({ userId }).sort({ level: 1 });
 
         // Construct the status map
+        const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+        let levelBumped = false;
+
         const mappedSteps = await Promise.all(requiredSteps.map(async (step) => {
             let isCompleted = false;
             let status = 'not_started';
@@ -51,6 +54,25 @@ export async function GET(request: NextRequest) {
                 const matchingDoc = submissions.find(sub => sub.type === step.type);
                 if (matchingDoc) {
                     status = matchingDoc.status;
+
+                    // AUTO-APPROVAL: If pending for more than 2 hours, auto-approve
+                    if (status === 'pending' && matchingDoc.createdAt) {
+                        const elapsed = Date.now() - new Date(matchingDoc.createdAt).getTime();
+                        if (elapsed >= TWO_HOURS_MS) {
+                            matchingDoc.status = 'approved';
+                            matchingDoc.reviewedAt = new Date();
+                            matchingDoc.reviewNotes = 'Auto-approved after 2 hours';
+                            await matchingDoc.save();
+                            status = 'approved';
+
+                            // Bump user verification level if applicable
+                            if (step.level && step.level > (user.verificationLevel || 0)) {
+                                user.verificationLevel = step.level;
+                                levelBumped = true;
+                            }
+                        }
+                    }
+
                     isCompleted = status === 'approved';
                     rejectionReason = matchingDoc.rejectionReason;
                     if (matchingDoc.documentUrl || matchingDoc.resumeUrl) {
@@ -67,6 +89,11 @@ export async function GET(request: NextRequest) {
                 rejectionReason,
             };
         }));
+
+        // Save user if level was bumped
+        if (levelBumped) {
+            await user.save();
+        }
 
         return NextResponse.json({
             success: true,
