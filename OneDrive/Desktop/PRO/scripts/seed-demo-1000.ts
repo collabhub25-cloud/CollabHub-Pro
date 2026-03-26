@@ -78,7 +78,7 @@ async function seed() {
   const talents: any[] = [];
 
   // Fetch existing users to include in relationships
-  const existingUsers = await User.find({}).lean();
+  const existingUsers = (await User.find({}).lean()) as any[];
   for (const eu of existingUsers) {
     if (eu.role === 'founder') founders.push(eu._id);
     else if (eu.role === 'investor') investors.push(eu._id);
@@ -89,7 +89,7 @@ async function seed() {
   console.log(`👤 Generating 1000 new random users...`);
   
   // Create 1000 users exactly
-  const ops = [];
+  const ops: any[] = [];
   for (let i = 0; i < TOTAL_USERS; i++) {
     const roleRnd = Math.random();
     let role = 'founder';
@@ -127,7 +127,7 @@ async function seed() {
   console.log(`   ✅ Inserted ${userResult.insertedCount} custom users.\n`);
 
   // Re-fetch all users to map correctly
-  const allGenerated = await User.find({ email: /.*demo\.alloysphere\.io.*/ }).lean();
+  const allGenerated = (await User.find({ email: /.*demo\.alloysphere\.io.*/ }).lean()) as any[];
   for (const gu of allGenerated) {
     if (gu.role === 'founder') founders.push(gu._id);
     else if (gu.role === 'investor') investors.push(gu._id);
@@ -140,7 +140,7 @@ async function seed() {
 
   // ── 2. NEW USER VERIFICATIONS ──
   console.log('🔒 Establishing verifications for new users...');
-  const vOps = [];
+  const vOps: any[] = [];
   for (const u of allGenerated) {
     vOps.push({ insertOne: { document: { userId: u._id, role: u.role, type: 'profile', level: 0, status: 'approved', submittedAt: daysAgo(35), verifiedAt: daysAgo(30) } } });
     vOps.push({ insertOne: { document: { userId: u._id, role: u.role, type: 'kyc-id', level: 1, status: 'approved', submittedAt: daysAgo(35), verifiedAt: daysAgo(30) } } });
@@ -150,7 +150,7 @@ async function seed() {
 
   // ── 3. CREATE STARTUPS (1 PER FOUNDER) ──
   console.log('🏢 Creating exactly 1 startup for each founder...');
-  const startupOps = [];
+  const startupOps: any[] = [];
   
   // We only run creation on new founders to avoid breaking existing setups, but we do give each new founder 1 startup
   for (const fId of newFounderIds) {
@@ -180,12 +180,12 @@ async function seed() {
     });
   }
   await Startup.bulkWrite(startupOps);
-  const allStartups = await Startup.find({}).lean();
+  const allStartups = (await Startup.find({}).lean()) as any[];
   console.log(`   ✅ Startups synchronized. Total globally: ${allStartups.length}\n`);
 
   // ── 4. INVESTOR PROFILES & DEAL FLOW ──
   console.log('💼 Building investor portfolios...');
-  const iOps = [];
+  const iOps: any[] = [];
   
   for (const invId of newInvestorIds) {
     iOps.push({
@@ -205,9 +205,9 @@ async function seed() {
 
   console.log('📈 Distributing investments randomly globally...');
   // Randomly distribute investments
-  const investmentOps = [];
-  const fundingRoundOps = [];
-  const agreementOps = [];
+  const investmentOps: any[] = [];
+  const fundingRoundOps: any[] = [];
+  const agreementOps: any[] = [];
   
   for (let s of allStartups) {
     // 30% of startups have funding
@@ -216,7 +216,7 @@ async function seed() {
       const selectedInvIds = faker.helpers.arrayElements(investors, invCount);
       const totalRaise = faker.number.int({min: 2, max: 20}) * 1000000;
       
-      const invShares = [];
+      const invShares: any[] = [];
       for(const invId of selectedInvIds) {
           const invAmt = totalRaise / invCount;
           
@@ -272,7 +272,7 @@ async function seed() {
 
   // ── 5. MILESTONES ──
   console.log('🏁 Creating milestones for startups...');
-  const milestoneOps = [];
+  const milestoneOps: any[] = [];
   for (let s of allStartups) {
       milestoneOps.push({
           insertOne: { document: { startupId: s._id, title: 'Platform Launch', description: 'Launch v1', amount: 500000, dueDate: daysAgo(-15), status: 'in_progress', paymentStatus: 'pending' } }
@@ -286,7 +286,7 @@ async function seed() {
 
   // ── 5.5. TALENT NDAS & AGREEMENTS ──
   console.log('📄 Creating Talent NDAs & Work Agreements...');
-  const ndaOps = [];
+  const ndaOps: any[] = [];
   for(let i=0; i<500; i++) {
      if(talents.length === 0 || allStartups.length === 0) break;
      const s = faker.helpers.arrayElement(allStartups);
@@ -315,9 +315,9 @@ async function seed() {
 
   // ── 6. ALLIANCES & MESSAGES ──
   console.log('💬 Establishing chat histories & alliances globally...');
-  const allianceOps = [];
-  const conversationOps = [];
-  const messageOps = [];
+  const allianceOps: any[] = [];
+  const conversationOps: any[] = [];
+  const messageOps: any[] = [];
 
   // Random 2000 alliances globally
   for(let i=0; i<2000; i++) {
