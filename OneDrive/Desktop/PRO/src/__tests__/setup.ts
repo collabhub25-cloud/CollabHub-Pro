@@ -29,7 +29,6 @@ vi.mock('next/navigation', () => ({
 // ============================================
 vi.mock('next/image', () => ({
   default: (props: Record<string, unknown>) => {
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
     const { fill, priority, ...rest } = props;
     return `<img ${Object.entries(rest).map(([k, v]) => `${k}="${v}"`).join(' ')} />`;
   },
@@ -38,6 +37,7 @@ vi.mock('next/image', () => ({
 // ============================================
 // MOCK: next/link
 // ============================================
+/* eslint-disable @typescript-eslint/no-require-imports */
 vi.mock('next/link', () => {
   const React = require('react');
   return {

@@ -15,6 +15,7 @@ async function connectDB() {
 }
 
 // ── Import all models ──
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('../src/lib/models/user.model');
 require('../src/lib/models/startup.model');
 require('../src/lib/models/agreement.model');

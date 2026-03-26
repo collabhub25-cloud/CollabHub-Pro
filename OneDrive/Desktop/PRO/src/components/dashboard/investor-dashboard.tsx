@@ -179,7 +179,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (roundsRes.ok) {
         const data = await roundsRes.json();
-        setFundingRounds(data.rounds || []);
+        setFundingRounds(Array.isArray(data.rounds) ? data.rounds : []);
+      } else {
+        setFundingRounds([]);
       }
 
       // Fetch user investments
@@ -188,7 +190,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (investmentsRes.ok) {
         const data = await investmentsRes.json();
-        setInvestments(data.investments || []);
+        setInvestments(Array.isArray(data.investments) ? data.investments : []);
+      } else {
+        setInvestments([]);
       }
 
       // Fetch access requests (investor's own requests)
@@ -197,7 +201,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (accessRes.ok) {
         const data = await accessRes.json();
-        setAccessRequests(data.requests || []);
+        setAccessRequests(Array.isArray(data.requests) ? data.requests : []);
+      } else {
+        setAccessRequests([]);
       }
 
       // Fetch favorites
@@ -215,11 +221,17 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
-        setStartups(data.startups || []);
+        setStartups(Array.isArray(data.startups) ? data.startups : []);
+      } else {
+        setStartups([]);
       }
     } catch (error) {
       console.error('Error fetching investor data:', error);
-      toast.error('Failed to load data');
+      toast.error('Failed to load data safely');
+      setFundingRounds([]);
+      setInvestments([]);
+      setAccessRequests([]);
+      setStartups([]);
     }
 
     setLoading(false);
@@ -1284,7 +1296,6 @@ function AgreementsSection({ }) {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAgreements();
   }, [fetchAgreements]);
 

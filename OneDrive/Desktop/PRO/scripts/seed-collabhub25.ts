@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('dotenv').config({ path: '.env.local' });
 const { connectDB } = require('../src/lib/mongodb');
 const { User, Startup, FundingRound, Alliance } = require('../src/lib/models');

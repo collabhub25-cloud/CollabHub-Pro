@@ -12,7 +12,7 @@ import {
   LayoutDashboard, Search, Building2, Users, Target, FileText,
   CreditCard, TrendingUp, MessageSquare, Shield, Settings,
   LogOut, ChevronLeft, Briefcase, Handshake, DollarSign,
-  AlertTriangle, BarChart3, Wallet
+  AlertTriangle, BarChart3, Wallet, Trophy
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -42,6 +42,7 @@ const getNavigation = (role: string) => {
       workspace: [
         { id: 'startups', label: 'My Startup', icon: Building2 },
         { id: 'milestones', label: 'Milestones', icon: Target },
+        { id: 'achievements', label: 'Achievements', icon: Trophy },
       ],
       finance: [
         { id: 'payments', label: 'Funding', icon: CreditCard },

@@ -836,9 +836,12 @@ function InvestmentProfileSection({ userId }: { userId: string }) {
         if (res.ok) {
           const json = await res.json();
           setData(json);
+        } else {
+          setData(null);
         }
       } catch (err) {
         console.error('Investment fetch error:', err);
+        setData(null);
       } finally {
         setLoading(false);
       }
@@ -847,7 +850,7 @@ function InvestmentProfileSection({ userId }: { userId: string }) {
   }, [userId]);
 
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
-  if (!data) return <p className="text-sm text-muted-foreground py-4">No investment data available.</p>;
+  if (!data || !data.portfolio) return <p className="text-sm text-muted-foreground py-4">No investment data available.</p>;
 
   return (
     <div className="space-y-6">

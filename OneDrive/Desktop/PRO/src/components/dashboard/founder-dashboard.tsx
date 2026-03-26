@@ -16,7 +16,7 @@ import {
   Plus, Building2, Users, CheckCircle2, Clock,
   Briefcase, Target, Zap, Loader2, Edit, Trash2,
   FileText, AlertCircle, DollarSign, Lock, ExternalLink,
-  ChevronRight, TrendingUp, Presentation, Check, Shield, Star
+  ChevronRight, TrendingUp, Presentation, Check, Shield, Star, Trophy, Eye, EyeOff
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
@@ -154,6 +154,13 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
 
+  // Achievements
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [achievementsLoading, setAchievementsLoading] = useState(false);
+  const [showCreateAchievement, setShowCreateAchievement] = useState(false);
+  const [newAchievement, setNewAchievement] = useState({ title: '', description: '', type: 'milestone', visibility: 'public', startupId: '' });
+  const [achievementSubmitting, setAchievementSubmitting] = useState(false);
+
   // Compute dynamic chart data from real user data
   const dynamicChartData = React.useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -272,12 +279,38 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   useEffect(() => {
     const loadData = async () => {
-      if (activeTab === 'dashboard' || activeTab === 'startups' || activeTab === 'applications' || activeTab === 'milestones' || activeTab === 'funding' || activeTab === 'agreements') {
+      if (activeTab === 'dashboard' || activeTab === 'startups' || activeTab === 'applications' || activeTab === 'milestones' || activeTab === 'funding' || activeTab === 'agreements' || activeTab === 'achievements') {
         await fetchData();
       }
     };
     loadData();
   }, [activeTab, fetchData]);
+
+  // Fetch achievements
+  const fetchAchievements = useCallback(async () => {
+    if (startups.length === 0) return;
+    setAchievementsLoading(true);
+    try {
+      const allAchievements: any[] = [];
+      for (const s of startups) {
+        const res = await fetch(`/api/achievements?startupId=${s._id}`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          allAchievements.push(...(data.achievements || []).map((a: any) => ({ ...a, startupName: s.name })));
+        }
+      }
+      setAchievements(allAchievements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    } catch {
+      console.error('Error fetching achievements');
+    }
+    setAchievementsLoading(false);
+  }, [startups]);
+
+  useEffect(() => {
+    if (activeTab === 'achievements' && startups.length > 0) {
+      fetchAchievements();
+    }
+  }, [activeTab, startups, fetchAchievements]);
 
   // Fetch funding rounds
   const fetchFundingRounds = useCallback(async () => {
@@ -1478,6 +1511,161 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             )}
           </TabsContent>
         </Tabs>
+      </div>
+    );
+  }
+
+  // Achievements Tab
+  if (activeTab === 'achievements') {
+    const typeIcons: Record<string, any> = {
+      funding: '💰',
+      product: '🚀',
+      growth: '📈',
+      milestone: '🎯',
+    };
+    const typeColors: Record<string, string> = {
+      funding: 'from-green-400/20 to-green-600/10 border-green-200 dark:border-green-800/30',
+      product: 'from-blue-400/20 to-blue-600/10 border-blue-200 dark:border-blue-800/30',
+      growth: 'from-purple-400/20 to-purple-600/10 border-purple-200 dark:border-purple-800/30',
+      milestone: 'from-orange-400/20 to-orange-600/10 border-orange-200 dark:border-orange-800/30',
+    };
+
+    const handleCreateAchievement = async () => {
+      if (!newAchievement.startupId && startups.length > 0) {
+        newAchievement.startupId = startups[0]._id;
+      }
+      if (!newAchievement.startupId || !newAchievement.title || !newAchievement.description) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+      setAchievementSubmitting(true);
+      try {
+        const res = await fetch('/api/achievements', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newAchievement),
+        });
+        if (res.ok) {
+          toast.success('Achievement posted!');
+          setShowCreateAchievement(false);
+          setNewAchievement({ title: '', description: '', type: 'milestone', visibility: 'public', startupId: '' });
+          fetchAchievements();
+        } else {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to create achievement');
+        }
+      } catch {
+        toast.error('Something went wrong');
+      }
+      setAchievementSubmitting(false);
+    };
+
+    return (
+      <div className="space-y-6 page-enter">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold flex items-center gap-2"><Trophy className="h-5 w-5" style={{ color: 'var(--sea-green)' }} /> Achievements</h1>
+            <p className="text-sm text-muted-foreground mt-1">Celebrate and share your startup milestones</p>
+          </div>
+          <Button onClick={() => setShowCreateAchievement(true)} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" /> Post Achievement
+          </Button>
+        </div>
+
+        {achievementsLoading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        ) : achievements.length === 0 ? (
+          <Card className="border-dashed bg-white/5 dark:bg-black/20 backdrop-blur-xl border-white/10">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Trophy className="h-12 w-12 text-muted-foreground/30 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No achievements yet</h3>
+              <p className="text-muted-foreground text-center text-sm mb-4">Post your first achievement to track and celebrate startup progress</p>
+              <Button onClick={() => setShowCreateAchievement(true)} size="sm" variant="outline">Post Achievement</Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {achievements.map((ach: any) => (
+              <div key={ach._id} className={`p-5 rounded-xl border bg-gradient-to-br ${typeColors[ach.type] || typeColors.milestone} transition-all hover:-translate-y-0.5 hover:shadow-lg`}>
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-2xl">{typeIcons[ach.type] || '🎯'}</span>
+                  <div className="flex items-center gap-2">
+                    {ach.visibility === 'private' && <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+                    <Badge variant="outline" className="text-[10px] capitalize">{ach.type}</Badge>
+                  </div>
+                </div>
+                <h3 className="font-bold text-sm mb-1">{ach.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{ach.description}</p>
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-black/5 dark:border-white/5">
+                  <span className="text-[10px] text-muted-foreground font-medium">{ach.startupName}</span>
+                  <span className="text-[10px] text-muted-foreground">{new Date(ach.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Create Achievement Dialog */}
+        <Dialog open={showCreateAchievement} onOpenChange={setShowCreateAchievement}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <DialogTitle>Post Achievement</DialogTitle>
+              <DialogDescription>Share a milestone or accomplishment with your network</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {startups.length > 1 && (
+                <div className="space-y-2">
+                  <Label>Startup</Label>
+                  <Select value={newAchievement.startupId || startups[0]?._id} onValueChange={(v) => setNewAchievement({ ...newAchievement, startupId: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {startups.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Title *</Label>
+                <Input value={newAchievement.title} onChange={e => setNewAchievement({ ...newAchievement, title: e.target.value })} placeholder="e.g., Secured $500K in Seed Funding" />
+              </div>
+              <div className="space-y-2">
+                <Label>Description *</Label>
+                <Textarea value={newAchievement.description} onChange={e => setNewAchievement({ ...newAchievement, description: e.target.value })} placeholder="Describe this achievement..." rows={3} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <Select value={newAchievement.type} onValueChange={(v) => setNewAchievement({ ...newAchievement, type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="funding">💰 Funding</SelectItem>
+                      <SelectItem value="product">🚀 Product</SelectItem>
+                      <SelectItem value="growth">📈 Growth</SelectItem>
+                      <SelectItem value="milestone">🎯 Milestone</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Visibility</Label>
+                  <Select value={newAchievement.visibility} onValueChange={(v) => setNewAchievement({ ...newAchievement, visibility: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCreateAchievement(false)}>Cancel</Button>
+              <Button onClick={handleCreateAchievement} disabled={achievementSubmitting}>
+                {achievementSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

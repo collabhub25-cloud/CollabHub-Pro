@@ -6,7 +6,8 @@ import { useAuthStore } from '@/store';
 import {
     ArrowLeft, Building2, Users, Globe, Loader2, Briefcase,
     TrendingUp, FileText, Target, DollarSign, Settings, Edit3,
-    Check, X, BadgeCheck, Heart, Send, Clock, CheckCircle2, Lock
+    Check, X, BadgeCheck, Heart, Send, Clock, CheckCircle2, Lock,
+    Pencil, Download, AlertTriangle
 } from 'lucide-react';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 import { toast } from 'sonner';
@@ -43,6 +44,7 @@ interface StartupData {
         name: string;
         role: string;
         avatar?: string;
+        skills?: string[];
     }>;
     rolesNeeded?: Array<{
         title: string;
@@ -53,6 +55,17 @@ interface StartupData {
         cashAmount?: number;
         status: string;
     }>;
+}
+
+interface TeamMemberData {
+    _id: string;
+    userId: { _id: string; name: string; role: string; avatar?: string; skills?: string[] };
+    startupId: string;
+    role: string;
+    skills: string[];
+    equity: number;
+    status: 'active' | 'inactive';
+    joinedAt: string;
 }
 
 
@@ -78,6 +91,15 @@ export default function StartupPage({
     const [milestonesLoading, setMilestonesLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Team member states
+    const [teamMembers, setTeamMembers] = useState<TeamMemberData[]>([]);
+    const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+    const [editMemberData, setEditMemberData] = useState({ role: '', equity: 0, status: 'active' as string });
+    const [savingMember, setSavingMember] = useState(false);
+
+    // Agreement detail modal
+    const [selectedAgreement, setSelectedAgreement] = useState<any | null>(null);
 
     // Investor action states
     const [isFavorite, setIsFavorite] = useState(false);
@@ -125,6 +147,7 @@ export default function StartupPage({
                 setStartup(data.startup);
                 setFundingRounds(data.fundingRounds || []);
                 setAgreementCount(data.agreementCount || 0);
+                setTeamMembers(data.teamMembers || []);
             } catch (err: any) {
                 console.error('Startup fetch error:', err);
                 setError(err.message);
@@ -339,6 +362,55 @@ export default function StartupPage({
             toast.error('An error occurred');
         }
         setSubmitting(false);
+    };
+
+    const handleSaveTeamMember = async (memberId: string) => {
+        setSavingMember(true);
+        try {
+            const res = await fetch(`/api/team/${memberId}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editMemberData),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setTeamMembers(prev => prev.map(m => m._id === memberId ? data.member : m));
+                setEditingMemberId(null);
+                toast.success('Team member updated!');
+            } else {
+                toast.error('Failed to update team member');
+            }
+        } catch {
+            toast.error('An error occurred');
+        }
+        setSavingMember(false);
+    };
+
+    const downloadAgreementSnapshot = (agreement: any) => {
+        const lines = [
+            `AGREEMENT SNAPSHOT`,
+            `==================`,
+            `Type: ${agreement.type}`,
+            `Status: ${agreement.status}`,
+            `Created: ${new Date(agreement.createdAt).toLocaleString()}`,
+            ``,
+            `--- PARTIES ---`,
+            ...(agreement.parties || []).map((p: any) => `${p.name || 'Unknown'} (${p.role || 'party'})`),
+            ``,
+            `--- TERMS ---`,
+            ...Object.entries(agreement.terms || {}).map(([k, v]) => `${k}: ${v}`),
+            ``,
+            agreement.content ? `--- CONTENT ---\n${agreement.content}` : '',
+        ].filter(Boolean).join('\n');
+        const blob = new Blob([lines], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `agreement-${agreement._id}-snapshot.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Snapshot downloaded');
     };
 
     if (loading) {
@@ -599,33 +671,148 @@ export default function StartupPage({
                 {activeTab === 'team' && (
                     <div className="space-y-6">
                         <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Team ({startup.team?.length || 0})</h2>
-                        {startup.team && startup.team.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {startup.team.map((member: any) => (
-                                    <button
-                                        key={member._id}
-                                        onClick={() => router.push(`/profile/${member._id}`)}
-                                        className="flex items-center gap-4 px-4 py-4 rounded-xl w-full text-left bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800/80 border border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-                                    >
-                                        <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 dark:from-blue-900/50 dark:to-blue-800/30 dark:text-blue-300">
-                                            {member.name?.charAt(0) || '?'}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{member.name}</p>
-                                            <p className="text-xs uppercase tracking-wider font-semibold mt-0.5 text-gray-500 dark:text-gray-400">
-                                                {member.skills?.length > 0 ? member.skills.slice(0, 2).join(' • ') : member.role}
-                                            </p>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-200 dark:border-gray-800 text-center shadow-sm">
-                                <Users className="h-8 w-8 mx-auto text-gray-400 mb-3" />
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No team members yet.</p>
-                            </div>
-                        )}
+                        {(() => {
+                            // Use enriched teamMembers if available, fallback to basic team refs
+                            const hasEnriched = teamMembers.length > 0;
+                            const displayList = hasEnriched ? teamMembers : (startup.team || []).map((m: any) => ({
+                                _id: m._id,
+                                userId: { _id: m._id, name: m.name, role: m.role, avatar: m.avatar, skills: m.skills },
+                                role: '',
+                                skills: m.skills || [],
+                                equity: 0,
+                                status: 'active' as const,
+                                joinedAt: '',
+                                startupId: id,
+                            }));
 
+                            if (displayList.length === 0) {
+                                return (
+                                    <div className="bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-200 dark:border-gray-800 text-center shadow-sm">
+                                        <Users className="h-8 w-8 mx-auto text-gray-400 mb-3" />
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No team members yet.</p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {displayList.map((member: any) => {
+                                        const userInfo = member.userId || member;
+                                        const userId = userInfo._id;
+                                        const isEditing = editingMemberId === member._id;
+
+                                        return (
+                                            <div
+                                                key={member._id}
+                                                className="flex items-center justify-between px-5 py-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                                            >
+                                                <div className="flex items-center gap-4 min-w-0 flex-1">
+                                                    <button onClick={() => router.push(`/profile/${userId}`)} className="shrink-0">
+                                                        <div className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 dark:from-blue-900/50 dark:to-blue-800/30 dark:text-blue-300 hover:ring-2 hover:ring-blue-400 transition-all">
+                                                            {userInfo.name?.charAt(0) || '?'}
+                                                        </div>
+                                                    </button>
+                                                    <div className="min-w-0 flex-1">
+                                                        <button onClick={() => router.push(`/profile/${userId}`)} className="hover:underline">
+                                                            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{userInfo.name}</h3>
+                                                        </button>
+                                                        {isEditing ? (
+                                                            <input
+                                                                value={editMemberData.role}
+                                                                onChange={e => setEditMemberData({ ...editMemberData, role: e.target.value })}
+                                                                className="text-xs mt-0.5 w-full px-2 py-1 rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/20 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-700 dark:text-gray-200"
+                                                                placeholder="e.g., Frontend Developer"
+                                                            />
+                                                        ) : (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
+                                                                {member.role || 'No role assigned'}
+                                                            </p>
+                                                        )}
+                                                        <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                                            {(member.skills?.length > 0 ? member.skills : userInfo.skills || []).slice(0, 3).map((skill: string) => (
+                                                                <span key={skill} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30">
+                                                                    {skill}
+                                                                </span>
+                                                            ))}
+                                                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
+                                                                member.status === 'active'
+                                                                    ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800/30'
+                                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                                                            }`}>
+                                                                {member.status === 'active' ? '● Active' : '○ Inactive'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-right shrink-0 ml-3 flex flex-col items-end gap-1">
+                                                    {isEditing ? (
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex items-center gap-1">
+                                                                <input
+                                                                    type="number"
+                                                                    min={0}
+                                                                    max={100}
+                                                                    value={editMemberData.equity}
+                                                                    onChange={e => setEditMemberData({ ...editMemberData, equity: Number(e.target.value) })}
+                                                                    className="w-16 text-xs px-2 py-1 rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/20 focus:outline-none focus:ring-1 focus:ring-blue-500 text-right text-gray-700 dark:text-gray-200"
+                                                                />
+                                                                <span className="text-xs text-gray-400">%</span>
+                                                            </div>
+                                                            <select
+                                                                value={editMemberData.status}
+                                                                onChange={e => setEditMemberData({ ...editMemberData, status: e.target.value })}
+                                                                className="text-xs w-full px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                                                            >
+                                                                <option value="active">Active</option>
+                                                                <option value="inactive">Inactive</option>
+                                                            </select>
+                                                            <div className="flex gap-1">
+                                                                <button
+                                                                    onClick={() => handleSaveTeamMember(member._id)}
+                                                                    disabled={savingMember}
+                                                                    className="p-1 rounded-md bg-green-100 dark:bg-green-900/20 text-green-600 hover:bg-green-200 transition"
+                                                                >
+                                                                    <Check className="h-3.5 w-3.5" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setEditingMemberId(null)}
+                                                                    className="p-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 transition"
+                                                                >
+                                                                    <X className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{member.equity || 0}% <span className="text-xs font-normal text-gray-400">Equity</span></p>
+                                                            {member.joinedAt && (
+                                                                <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                                                                    Joined {new Date(member.joinedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                                                </p>
+                                                            )}
+                                                            {isFounder && hasEnriched && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setEditingMemberId(member._id);
+                                                                        setEditMemberData({ role: member.role || '', equity: member.equity || 0, status: member.status || 'active' });
+                                                                    }}
+                                                                    className="mt-1 p-1 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+                                                                    title="Edit member"
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
 
@@ -824,7 +1011,11 @@ export default function StartupPage({
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2">
                                 {agreements.map((agreement: any) => (
-                                    <div key={agreement._id} className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+                                    <div
+                                        key={agreement._id}
+                                        onClick={() => setSelectedAgreement(agreement)}
+                                        className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:border-blue-300 dark:hover:border-blue-700 hover:-translate-y-0.5"
+                                    >
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
@@ -964,6 +1155,168 @@ export default function StartupPage({
                     </div>
                 )}
             </div>
+
+            {/* Agreement Detail Modal */}
+            {selectedAgreement && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setSelectedAgreement(null)}>
+                    <div
+                        className="bg-white dark:bg-gray-900 w-full max-w-3xl mx-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-start justify-between shrink-0">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{selectedAgreement.type} Agreement</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    Created {new Date(selectedAgreement.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold ${
+                                    selectedAgreement.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                    selectedAgreement.status === 'signed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                    selectedAgreement.status === 'disputed' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                }`}>
+                                    {selectedAgreement.status}
+                                </span>
+                                <button onClick={() => setSelectedAgreement(null)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                    <X className="h-5 w-5 text-gray-400" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                            {/* PDF Viewer if available */}
+                            {selectedAgreement.pdfSnapshotUrl && (
+                                <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+                                    <iframe src={selectedAgreement.pdfSnapshotUrl} className="w-full h-[400px]" title="Agreement Document" />
+                                </div>
+                            )}
+
+                            {/* Agreement Content */}
+                            {selectedAgreement.content && (
+                                <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
+                                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Agreement Content</h4>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed font-serif">{selectedAgreement.content}</p>
+                                </div>
+                            )}
+
+                            {/* Terms */}
+                            {selectedAgreement.terms && Object.keys(selectedAgreement.terms).length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Agreement Terms</h4>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        {Object.entries(selectedAgreement.terms).map(([key, value]) => (
+                                            <div key={key} className="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700">
+                                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                                <p className="text-sm font-bold mt-1 text-gray-900 dark:text-gray-100">{String(value)}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Parties & Signatures */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Parties & Signatures</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {selectedAgreement.parties?.map((party: any, idx: number) => {
+                                        const sig = selectedAgreement.signedBy?.find((s: any) => s.userId === party._id || s.userId?._id === party._id);
+                                        return (
+                                            <div key={idx} className={`p-4 rounded-xl border ${
+                                                sig ? 'bg-green-50/50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-gray-50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700'
+                                            }`}>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 dark:from-blue-900/50 dark:to-blue-800/30 dark:text-blue-300">
+                                                        {party.name?.charAt(0) || '?'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{party.name}</p>
+                                                        <p className="text-xs text-gray-500 capitalize">{party.role}</p>
+                                                    </div>
+                                                </div>
+                                                {sig ? (
+                                                    <div className="mt-3 space-y-1">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                                                            <span className="text-xs font-medium text-green-600 dark:text-green-400">Signed</span>
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-400">{new Date(sig.signedAt).toLocaleString()}</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="mt-3 flex items-center gap-1.5">
+                                                        <Clock className="h-3.5 w-3.5 text-yellow-500" />
+                                                        <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">Awaiting Signature</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Status Timeline */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-gray-400" /> Status Timeline
+                                </h4>
+                                <div className="space-y-3 ml-1">
+                                    <div className="flex items-start gap-3">
+                                        <div className="h-2.5 w-2.5 rounded-full bg-gray-400 mt-1.5 shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Agreement Created</p>
+                                            <p className="text-xs text-gray-400">{new Date(selectedAgreement.createdAt).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    {selectedAgreement.signedBy?.map((sig: any, i: number) => (
+                                        <div key={i} className="flex items-start gap-3">
+                                            <div className="h-2.5 w-2.5 rounded-full bg-green-400 mt-1.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Signed by party</p>
+                                                <p className="text-xs text-gray-400">{new Date(sig.signedAt).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {selectedAgreement.status === 'active' && (
+                                        <div className="flex items-start gap-3">
+                                            <div className="h-2.5 w-2.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Agreement Active</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {selectedAgreement.status === 'disputed' && (
+                                        <div className="flex items-start gap-3">
+                                            <div className="h-2.5 w-2.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-medium text-red-600">Dispute Filed</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center shrink-0">
+                            <button
+                                onClick={() => downloadAgreementSnapshot(selectedAgreement)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                            >
+                                <Download className="h-4 w-4" /> Download Snapshot
+                            </button>
+                            <button
+                                onClick={() => setSelectedAgreement(null)}
+                                className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 transition shadow-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Access Request Modal */}
             {showAccessModal && (

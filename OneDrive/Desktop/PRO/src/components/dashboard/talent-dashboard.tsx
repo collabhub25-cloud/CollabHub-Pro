@@ -54,6 +54,9 @@ interface Agreement {
   title: string;
   type: string;
   status: string;
+  role?: string;
+  equity?: number;
+  signedAt?: string;
   parties: Array<{ _id: string; name: string; role: string; signedAt?: string }>;
   createdAt: string;
   startupId?: { _id: string; name: string };
@@ -74,6 +77,7 @@ interface TalentDashboardProps {
 }
 
 export function TalentDashboard({ activeTab }: TalentDashboardProps) {
+  const router = useRouter();
   const { user, setUser } = useAuthStore();
   const { setActiveTab: setGlobalTab } = useUIStore();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -768,17 +772,36 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               </Card>
             ) : (
               pendingAgreements.map((agreement) => (
-                <Card key={agreement._id}>
+                <Card 
+                  key={agreement._id}
+                  onClick={() => router.push(`/agreements/${agreement._id}`)}
+                  className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200"
+                >
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{agreement.title}</h3>
-                        <p className="text-sm text-muted-foreground">{agreement.type}</p>
-                        {agreement.startupId && (
-                          <Badge variant="outline" className="mt-2">{agreement.startupId.name}</Badge>
-                        )}
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-4">
+                        <div className="h-10 w-10 mt-1 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <FileText className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-base">{agreement.title || 'Agreement'}</h3>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {agreement.startupId?.name || 'Unknown Startup'} • {agreement.role || 'Team Member'}
+                          </p>
+                          <div className="flex gap-2 mt-2.5">
+                            {agreement.equity && agreement.equity > 0 ? (
+                               <Badge variant="secondary" className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/20">{agreement.equity}% Equity</Badge>
+                            ) : null}
+                            <Badge variant="outline" className="capitalize text-muted-foreground bg-muted/30">{agreement.type?.replace('_', ' ') || 'Standard'}</Badge>
+                          </div>
+                        </div>
                       </div>
-                      <Button>Sign Agreement</Button>
+                      <div className="text-right flex flex-col items-end justify-between h-full min-h-[60px]">
+                        <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 shadow-none border-yellow-500/20">Pending Signature</Badge>
+                        <p className="text-xs text-muted-foreground mt-3">
+                          {new Date(agreement.createdAt || Date.now()).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -794,14 +817,36 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               </Card>
             ) : (
               signedAgreements.map((agreement) => (
-                <Card key={agreement._id}>
+                <Card 
+                  key={agreement._id}
+                  onClick={() => router.push(`/agreements/${agreement._id}`)}
+                  className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200"
+                >
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{agreement.title}</h3>
-                        <p className="text-sm text-muted-foreground">{agreement.type}</p>
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-4">
+                        <div className="h-10 w-10 mt-1 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-base">{agreement.title || 'Agreement'}</h3>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {agreement.startupId?.name || 'Unknown Startup'} • {agreement.role || 'Team Member'}
+                          </p>
+                          <div className="flex gap-2 mt-2.5">
+                            {agreement.equity && agreement.equity > 0 ? (
+                               <Badge variant="secondary" className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/20">{agreement.equity}% Equity</Badge>
+                            ) : null}
+                            <Badge variant="outline" className="capitalize text-muted-foreground bg-muted/30">{agreement.type?.replace('_', ' ') || 'Standard'}</Badge>
+                          </div>
+                        </div>
                       </div>
-                      <Badge className="bg-green-500">Signed</Badge>
+                      <div className="text-right flex flex-col items-end justify-between h-full min-h-[60px]">
+                        <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20 shadow-none border-green-500/20">Signed</Badge>
+                        <p className="text-xs text-muted-foreground mt-3">
+                          {new Date(agreement.signedAt || agreement.createdAt || Date.now()).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

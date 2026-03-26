@@ -10,6 +10,8 @@ export * from './models/funding.model';
 export * from './models/message.model';
 export * from './models/verification.model';
 export * from './models/misc.model';
+export * from './models/team-member.model';
+export * from './models/achievement.model';
 import mongoose, { Schema, Document } from 'mongoose';
 // ============================================
 // TRUST SCORE LOG SCHEMA

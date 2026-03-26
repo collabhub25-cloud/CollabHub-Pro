@@ -14,6 +14,7 @@ async function connectDB() {
 }
 
 // ── Import all models (side-effect imports to register Mongoose schemas) ──
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('../src/lib/models/user.model');
 require('../src/lib/models/startup.model');
 require('../src/lib/models/agreement.model');

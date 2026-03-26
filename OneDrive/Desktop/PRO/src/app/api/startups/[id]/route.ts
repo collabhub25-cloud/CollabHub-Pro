@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
-import { Startup, User, FundingRound, Agreement } from '@/lib/models';
+import { Startup, User, FundingRound, Agreement, TeamMember } from '@/lib/models';
 
 export async function GET(
     request: NextRequest,
@@ -18,7 +18,7 @@ export async function GET(
 
         const startup = await Startup.findById(id)
             .populate('founderId', 'name email role avatar verificationLevel')
-            .populate('team', 'name email role avatar')
+            .populate('team', 'name email role avatar skills')
             .lean();
 
         if (!startup) {
@@ -31,11 +31,18 @@ export async function GET(
 
         const agreementCount = await Agreement.countDocuments({ startupId: id });
 
+        // Fetch enriched team member data
+        const teamMembers = await TeamMember.find({ startupId: id })
+            .populate('userId', 'name email role avatar skills')
+            .sort({ joinedAt: 1 })
+            .lean();
+
         return NextResponse.json({
             success: true,
             startup,
             fundingRounds,
             agreementCount,
+            teamMembers,
         });
     } catch (error) {
         console.error('Startup Fetch Error:', error);
