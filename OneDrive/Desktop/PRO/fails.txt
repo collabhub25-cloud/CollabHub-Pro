@@ -1,0 +1,2 @@
+safeAverage ignores invalid values
+formatNumber formats numbers with commas

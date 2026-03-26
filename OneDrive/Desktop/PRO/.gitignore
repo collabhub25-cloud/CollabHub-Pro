@@ -12,6 +12,12 @@ node_modules
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+*.json
+seed_error.txt
+
 
 # next.js
 /.next/

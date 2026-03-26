@@ -1,0 +1,145 @@
+﻿
+ RUN  v4.1.1 C:/Users/murar/AlloySphere/OneDrive/Desktop/PRO
+
+ Γ¥» src/__tests__/lib/safe-math.test.ts (41 tests | 2 failed) 43ms
+     Γ£ô returns the number when given a valid number 2ms
+     Γ£ô parses valid numeric strings 0ms
+     Γ£ô returns fallback for NaN and Infinity 0ms
+     Γ£ô returns fallback for non-numeric values 0ms
+     Γ£ô uses custom fallback 0ms
+     Γ£ô adds two valid numbers 0ms
+     Γ£ô handles invalid inputs 0ms
+     Γ£ô subtracts two valid numbers 0ms
+     Γ£ô multiplies two valid numbers 1ms
+     Γ£ô returns 0 when one operand is invalid 0ms
+     Γ£ô divides two valid numbers 0ms
+     Γ£ô returns fallback on divide by zero 0ms
+     Γ£ô returns fallback for invalid inputs 0ms
+     Γ£ô calculates percentage correctly 0ms
+     Γ£ô returns fallback when total is zero 0ms
+     Γ£ô calculates average 0ms
+     ├ù ignores invalid values 8ms
+     Γ£ô returns fallback for empty arrays 0ms
+     Γ£ô returns fallback for non-arrays 0ms
+     Γ£ô sums valid numbers 0ms
+     Γ£ô ignores non-finite values 0ms
+     Γ£ô returns fallback for non-array 0ms
+     Γ£ô returns array length 0ms
+     Γ£ô returns 0 for non-array 0ms
+     Γ£ô returns minimum value 0ms
+     Γ£ô returns fallback for empty array 0ms
+     Γ£ô returns maximum value 0ms
+     Γ£ô returns fallback for empty array 0ms
+     Γ£ô formats USD by default 21ms
+     Γ£ô handles invalid input gracefully 0ms
+     ├ù formats numbers with commas 2ms
+     Γ£ô formats with default 1 decimal 0ms
+     Γ£ô formats billions 0ms
+     Γ£ô formats millions 0ms
+     Γ£ô formats thousands 0ms
+     Γ£ô returns raw number under 1000 0ms
+     Γ£ô clamps within range 0ms
+     Γ£ô handles invalid input 0ms
+     Γ£ô clamps between 0 and 100 0ms
+     Γ£ô clamps between 0 and 4, rounded 0ms
+     Γ£ô clamps between 0 and 100 0ms
+node.exe : 
+At C:\Program Files\nod
+ejs\npx.ps1:29 char:3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (:String) [],    
+ RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» 
+Failed Tests 2 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/__tests__/li
+b/safe-math.test.ts > 
+safeAverage > ignores 
+invalid values
+AssertionError: 
+expected 
+13.333333333333334 to 
+be 20 // Object.is 
+equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 20[39m
+[31m+ 
+13.333333333333334[39m
+
+ Γ¥» src/__tests__/lib/
+safe-math.test.ts:132:4
+2
+    130|
+    131|   it('ignores 
+invalid values', () => 
+{
+    132|     expect(saf
+eAverage([10, 'abc', 
+30])).toBe(20);
+       |               
+                       
+    ^
+    133|   });
+    134|
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[1/2]ΓÄ»
+
+ FAIL  src/__tests__/li
+b/safe-math.test.ts > 
+formatNumber > formats 
+numbers with commas
+AssertionError: 
+expected '10,00,000' 
+to be '1,000,000' // 
+Object.is equality
+
+Expected: [32m"1[7m,
+[27m000,000"[39m
+Received: [31m"10[7m,
+[27m00,000"[39m
+
+ Γ¥» src/__tests__/lib/
+safe-math.test.ts:211:3
+5
+    209| describe('form
+atNumber', () => {
+    210|   it('formats 
+numbers with commas', 
+() => {
+    211|     expect(for
+matNumber(1000000)).toB
+e('1,000,000');
+       |               
+                    ^
+    212|     expect(for
+matNumber(0)).toBe('0')
+;
+    213|   });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[2/2]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 39 passed (41)
+   Start at  10:38:19
+   Duration  2.11s (transform 101ms, setup 214ms, import 58ms, tests 43ms, environment 1.52s)
+
