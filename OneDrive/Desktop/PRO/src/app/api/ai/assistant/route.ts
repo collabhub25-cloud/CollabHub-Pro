@@ -3,11 +3,9 @@ import { requireAuth, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_L
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/lib/models';
 import { getSystemPrompt } from '@/lib/ai/system-prompts';
+import { callGemini, sanitizePromptInput } from '@/lib/ai/gemini';
 
 export const runtime = 'nodejs';
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-2.0-flash';
 
 export async function POST(request: NextRequest) {
     try {
@@ -45,53 +43,25 @@ export async function POST(request: NextRequest) {
 
         const systemPrompt = getSystemPrompt({
             role: (user as any).role || 'founder',
-
             verificationLevel: (user as any).verificationLevel,
         });
 
-        if (!GEMINI_API_KEY) {
-            // Fallback: generate contextual response without API
-            const fallbackResponse = generateFallbackResponse(message, (user as any).role);
-            return NextResponse.json({ response: fallbackResponse });
+        const sanitizedMessage = sanitizePromptInput(message);
+
+        const geminiResult = await callGemini({
+            systemPrompt,
+            userPrompt: sanitizedMessage,
+            maxOutputTokens: 600,
+            temperature: 0.7,
+        });
+
+        if (geminiResult.success && geminiResult.text) {
+            return NextResponse.json({ response: geminiResult.text });
         }
 
-        // Call Google Gemini API
-        const geminiResponse = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    systemInstruction: {
-                        parts: [{ text: systemPrompt }],
-                    },
-                    contents: [
-                        {
-                            role: 'user',
-                            parts: [{ text: message }],
-                        },
-                    ],
-                    generationConfig: {
-                        maxOutputTokens: 600,
-                        temperature: 0.7,
-                    },
-                }),
-            }
-        );
-
-        if (!geminiResponse.ok) {
-            console.error('Gemini API error:', geminiResponse.status, await geminiResponse.text().catch(() => ''));
-            const fallbackResponse = generateFallbackResponse(message, (user as any).role);
-            return NextResponse.json({ response: fallbackResponse });
-        }
-
-        const data = await geminiResponse.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
-            || 'I could not generate a response. Please try again.';
-
-        return NextResponse.json({ response: reply });
+        // Fallback: generate contextual response without API
+        const fallbackResponse = generateFallbackResponse(message, (user as any).role);
+        return NextResponse.json({ response: fallbackResponse });
     } catch (error) {
         console.error('AI Assistant Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

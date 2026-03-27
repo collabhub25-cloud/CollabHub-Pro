@@ -17,6 +17,8 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { formatCurrencyShort } from '@/components/dashboard/shared-components';
+import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
 
 interface DashboardData {
   startup: any;
@@ -203,11 +205,11 @@ export function FounderDashboardNew() {
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/60">
-                        {formatCurrency(data?.stats.fundingRaised || 0)}
+                        {formatCurrencyShort(data?.stats.fundingRaised || 0)}
                       </span>
                       {data?.stats.fundingTarget ? (
                         <span className="text-lg text-muted-foreground font-medium">
-                          / {formatCurrency(data.stats.fundingTarget)}
+                          / {formatCurrencyShort(data.stats.fundingTarget)}
                         </span>
                       ) : null}
                     </div>
@@ -217,11 +219,11 @@ export function FounderDashboardNew() {
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1.5">
                       <div className="h-2.5 w-2.5 rounded-full bg-emerald-500"></div>
-                      <span className="text-muted-foreground">Raised: <span className="font-semibold text-foreground">{formatCurrency(data?.stats.fundingRaised || 0)}</span></span>
+                      <span className="text-muted-foreground">Raised: <span className="font-semibold text-foreground">{formatCurrencyShort(data?.stats.fundingRaised || 0)}</span></span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="h-2.5 w-2.5 rounded-full bg-orange-500"></div>
-                      <span className="text-muted-foreground">Spent: <span className="font-semibold text-foreground">{formatCurrency(data?.stats.totalExpenditure || 0)}</span></span>
+                      <span className="text-muted-foreground">Spent: <span className="font-semibold text-foreground">{formatCurrencyShort(data?.stats.totalExpenditure || 0)}</span></span>
                     </div>
                   </div>
 
@@ -386,23 +388,8 @@ export function FounderDashboardNew() {
         {/* Right Column (AI Insights) */}
         <div className="lg:col-span-4 space-y-6">
           
-          <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-2xl p-px shadow-lg relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
-            <div className="bg-card/90 backdrop-blur-2xl rounded-[15px] h-full p-5 flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center p-[2px]">
-                  <div className="h-full w-full bg-background rounded-full flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 text-purple-500" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">AI Syndicate Engine</h3>
-                  <p className="text-xs text-muted-foreground">Optimal matches found</p>
-                </div>
-              </div>
-              <Zap className="h-4 w-4 text-yellow-500 animate-pulse" />
-            </div>
-          </div>
+          {/* Real AI Analytics Panel */}
+          <AIAnalyticsPanel role="founder" />
 
           {/* AI Talent Recommendations */}
           <Card className="bg-background/60 backdrop-blur-xl border-border/40 shadow-xl relative overflow-hidden">
@@ -510,10 +497,4 @@ export function FounderDashboardNew() {
   );
 }
 
-// Helpers
-function formatCurrency(amount: number): string {
-  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-  if (amount >= 1000) return `₹${(amount / 1000).toFixed(0)}K`;
-  return `₹${amount}`;
-}
+

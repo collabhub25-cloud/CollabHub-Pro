@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/notifications - Create a notification
+// POST /api/notifications - Create a notification (admin/system only)
 export async function POST(request: NextRequest) {
   try {
     const token = extractTokenFromCookies(request);
@@ -78,6 +78,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      );
+    }
+
+    // Authorization: users can only create notifications for themselves
+    // System-level notifications should go through internal service
+    if (userId !== decoded.userId) {
+      return NextResponse.json(
+        { error: 'Cannot create notifications for other users' },
+        { status: 403 }
       );
     }
 

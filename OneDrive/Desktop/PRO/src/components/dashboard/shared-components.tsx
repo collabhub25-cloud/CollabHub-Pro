@@ -409,6 +409,91 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+/** Short currency format: ₹1.2Cr, ₹5.0L, ₹25K, ₹500 */
+export function formatCurrencyShort(amount: number): string {
+  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
+  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
+  if (amount >= 1000) return `₹${(amount / 1000).toFixed(0)}K`;
+  return `₹${amount}`;
+}
+
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat('en-US').format(value);
+}
+
+// ============================================
+// DASHBOARD-SPECIFIC SHARED COMPONENTS
+// ============================================
+
+export function QuickActionCard({ icon: Icon, label, description, onClick }: {
+  icon: any; label: string; description: string; onClick: () => void;
+}) {
+  return (
+    <Card
+      className="bg-card/50 backdrop-blur border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all cursor-pointer group"
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <p className="font-medium text-sm">{label}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function StatsCard({ icon: Icon, iconColor, label, value, subtext, trend, trendPositive, progress, onClick }: {
+  icon: any; iconColor: string; label: string; value: string | number; subtext: string;
+  trend?: string; trendPositive?: boolean; progress?: number; onClick: () => void;
+}) {
+  return (
+    <Card className="bg-card/50 backdrop-blur border-border/50 hover:border-border transition-colors cursor-pointer" onClick={onClick}>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className={`h-10 w-10 rounded-lg ${iconColor.replace('text-', 'bg-')}/10 flex items-center justify-center`}>
+            <Icon className={`h-5 w-5 ${iconColor}`} />
+          </div>
+          <span className="text-sm text-muted-foreground">{label}</span>
+        </div>
+        <p className="text-3xl font-bold">{value}</p>
+        <p className="text-xs text-muted-foreground mt-1">{subtext}</p>
+        {progress !== undefined && (
+          <div className="mt-3">
+            <Progress value={progress} className="h-1" />
+            <p className="text-[10px] text-muted-foreground mt-1">{progress}% completion</p>
+          </div>
+        )}
+        {trend && (
+          <p className={`text-xs mt-2 ${trendPositive ? 'text-green-500' : 'text-red-500'}`}>↗ {trend}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function StatusBadge({ status }: { status: string }) {
+  const config: Record<string, { bg: string; text: string; label: string }> = {
+    pending: { bg: 'bg-amber-500/10', text: 'text-amber-500', label: 'Pending' },
+    accepted: { bg: 'bg-green-500/10', text: 'text-green-500', label: 'Accepted' },
+    rejected: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Rejected' },
+    shortlisted: { bg: 'bg-blue-500/10', text: 'text-blue-500', label: 'Shortlisted' },
+    completed: { bg: 'bg-green-500/10', text: 'text-green-500', label: 'Completed' },
+    in_progress: { bg: 'bg-blue-500/10', text: 'text-blue-500', label: 'In Progress' },
+  };
+  const { bg, text, label } = config[status] || config.pending;
+  return <Badge className={`${bg} ${text} border-0 text-[10px]`}>{label}</Badge>;
+}
+
+export function StatusDot({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    pending: 'bg-amber-500',
+    accepted: 'bg-green-500',
+    rejected: 'bg-red-500',
+    shortlisted: 'bg-blue-500',
+    completed: 'bg-green-500',
+    in_progress: 'bg-blue-500',
+  };
+  return <span className={`h-2 w-2 rounded-full ${colors[status] || 'bg-gray-500'}`} />;
 }

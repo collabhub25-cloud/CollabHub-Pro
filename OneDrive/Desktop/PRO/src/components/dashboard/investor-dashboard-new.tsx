@@ -17,6 +17,8 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { formatCurrencyShort, QuickActionCard, StatsCard } from '@/components/dashboard/shared-components';
+import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
 
 interface InvestorDashboardData {
   portfolio: any[];
@@ -50,28 +52,37 @@ export function InvestorDashboardNew() {
     try {
       setLoading(true);
       
-      const [startupsRes, alliancesRes] = await Promise.all([
+      const [startupsRes, alliancesRes, investmentsRes] = await Promise.all([
         apiFetch('/api/startups'),
         apiFetch('/api/alliances'),
+        user?._id ? apiFetch(`/api/investments?userId=${user._id}`) : Promise.resolve(null),
       ]);
 
       const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
       const alliances = alliancesRes.ok ? await alliancesRes.json() : [];
+      const investmentsData = investmentsRes && investmentsRes.ok ? await investmentsRes.json() : null;
 
       const startups = startupsData.startups || startupsData || [];
       const dealflow = Array.isArray(startups) ? startups.slice(0, 10) : [];
+      const allianceList = Array.isArray(alliances) ? alliances : alliances.alliances || [];
+
+      // Extract real portfolio data from investments API
+      const portfolio = investmentsData?.portfolio || [];
+      const totalInvested = investmentsData?.totalInvested || 0;
+      const portfolioCount = portfolio.length;
+      const avgTicketSize = portfolioCount > 0 ? Math.round(totalInvested / portfolioCount) : 0;
 
       setData({
-        portfolio: [],
+        portfolio,
         dealflow,
-        alliances: Array.isArray(alliances) ? alliances : alliances.alliances || [],
+        alliances: allianceList,
         stats: {
-          totalInvested: 0,
-          portfolioCount: 0,
+          totalInvested,
+          portfolioCount,
           dealflowCount: dealflow.length,
           watchlistCount: 0,
-          alliancesCount: Array.isArray(alliances) ? alliances.length : (alliances.alliances?.length || 0),
-          avgTicketSize: 0,
+          alliancesCount: allianceList.length,
+          avgTicketSize,
         },
       });
     } catch (error) {
@@ -79,7 +90,7 @@ export function InvestorDashboardNew() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?._id]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -158,8 +169,8 @@ export function InvestorDashboardNew() {
           icon={TrendingUp}
           iconColor="text-green-500"
           label="Total Invested"
-          value={formatCurrency(stats.totalInvested)}
-          subtext={`Avg ticket: ${formatCurrency(stats.avgTicketSize)}`}
+          value={formatCurrencyShort(stats.totalInvested)}
+          subtext={`Avg ticket: ${formatCurrencyShort(stats.avgTicketSize)}`}
           onClick={() => setActiveTab('portfolio')}
         />
         <StatsCard
@@ -179,6 +190,9 @@ export function InvestorDashboardNew() {
           onClick={() => setActiveTab('dealflow')}
         />
       </div>
+
+      {/* AI-Powered Deal Flow Matches */}
+      <AIMatchingPanel type="investor-startup" />
 
       {/* Deal Flow & Portfolio */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -205,9 +219,20 @@ export function InvestorDashboardNew() {
             </Tabs>
           </CardHeader>
           <CardContent className="pt-0">
-            {data?.dealflow && data.dealflow.length > 0 ? (
+            {(() => {
+              const filteredDeals = data?.dealflow?.filter((deal: any) => {
+                if (dealflowFilter === 'all') return true;
+                if (dealflowFilter === 'new') {
+                  const created = new Date(deal.createdAt);
+                  const daysSince = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+                  return daysSince <= 7;
+                }
+                if (dealflowFilter === 'watching') return data.alliances?.some((a: any) => a.targetId === deal._id || a.targetUser?._id === deal.founderId);
+                return true;
+              }) || [];
+              return filteredDeals.length > 0 ? (
               <div className="space-y-3">
-                {data.dealflow.slice(0, 4).map((deal: any) => (
+                {filteredDeals.slice(0, 4).map((deal: any) => (
                   <DealItem key={deal._id} deal={deal} />
                 ))}
               </div>
@@ -219,7 +244,8 @@ export function InvestorDashboardNew() {
                   Discover Startups
                 </Button>
               </div>
-            )}
+            );
+            })()}
           </CardContent>
         </Card>
 
@@ -237,7 +263,7 @@ export function InvestorDashboardNew() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Invested</span>
-                  <span className="font-semibold">{formatCurrency(stats.totalInvested)}</span>
+                  <span className="font-semibold">{formatCurrencyShort(stats.totalInvested)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Companies</span>
@@ -245,9 +271,23 @@ export function InvestorDashboardNew() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Avg Ticket</span>
-                  <span className="font-semibold">{formatCurrency(stats.avgTicketSize)}</span>
+                  <span className="font-semibold">{formatCurrencyShort(stats.avgTicketSize)}</span>
                 </div>
               </div>
+              {data?.portfolio && data.portfolio.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
+                  {data.portfolio.slice(0, 3).map((item: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={item.startup?.logo} />
+                        <AvatarFallback className="text-[8px] bg-primary/10">{getInitials(item.startup?.name || 'S')}</AvatarFallback>
+                      </Avatar>
+                      <span className="flex-1 truncate">{item.startup?.name || 'Startup'}</span>
+                      <span className="text-muted-foreground">{formatCurrencyShort(item.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -260,58 +300,36 @@ export function InvestorDashboardNew() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              {data?.alliances && data.alliances.length > 0 ? (
+              {(() => {
+                const activities: { label: string; color: string }[] = [];
+                if (data?.portfolio) {
+                  data.portfolio.slice(0, 2).forEach((item: any) => {
+                    activities.push({ label: `Invested in ${item.startup?.name || 'startup'}`, color: 'bg-green-500' });
+                  });
+                }
+                if (data?.alliances) {
+                  data.alliances.slice(0, 2).forEach((alliance: any) => {
+                    activities.push({ label: `Connected with ${alliance.targetUser?.name || 'User'}`, color: 'bg-blue-500' });
+                  });
+                }
+                return activities.length > 0 ? (
                 <div className="space-y-2">
-                  {data.alliances.slice(0, 3).map((alliance: any, i: number) => (
+                  {activities.slice(0, 4).map((act, i: number) => (
                     <div key={i} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 text-xs">
-                      <span className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="truncate flex-1">Connected with {alliance.targetUser?.name || 'User'}</span>
+                      <span className={`h-2 w-2 rounded-full ${act.color}`} />
+                      <span className="truncate flex-1">{act.label}</span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground text-center py-4">No recent activity</p>
-              )}
+              );
+              })()}
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  );
-}
-
-function QuickActionCard({ icon: Icon, label, description, onClick }: { 
-  icon: any; label: string; description: string; onClick: () => void;
-}) {
-  return (
-    <Card className="bg-card/50 backdrop-blur border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all cursor-pointer group" onClick={onClick}>
-      <CardContent className="p-4">
-        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        <p className="font-medium text-sm">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatsCard({ icon: Icon, iconColor, label, value, subtext, onClick }: { 
-  icon: any; iconColor: string; label: string; value: string | number; subtext: string; onClick: () => void;
-}) {
-  return (
-    <Card className="bg-card/50 backdrop-blur border-border/50 hover:border-border transition-colors cursor-pointer" onClick={onClick}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <div className={`h-10 w-10 rounded-lg ${iconColor.replace('text-', 'bg-')}/10 flex items-center justify-center`}>
-            <Icon className={`h-5 w-5 ${iconColor}`} />
-          </div>
-          <span className="text-sm text-muted-foreground">{label}</span>
-        </div>
-        <p className="text-3xl font-bold">{value}</p>
-        <p className="text-xs text-muted-foreground mt-1">{subtext}</p>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -337,16 +355,6 @@ function DealItem({ deal }: { deal: any }) {
           </p>
         )}
       </div>
-      <div className="text-right">
-
-      </div>
     </div>
   );
-}
-
-function formatCurrency(amount: number): string {
-  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-  if (amount >= 1000) return `₹${(amount / 1000).toFixed(0)}K`;
-  return `₹${amount}`;
 }

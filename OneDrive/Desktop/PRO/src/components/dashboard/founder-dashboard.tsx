@@ -55,6 +55,8 @@ import { CreateMilestoneModal } from '@/components/milestones/create-milestone-m
 import { apiFetch } from '@/lib/api-client';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
+import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
+import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
 
 interface Startup {
   _id: string;
@@ -1666,6 +1668,32 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
+    );
+  }
+
+  // AI Insights
+  if (activeTab === 'ai-insights') {
+    return (
+      <div className="space-y-6 page-enter relative">
+        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(46,139,87,0.06) 0%, rgba(0,71,171,0.04) 50%, rgba(255,255,255,0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(46,139,87,0.25)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+          <div>
+            <h1 className="text-xl font-semibold">AI Insights</h1>
+            <p className="text-muted-foreground mt-1">Smart matching and analytics tailored for your startup</p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+          {/* Left Column: Analytics */}
+          <div className="space-y-6">
+            <AIAnalyticsPanel role="founder" />
+          </div>
+
+          {/* Right Column: Matching */}
+          <div className="space-y-6">
+            <AIMatchingPanel type="talent-startup" onConnect={(id) => useUIStore.getState().setActiveTab('search')} />
+          </div>
+        </div>
       </div>
     );
   }

@@ -12,7 +12,7 @@ import {
   LayoutDashboard, Search, Building2, Users, Target, FileText,
   CreditCard, TrendingUp, MessageSquare, Shield, Settings,
   LogOut, ChevronLeft, Briefcase, Handshake, DollarSign,
-  AlertTriangle, BarChart3, Wallet, Trophy
+  AlertTriangle, BarChart3, Wallet, Trophy, Sparkles
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,6 +38,7 @@ const getNavigation = (role: string) => {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'search', label: 'Discover', icon: Search },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
       ],
       workspace: [
         { id: 'startups', label: 'My Startup', icon: Building2 },
@@ -56,6 +57,7 @@ const getNavigation = (role: string) => {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'search', label: 'Discover', icon: Search },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
       ],
       workspace: [
         { id: 'applications', label: 'My Applications', icon: Briefcase, countKey: 'applications' },
@@ -71,6 +73,7 @@ const getNavigation = (role: string) => {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'search', label: 'Discover', icon: Search },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
       ],
       workspace: [
         { id: 'dealflow', label: 'Deal Flow', icon: DollarSign },

@@ -7,6 +7,9 @@ import { useAuthStore, useUIStore } from '@/store';
 import { safeLocalStorage, STORAGE_KEYS } from '@/lib/client-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
+import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -1065,6 +1068,32 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     );
   }
 
+  // AI Insights
+  if (activeTab === 'ai-insights') {
+    return (
+      <div className="space-y-6 page-enter relative">
+        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(88,28,135,0.06) 0%, rgba(59,130,246,0.04) 50%, rgba(255,255,255,0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(88,28,135,0.25)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+          <div>
+            <h1 className="text-xl font-semibold">AI Investment Insights</h1>
+            <p className="text-muted-foreground mt-1">Smart deal flow matching and portfolio analytics tailored for you</p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+          {/* Left Column: Analytics */}
+          <div className="space-y-6">
+            <AIAnalyticsPanel role="investor" />
+          </div>
+
+          {/* Right Column: Matching */}
+          <div className="space-y-6">
+            <AIMatchingPanel type="investor-startup" onConnect={(id) => useUIStore.getState().setActiveTab('search')} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Agreements
   if (activeTab === 'agreements') {
     return <AgreementsSection />;
@@ -1271,15 +1300,14 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 }
 
 // Agreements Section Component
-function AgreementsSection({ }) {
+function AgreementsSection() {
+  const { user } = useAuthStore();
   const [agreements, setAgreements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [signingId, setSigningId] = useState<string | null>(null);
 
   const fetchAgreements = useCallback(async () => {
-
     setLoading(true);
-
     try {
       const res = await fetch('/api/agreements', {
         credentials: 'include',
@@ -1291,7 +1319,6 @@ function AgreementsSection({ }) {
     } catch (error) {
       console.error('Error fetching agreements:', error);
     }
-
     setLoading(false);
   }, []);
 
@@ -1301,7 +1328,6 @@ function AgreementsSection({ }) {
 
   const handleSign = async (agreementId: string) => {
     setSigningId(agreementId);
-
     try {
       const res = await fetch('/api/agreements/sign', {
         credentials: 'include',
@@ -1323,7 +1349,6 @@ function AgreementsSection({ }) {
     } catch {
       toast.error('Failed to sign agreement');
     }
-
     setSigningId(null);
   };
 
@@ -1359,7 +1384,7 @@ function AgreementsSection({ }) {
         <div className="space-y-4">
           {agreements.map((agreement) => {
             const isSigned = agreement.signedBy?.some(
-              (s: any) => s.userId?._id === s.userId || s.userId
+              (s: any) => s.userId === user?._id || (typeof s.userId === 'object' && s.userId?._id === user?._id)
             );
 
             return (

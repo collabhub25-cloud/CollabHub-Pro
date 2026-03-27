@@ -19,6 +19,8 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { formatCurrencyShort, QuickActionCard, StatsCard, StatusBadge, StatusDot } from '@/components/dashboard/shared-components';
+import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
 
 interface TalentDashboardData {
   applications: any[];
@@ -58,16 +60,19 @@ export function TalentDashboardNew() {
     try {
       setLoading(true);
       
-      const [applicationsRes, agreementsRes] = await Promise.all([
+      const [applicationsRes, agreementsRes, notificationsRes] = await Promise.all([
         apiFetch('/api/applications'),
         apiFetch('/api/agreements'),
+        apiFetch('/api/notifications?limit=5'),
       ]);
 
       const applicationsData = applicationsRes.ok ? await applicationsRes.json() : { applications: [] };
       const agreements = agreementsRes.ok ? await agreementsRes.json() : [];
+      const notifData = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
 
       const applications = Array.isArray(applicationsData) ? applicationsData : applicationsData.applications || [];
       const agreementList = Array.isArray(agreements) ? agreements : agreements.agreements || [];
+      const notifications = notifData.notifications || [];
 
       const pendingApps = applications.filter((a: any) => a.status === 'pending');
       const acceptedApps = applications.filter((a: any) => a.status === 'accepted');
@@ -90,31 +95,44 @@ export function TalentDashboardNew() {
           } catch (e) {}
         }
         
-        // Mock activity for the startup as there is no specific route
-        startupActivities = [
-          { id: '1', title: 'New milestone added', date: new Date().toISOString() },
-          { id: '2', title: 'Funding round opened', date: new Date(Date.now() - 86400000).toISOString() }
-        ];
+        // Use real notifications as startup activities
+        startupActivities = notifications.slice(0, 4).map((n: any) => ({
+          id: n._id,
+          title: n.title || 'Activity',
+          date: n.createdAt,
+        }));
       } else {
-        // Not hired, fetch matching startups based on user skills
+        // Not hired, use AI matching for startups
         try {
-          const userSkills = user?.skills?.join(',') || '';
-          const skillsParam = userSkills ? `&skills=${encodeURIComponent(userSkills)}` : '';
-          const sRes = await apiFetch(`/api/search/startups?limit=5${skillsParam}`);
-          if (sRes.ok) {
-            const sData = await sRes.json();
-            matchingStartups = sData.startups || [];
+          const matchRes = await apiFetch('/api/ai/match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'talent-startup' }),
+          });
+          if (matchRes.ok) {
+            const matchData = await matchRes.json();
+            matchingStartups = matchData.matches || [];
           }
-          // If no skill-matched results, fallback to all active startups
+          // Fallback to basic search if AI matching fails
           if (matchingStartups.length === 0) {
-            const fallbackRes = await apiFetch('/api/search/startups?limit=5');
-            if (fallbackRes.ok) {
-              const fallbackData = await fallbackRes.json();
-              matchingStartups = fallbackData.startups || [];
+            const userSkills = user?.skills?.join(',') || '';
+            const skillsParam = userSkills ? `&skills=${encodeURIComponent(userSkills)}` : '';
+            const sRes = await apiFetch(`/api/search/startups?limit=5${skillsParam}`);
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              matchingStartups = sData.startups || [];
             }
           }
         } catch (e) {}
       }
+
+      // Calculate real earnings from completed milestones
+      const totalEarnings = milestoneList
+        .filter((m: any) => m.status === 'completed')
+        .reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
+      const pendingEarnings = milestoneList
+        .filter((m: any) => m.status === 'completed' && m.paymentStatus !== 'paid')
+        .reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
 
       setData({
         applications,
@@ -126,11 +144,11 @@ export function TalentDashboardNew() {
           totalApplications: applications.length,
           pendingApplications: pendingApps.length,
           acceptedApplications: acceptedApps.length,
-          activeMilestones: milestoneList.filter(m => m.status === 'in_progress').length,
-          completedMilestones: milestoneList.filter(m => m.status === 'completed').length,
+          activeMilestones: milestoneList.filter((m: any) => m.status === 'in_progress').length,
+          completedMilestones: milestoneList.filter((m: any) => m.status === 'completed').length,
           totalMilestones: milestoneList.length,
-          totalEarnings: 0,
-          pendingEarnings: 0,
+          totalEarnings,
+          pendingEarnings,
           pendingAgreements: pendingAgreements.length,
         },
       });
@@ -290,6 +308,9 @@ export function TalentDashboardNew() {
 
         {/* Skill Match & Activity */}
         <div className="space-y-4">
+          {/* AI Analytics */}
+          <AIAnalyticsPanel role="talent" />
+
           {/* Verification Status */}
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardContent className="p-4">
@@ -396,54 +417,6 @@ export function TalentDashboardNew() {
   );
 }
 
-function QuickActionCard({ icon: Icon, label, description, onClick }: { 
-  icon: any; label: string; description: string; onClick: () => void;
-}) {
-  return (
-    <Card 
-      className="bg-card/50 backdrop-blur border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all cursor-pointer group"
-      onClick={onClick}
-    >
-      <CardContent className="p-4">
-        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        <p className="font-medium text-sm">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatsCard({ icon: Icon, iconColor, label, value, subtext, trend, trendPositive, progress, onClick }: { 
-  icon: any; iconColor: string; label: string; value: string | number; subtext: string;
-  trend?: string; trendPositive?: boolean; progress?: number; onClick: () => void;
-}) {
-  return (
-    <Card className="bg-card/50 backdrop-blur border-border/50 hover:border-border transition-colors cursor-pointer" onClick={onClick}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <div className={`h-10 w-10 rounded-lg ${iconColor.replace('text-', 'bg-')}/10 flex items-center justify-center`}>
-            <Icon className={`h-5 w-5 ${iconColor}`} />
-          </div>
-          <span className="text-sm text-muted-foreground">{label}</span>
-        </div>
-        <p className="text-3xl font-bold">{value}</p>
-        <p className="text-xs text-muted-foreground mt-1">{subtext}</p>
-        {progress !== undefined && (
-          <div className="mt-3">
-            <Progress value={progress} className="h-1" />
-            <p className="text-[10px] text-muted-foreground mt-1">{progress}% completion</p>
-          </div>
-        )}
-        {trend && (
-          <p className={`text-xs mt-2 ${trendPositive ? 'text-green-500' : 'text-red-500'}`}>↗ {trend}</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 function ApplicationItem({ application }: { application: any }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
@@ -465,32 +438,4 @@ function ApplicationItem({ application }: { application: any }) {
       </div>
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; text: string; label: string }> = {
-    pending: { bg: 'bg-amber-500/10', text: 'text-amber-500', label: 'Pending' },
-    accepted: { bg: 'bg-green-500/10', text: 'text-green-500', label: 'Accepted' },
-    rejected: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Rejected' },
-    shortlisted: { bg: 'bg-blue-500/10', text: 'text-blue-500', label: 'Shortlisted' },
-  };
-  const { bg, text, label } = config[status] || config.pending;
-  return <Badge className={`${bg} ${text} border-0 text-[10px]`}>{label}</Badge>;
-}
-
-function StatusDot({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    pending: 'bg-amber-500',
-    accepted: 'bg-green-500',
-    rejected: 'bg-red-500',
-    shortlisted: 'bg-blue-500',
-  };
-  return <span className={`h-2 w-2 rounded-full ${colors[status] || 'bg-gray-500'}`} />;
-}
-
-function formatCurrency(amount: number): string {
-  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-  if (amount >= 1000) return `₹${(amount / 1000).toFixed(0)}K`;
-  return `₹${amount}`;
 }

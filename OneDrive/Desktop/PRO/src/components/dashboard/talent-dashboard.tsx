@@ -25,6 +25,8 @@ import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
 import { FloatingTooltip } from '@/components/ui/floating-tooltip';
+import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
+import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
 
 interface Application {
   _id: string;
@@ -933,6 +935,32 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
   // Projects — startups where talent is a team member
   if (activeTab === 'projects') {
     return <TalentProjects />;
+  }
+
+  // AI Insights
+  if (activeTab === 'ai-insights') {
+    return (
+      <div className="space-y-6 page-enter relative">
+        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(88,28,135,0.06) 0%, rgba(59,130,246,0.04) 50%, rgba(255,255,255,0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(88,28,135,0.25)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)' }}>
+          <div>
+            <h1 className="text-xl font-semibold">AI Career Insights</h1>
+            <p className="text-muted-foreground mt-1">Smart matching and career analytics tailored for you</p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+          {/* Left Column: Analytics */}
+          <div className="space-y-6">
+            <AIAnalyticsPanel role="talent" />
+          </div>
+
+          {/* Right Column: Matching */}
+          <div className="space-y-6">
+            <AIMatchingPanel type="talent-startup" onConnect={(id) => useUIStore.getState().setActiveTab('search')} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Settings handled by Dashboard component

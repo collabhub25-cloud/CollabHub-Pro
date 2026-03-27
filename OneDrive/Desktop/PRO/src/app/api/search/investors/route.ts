@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User, Investor } from '@/lib/models';
+import { checkRateLimit, getRateLimitKey, escapeRegex } from '@/lib/security';
 
 // GET /api/search/investors - Search investors with filters
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitKey = getRateLimitKey(request, 'search');
+    const rateLimitResult = checkRateLimit(rateLimitKey, { windowMs: 60000, maxRequests: 30, message: 'Too many search requests.' });
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({ error: 'Too many search requests. Please slow down.' }, { status: 429 });
+    }
+
     await connectDB();
 
     const { searchParams } = new URL(request.url);
@@ -13,21 +21,20 @@ export async function GET(request: NextRequest) {
     const maxTicket = searchParams.get('maxTicket');
     const industries = searchParams.get('industries');
     const stagePreference = searchParams.get('stagePreference');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const page = Math.min(parseInt(searchParams.get('page') || '1'), 100);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') === 'asc' ? 1 : -1;
 
-    // Build user filter for name search
+    // Build user filter for name search — sanitize regex input
     const userFilter: Record<string, unknown> = { role: 'investor' };
     if (query) {
       userFilter.$or = [
-        { name: { $regex: query, $options: 'i' } },
+        { name: { $regex: escapeRegex(query), $options: 'i' } },
       ];
     }
 
     // Build investor filter
-     
     const investorFilter: Record<string, any> = {};
 
     if (minTicket || maxTicket) {
@@ -41,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     if (industries) {
       investorFilter.preferredIndustries = {
-        $in: industries.split(',').map(i => new RegExp(i.trim(), 'i'))
+        $in: industries.split(',').map(i => new RegExp(escapeRegex(i.trim()), 'i'))
       };
     }
 

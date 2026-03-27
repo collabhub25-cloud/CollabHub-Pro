@@ -104,12 +104,11 @@ const DASHBOARD_ROLE_MAP: Record<string, string> = {
 
 const SECURITY_HEADERS: Record<string, string> = {
   'X-DNS-Prefetch-Control': 'on',
-  'X-XSS-Protection': '1; mode=block',
   'X-Frame-Options': 'SAMEORIGIN',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://api.openai.com https://generativelanguage.googleapis.com https://livelog.razorpay.com; frame-src 'self' https://accounts.google.com https://api.razorpay.com;",
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://generativelanguage.googleapis.com https://livelog.razorpay.com; frame-src 'self' https://accounts.google.com https://api.razorpay.com;",
   'X-Request-Id': '', // Will be set dynamically
 };
 
