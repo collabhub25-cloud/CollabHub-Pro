@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Search, Filter, ChevronDown, X, Loader2, Users, Building2,
-  TrendingUp, MapPin, Star, Briefcase, DollarSign, FileText, Send
+  TrendingUp, MapPin, Star, Briefcase, DollarSign
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,10 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore, useUIStore } from '@/store';
 import { AllianceButton } from '@/components/alliances/alliance-button';
-import { ApplyModal } from '@/components/applications/apply-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 
@@ -113,9 +110,7 @@ export function SearchPage() {
     ticketSizeRange: [0, 1000000],
   });
 
-  // Apply modal state
-  const [applyModalOpen, setApplyModalOpen] = useState(false);
-  const [selectedStartup, setSelectedStartup] = useState<SearchResult | null>(null);
+
 
   const viewProfile = (profileId: string) => {
     safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, profileId);
@@ -187,22 +182,14 @@ export function SearchPage() {
     });
   };
 
-  const handleApply = (startup: SearchResult) => {
-    setSelectedStartup(startup);
-    setApplyModalOpen(true);
-  };
 
-  const handleApplySuccess = () => {
-    // Refresh results to update hasApplied status
-    searchResults(page);
-  };
 
   const activeFilterCount =
     filters.industry.length +
     filters.stage.length +
     0;
 
-  const isTalent = user?.role === 'talent';
+
 
   return (
     <div className="space-y-6">
@@ -454,50 +441,15 @@ export function SearchPage() {
                             )}
                           </div>
                           <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
-
-                            {/* Apply button for Talent viewing Founders/Startups */}
-                            {(activeTab === 'founders' || activeTab === 'startups') && isTalent && user?._id !== result.founderId?._id && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div>
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleApply(result)}
-                                        disabled={!result.isActive || !result.rolesNeeded?.length || result.hasApplied}
-                                      >
-                                        {result.hasApplied ? (
-                                          <>
-                                            <FileText className="h-4 w-4 mr-1" />
-                                            Applied
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Send className="h-4 w-4 mr-1" />
-                                            Apply
-                                          </>
-                                        )}
-                                      </Button>
-                                    </div>
-                                  </TooltipTrigger>
-                                  {!result.isActive && (
-                                    <TooltipContent>
-                                      <p>This startup is not accepting applications.</p>
-                                    </TooltipContent>
-                                  )}
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-
-                            {/* Alliance button for Founders - connect with founder */}
-                            {(activeTab === 'founders' || activeTab === 'startups') && result.founderId && user?._id !== result.founderId?._id && (
+                            {/* Alliance button */}
+                            {activeTab === 'startups' && result.founderId && user?._id !== result.founderId?._id && (
                               <AllianceButton
                                 targetUserId={result.founderId._id}
                                 compact={true}
                               />
                             )}
 
-                            {(activeTab === 'talents' || activeTab === 'investors') && user?._id !== result._id && (
+                            {(activeTab === 'founders' || activeTab === 'talents' || activeTab === 'investors') && user?._id !== result._id && (
                               <AllianceButton
                                 targetUserId={result._id}
                                 compact={true}
@@ -540,13 +492,6 @@ export function SearchPage() {
         </div>
       </Tabs>
 
-      {/* Apply Modal for Talent */}
-      <ApplyModal
-        startup={selectedStartup ? { ...selectedStartup, vision: selectedStartup.vision || '', industry: selectedStartup.industry || '', stage: selectedStartup.stage || '' } : null}
-        open={applyModalOpen}
-        onOpenChange={setApplyModalOpen}
-        onSuccess={handleApplySuccess}
-      />
     </div>
   );
 }

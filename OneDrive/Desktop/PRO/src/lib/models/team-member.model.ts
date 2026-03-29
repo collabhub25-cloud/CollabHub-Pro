@@ -9,6 +9,7 @@ export interface ITeamMember extends Document {
     userId: mongoose.Types.ObjectId;
     startupId: mongoose.Types.ObjectId;
     role: string;
+    isFounder: boolean;
     skills: string[];
     equity: number;
     status: TeamMemberStatus;
@@ -22,6 +23,7 @@ const TeamMemberSchema = new Schema<ITeamMember>(
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         startupId: { type: Schema.Types.ObjectId, ref: 'Startup', required: true },
         role: { type: String, default: '' },
+        isFounder: { type: Boolean, default: false },
         skills: [{ type: String }],
         equity: { type: Number, default: 0, min: 0, max: 100 },
         status: { type: String, enum: ['active', 'inactive'], default: 'active' },

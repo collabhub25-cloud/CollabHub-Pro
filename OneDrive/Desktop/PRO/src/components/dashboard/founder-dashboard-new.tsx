@@ -26,6 +26,8 @@ interface DashboardData {
   talentRecommendations: any[];
   investorRecommendations: any[];
   fundingRounds: any[];
+  pitches: any[];
+  accessRequests: any[];
   stats: {
     fundingRaised: number;
     fundingTarget: number;
@@ -72,21 +74,29 @@ export function FounderDashboardNew() {
       let appList: any[] = [];
       let rounds: any[] = [];
       let milestonesList: any[] = [];
+      let pitchesList: any[] = [];
+      let accessRequestsList: any[] = [];
 
       if (startup?._id) {
-        const [applicationsRes, fundingRes, milestonesRes] = await Promise.all([
+        const [applicationsRes, fundingRes, milestonesRes, pitchesRes, accessRes] = await Promise.all([
           apiFetch(`/api/applications/received?startupId=${startup._id}`),
           apiFetch(`/api/funding/create-round?startupId=${startup._id}`),
           apiFetch(`/api/milestones?startupId=${startup._id}`),
+          apiFetch(`/api/pitches?startupId=${startup._id}`),
+          apiFetch(`/api/funding/request-access?startupId=${startup._id}&status=pending`)
         ]);
 
         const applications = applicationsRes.ok ? await applicationsRes.json() : [];
         const fundingData = fundingRes.ok ? await fundingRes.json() : { rounds: [] };
         const milestonesData = milestonesRes.ok ? await milestonesRes.json() : { milestones: [] };
+        const pitchesData = pitchesRes.ok ? await pitchesRes.json() : { pitches: [] };
+        const accessData = accessRes.ok ? await accessRes.json() : { requests: [] };
 
         appList = Array.isArray(applications) ? applications : applications.applications || [];
         rounds = fundingData.rounds || [];
         milestonesList = milestonesData.milestones || [];
+        pitchesList = pitchesData.pitches || [];
+        accessRequestsList = accessData.requests || [];
       }
 
       const pendingApps = appList.filter((a: any) => a.status === 'pending');
@@ -127,6 +137,8 @@ export function FounderDashboardNew() {
         talentRecommendations: talentList,
         investorRecommendations: investorList,
         fundingRounds: rounds,
+        pitches: pitchesList,
+        accessRequests: accessRequestsList,
         stats: {
           fundingRaised: totalRaised,
           fundingTarget: totalTarget || 0,
@@ -141,6 +153,48 @@ export function FounderDashboardNew() {
       setLoading(false);
     }
   }, []);
+
+  const handleLogInvestment = async (pitch: any) => {
+    try {
+      const res = await apiFetch('/api/investments', {
+        method: 'POST',
+        body: JSON.stringify({
+          startupId: pitch.startupId,
+          investorId: pitch.investorId._id,
+          amountInvested: pitch.amountRequested,
+          equityPercentage: pitch.equityOffered,
+          pitchId: pitch._id
+        })
+      });
+      if (res.ok) {
+        toast.success('Investment logged and investor added to team successfully!');
+        fetchDashboardData();
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.error || 'Failed to log investment');
+      }
+    } catch (err) {
+      toast.error('Failed to log investment');
+    }
+  };
+
+  const handleAccessRequestRespond = async (requestId: string, status: 'approved' | 'rejected') => {
+    try {
+      const res = await apiFetch('/api/funding/request-access/respond', {
+        method: 'POST',
+        body: JSON.stringify({ requestId, status })
+      });
+      if (res.ok) {
+        toast.success(`Access request ${status} successfully.`);
+        fetchDashboardData();
+      } else {
+        const errData = await res.json();
+        toast.error(errData.error || `Failed to ${status} request`);
+      }
+    } catch {
+      toast.error('An error occurred while responding to request');
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -386,6 +440,76 @@ export function FounderDashboardNew() {
 
 
       </div>
+
+      {/* Accepted Pitches Needing Action */}
+      {data?.pitches && data.pitches.filter(p => p.pitchStatus === 'accepted').length > 0 && (
+        <Card className="bg-card/50 backdrop-blur border-border/50 shadow-xl mt-6">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              <CardTitle className="text-base font-semibold">Accepted Pitches</CardTitle>
+              <Badge variant="default" className="text-xs bg-emerald-500">{data.pitches.filter(p => p.pitchStatus === 'accepted').length}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {data.pitches.filter((p: any) => p.pitchStatus === 'accepted').map((pitch: any) => (
+              <div key={pitch._id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/40 gap-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={pitch.investorId?.avatar} />
+                    <AvatarFallback>{getInitials(pitch.investorId?.name || 'I')}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-sm">{pitch.investorId?.name} accepted your pitch!</p>
+                    <p className="text-xs text-muted-foreground">{formatCurrencyShort(pitch.amountRequested)} for {pitch.equityOffered}% equity</p>
+                  </div>
+                </div>
+                <Button onClick={() => handleLogInvestment(pitch)} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow">
+                  Record Investment & Add to Team
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Access Requests */}
+      {data?.accessRequests && data.accessRequests.length > 0 && (
+        <Card className="bg-card/50 backdrop-blur border-border/50 shadow-xl mt-6 border-blue-500/20">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-blue-500" />
+              <CardTitle className="text-base font-semibold">Incoming Access Requests</CardTitle>
+              <Badge variant="default" className="text-xs bg-blue-500">{data.accessRequests.length}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {data.accessRequests.map((req: any) => (
+              <div key={req._id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/40 gap-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={req.investorId?.avatar} />
+                    <AvatarFallback>{getInitials(req.investorId?.name || 'I')}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-sm">{req.investorId?.name} requested access</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{req.message || 'No message provided'}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleAccessRequestRespond(req._id, 'rejected')} className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20">
+                    Reject
+                  </Button>
+                  <Button size="sm" onClick={() => handleAccessRequestRespond(req._id, 'approved')} className="bg-blue-600 hover:bg-blue-700 text-white shadow">
+                    Approve Access
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
     </div>
   );
 }

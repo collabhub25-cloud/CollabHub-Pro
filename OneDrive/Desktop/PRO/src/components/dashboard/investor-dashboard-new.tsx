@@ -21,6 +21,7 @@ import { formatCurrencyShort, QuickActionCard, StatsCard } from '@/components/da
 interface InvestorDashboardData {
   portfolio: any[];
   dealflow: any[];
+  pitches: any[];
   alliances: any[];
   stats: {
     totalInvested: number;
@@ -49,24 +50,28 @@ export function InvestorDashboardNew() {
     try {
       setLoading(true);
       
-      const [startupsRes, portfolioRes, activityRes] = await Promise.all([
+      const [startupsRes, portfolioRes, activityRes, pitchesRes] = await Promise.all([
         apiFetch('/api/startups?limit=10'),
         apiFetch('/api/investor/portfolio'),
-        apiFetch('/api/startups/activity')
+        apiFetch('/api/startups/activity'),
+        apiFetch('/api/pitches')
       ]);
 
       const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
       const portfolioData = portfolioRes.ok ? await portfolioRes.json() : null;
       const activityData = activityRes.ok ? await activityRes.json() : { activity: [] };
+      const pitchesData = pitchesRes.ok ? await pitchesRes.json() : { pitches: [] };
 
       const dealflow = startupsData.startups || startupsData || [];
       const portfolio = portfolioData?.investments || [];
       const stats = portfolioData?.metrics || { totalInvested: 0, numberOfStartups: 0, averageInvestmentSize: 0 };
       const activity = activityData.activity || [];
+      const pitches = pitchesData.pitches?.filter((p: any) => p.pitchStatus === 'pending') || [];
 
       setData({
         portfolio,
         dealflow,
+        pitches,
         alliances: [],
         activity,
         stats: {
@@ -82,6 +87,23 @@ export function InvestorDashboardNew() {
       setLoading(false);
     }
   }, [user?._id]);
+
+  const handlePitchResponse = async (pitchId: string, status: 'accepted' | 'rejected') => {
+      try {
+          const res = await apiFetch(`/api/pitches`, {
+              method: 'PATCH',
+              body: JSON.stringify({ id: pitchId, status })
+          });
+          if (res.ok) {
+              toast.success(`Pitch ${status} successfully`);
+              fetchDashboardData();
+          } else {
+              toast.error('Failed to respond to pitch');
+          }
+      } catch (e) {
+          toast.error('Error responding to pitch');
+      }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -234,6 +256,48 @@ export function InvestorDashboardNew() {
             })()}
           </CardContent>
         </Card>
+
+        {/* Incoming Pitches */}
+        {data?.pitches && data.pitches.length > 0 && (
+          <Card className="lg:col-span-2 bg-card/50 backdrop-blur border-border/50 transition-all hover:shadow-xl mt-4">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-500" />
+                <CardTitle className="text-base">Incoming Pitches</CardTitle>
+                <Badge variant="default" className="text-xs bg-purple-500">{data.pitches.length}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              {data.pitches.map((pitch: any) => (
+                <div key={pitch._id} className="p-4 rounded-xl border border-border bg-muted/20">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={pitch.startupId?.logo} />
+                        <AvatarFallback>{getInitials(pitch.startupId?.name || 'S')}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-sm">{pitch.startupId?.name}</p>
+                        <p className="text-xs text-muted-foreground">{pitch.startupId?.industry} • {pitch.startupId?.stage}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">{formatCurrencyShort(pitch.amountRequested)}</p>
+                      <p className="text-xs text-muted-foreground">for {pitch.equityOffered}% equity</p>
+                    </div>
+                  </div>
+                  {pitch.message && (
+                    <p className="mt-3 text-sm italic border-l-2 pl-3 border-purple-500/50 text-muted-foreground">"{pitch.message}"</p>
+                  )}
+                  <div className="mt-4 flex gap-2 w-full">
+                    <Button variant="default" className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handlePitchResponse(pitch._id, 'accepted')}>Accept & Connect</Button>
+                    <Button variant="outline" className="flex-1 hover:bg-destructive hover:text-white" onClick={() => handlePitchResponse(pitch._id, 'rejected')}>Pass</Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Investment Summary */}
         <div className="space-y-4">

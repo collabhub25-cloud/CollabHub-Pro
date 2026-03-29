@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, MapPin, Briefcase, Building2, Loader2, Star } from 'lucide-react';
+import { Search, MapPin, Briefcase, Building2, Loader2, Star, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { apiFetch } from '@/lib/api-client';
 import { getInitials } from '@/lib/client-utils';
@@ -16,35 +16,81 @@ import { toast } from 'sonner';
 export function TalentJobsPage() {
   const { user } = useAuthStore();
   const [jobs, setJobs] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedTerm, setDebouncedTerm] = useState('');
+  const [applyingTo, setApplyingTo] = useState<string | null>(null);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
-    async function fetchJobs() {
+    async function fetchData() {
+      setLoading(true);
       try {
-        const res = await apiFetch('/api/jobs');
-        if (res.ok) {
-          const data = await res.json();
+        const queryParams = new URLSearchParams();
+        if (debouncedTerm) queryParams.set('search', debouncedTerm);
+        
+        const [jobsRes, appsRes] = await Promise.all([
+          apiFetch(`/api/jobs?${queryParams.toString()}`),
+          apiFetch('/api/applications')
+        ]);
+        
+        if (jobsRes.ok) {
+          const data = await jobsRes.json();
           setJobs(data.jobs || []);
         }
+        
+        if (appsRes.ok) {
+          const data = await appsRes.json();
+          setApplications(data.applications || []);
+        }
       } catch (error) {
-        console.error('Error fetching jobs:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     }
-    fetchJobs();
-  }, []);
+    fetchData();
+  }, [debouncedTerm]);
 
-  const handleApply = (jobId: string) => {
-    toast.success('Successfully applied to job!');
+  const handleApply = async (job: any) => {
+    if (!user) return;
+    setApplyingTo(job._id);
+    try {
+      const payload = {
+        startupId: job.startupId?._id || job.startupId,
+        roleId: job._id,
+        coverLetter: "I am extremely passionate about this opportunity and believe my unique skills align perfectly with your startup's vision. I would love to learn more about the role and how I can contribute to your success."
+      };
+      
+      const res = await apiFetch('/api/applications', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        toast.success('Successfully applied to job!');
+        // Optimistic UI update
+        setApplications(prev => [...prev, { roleId: job._id, status: 'pending' }]);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to apply');
+      }
+    } catch (err) {
+      toast.error('An error occurred while applying');
+    } finally {
+      setApplyingTo(null);
+    }
   };
 
-  const filteredJobs = jobs.filter(job => 
-    job.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    job.startupId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.skillsRequired?.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredJobs = jobs;
 
   if (!user) return null;
 
@@ -128,9 +174,21 @@ export function TalentJobsPage() {
                   <span className="text-[10px] text-muted-foreground">
                     Posted {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
                   </span>
-                  <Button onClick={() => handleApply(job._id)} size="sm" className="h-8 text-xs font-semibold shadow-sm hover:shadow-md transition-shadow">
-                    Apply Now
-                  </Button>
+                  {(() => {
+                    const hasApplied = applications.some(app => app.roleId === job._id);
+                    const isApplying = applyingTo === job._id;
+                    return (
+                      <Button 
+                        onClick={() => handleApply(job)} 
+                        size="sm" 
+                        disabled={hasApplied || isApplying}
+                        className={`h-8 text-xs font-semibold shadow-sm hover:shadow-md transition-shadow ${hasApplied ? 'bg-green-600 hover:bg-green-700 opacity-100 text-white' : ''}`}
+                      >
+                        {isApplying ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : hasApplied ? <CheckCircle2 className="h-4 w-4 mr-1" /> : null}
+                        {hasApplied ? 'Applied' : 'Apply Now'}
+                      </Button>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>

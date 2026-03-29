@@ -7,9 +7,10 @@ import {
     ArrowLeft, Building2, Users, Globe, Loader2, Briefcase,
     TrendingUp, FileText, Target, DollarSign, Settings, Edit3,
     Check, X, BadgeCheck, Heart, Send, Clock, CheckCircle2, Lock,
-    Pencil, Download, AlertTriangle
+    Pencil, Download, AlertTriangle, Activity, Plus
 } from 'lucide-react';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 interface StartupData {
@@ -126,6 +127,7 @@ export default function StartupPage({
     // Build tabs dynamically
     const baseTabs = [
         { id: 'overview', label: 'Overview', icon: Building2 },
+        { id: 'journey', label: 'Journey', icon: Activity },
         { id: 'team', label: 'Team', icon: Users },
         { id: 'funding', label: 'Funding', icon: DollarSign },
         { id: 'milestones', label: 'Milestones', icon: Target },
@@ -157,6 +159,34 @@ export default function StartupPage({
         };
         fetchStartup();
     }, [id]);
+
+    const [journeyPosts, setJourneyPosts] = useState<any[]>([]);
+    const [journeyLoading, setJourneyLoading] = useState(false);
+    const [showJourneyModal, setShowJourneyModal] = useState(false);
+    const [newJourneyPost, setNewJourneyPost] = useState({
+        title: '',
+        description: '',
+        postType: 'general'
+    });
+
+    useEffect(() => {
+        if (activeTab !== 'journey') return;
+        const fetchJourney = async () => {
+            setJourneyLoading(true);
+            try {
+                const res = await fetch(`/api/startup/journey?startupId=${id}`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    setJourneyPosts(data.posts || []);
+                }
+            } catch (err) {
+                console.error('Error fetching journey posts:', err);
+            } finally {
+                setJourneyLoading(false);
+            }
+        };
+        fetchJourney();
+    }, [activeTab, id]);
 
     // Fetch investor-specific data (favorite status + access request status)
     useEffect(() => {
@@ -357,6 +387,32 @@ export default function StartupPage({
                 toast.success('Role added successfully!');
             } else {
                 toast.error('Failed to add role');
+            }
+        } catch (err) {
+             toast.error('An error occurred');
+        }
+        setSubmitting(false);
+    };
+
+    const handleCreateJourneyPost = async () => {
+        setSubmitting(true);
+        try {
+            const res = await fetch('/api/startup/journey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startupId: id,
+                    ...newJourneyPost
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setJourneyPosts([data.post, ...journeyPosts]);
+                setShowJourneyModal(false);
+                setNewJourneyPost({ title: '', description: '', postType: 'general' });
+                toast.success('Journey post published!');
+            } else {
+                toast.error('Failed to publish post');
             }
         } catch {
             toast.error('An error occurred');
@@ -625,12 +681,7 @@ export default function StartupPage({
                             </section>
                         )}
 
-                        {startup.achievements && (
-                            <section className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                <h2 className="text-lg font-bold mb-3 text-gray-900 dark:text-gray-100">Achievements</h2>
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-600 dark:text-gray-400">{startup.achievements}</p>
-                            </section>
-                        )}
+
 
                         {/* Open Roles section moved to overview */}
                         <div className="mt-8">
@@ -665,6 +716,57 @@ export default function StartupPage({
                                 <p className="text-sm text-gray-500">No open roles at the moment.</p>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'journey' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Journey Feed</h2>
+                            {isFounder && (
+                                <button
+                                    onClick={() => setShowJourneyModal(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-sm"
+                                >
+                                    <Plus className="h-4 w-4" /> New Update
+                                </button>
+                            )}
+                        </div>
+
+                        {journeyLoading ? (
+                            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>
+                        ) : journeyPosts.length === 0 ? (
+                            <div className="bg-white dark:bg-gray-900 py-12 px-6 rounded-2xl border border-gray-200 dark:border-gray-800 text-center shadow-sm">
+                                <Activity className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No updates yet</h3>
+                                <p className="text-sm text-gray-500 max-w-sm mx-auto">This startup hasn't shared any journey milestones or updates yet.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 dark:before:via-gray-800 before:to-transparent">
+                                {journeyPosts.map((post: any, i: number) => (
+                                    <div key={post._id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                        {/* Icon */}
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white dark:border-gray-950 bg-blue-100 dark:bg-blue-900 text-blue-500 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm relative z-10">
+                                            {post.postType === 'milestone' ? <Target className="h-4 w-4" /> :
+                                                post.postType === 'funding' ? <DollarSign className="h-4 w-4 text-emerald-500" /> :
+                                                <Activity className="h-4 w-4" />}
+                                        </div>
+                                        {/* Card */}
+                                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <Badge variant="outline" className="capitalize text-xs bg-gray-50 dark:bg-gray-800">{post.postType.replace('_', ' ')}</Badge>
+                                                <div className="flex items-center text-xs text-gray-500">
+                                                    <Clock className="w-3 h-3 justify-center mr-1" />
+                                                    {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </div>
+                                            </div>
+                                            {post.title && <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-2">{post.title}</h3>}
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{post.description}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -713,9 +815,16 @@ export default function StartupPage({
                                                         </div>
                                                     </button>
                                                     <div className="min-w-0 flex-1">
-                                                        <button onClick={() => router.push(`/profile/${userId}`)} className="hover:underline">
-                                                            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{userInfo.name}</h3>
-                                                        </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <button onClick={() => router.push(`/profile/${userId}`)} className="hover:underline">
+                                                                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{userInfo.name}</h3>
+                                                            </button>
+                                                            {member.isFounder && (
+                                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30 flex items-center gap-1">
+                                                                    👑 Founder
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         {isEditing ? (
                                                             <input
                                                                 value={editMemberData.role}
@@ -1431,6 +1540,72 @@ export default function StartupPage({
                                     className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
                                 >
                                     {submitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'Add Role'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Post Journey Update Modal */}
+            {showJourneyModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => !submitting && setShowJourneyModal(false)}>
+                    <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl w-full max-w-lg shadow-xl border border-gray-200 dark:border-gray-800" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold tracking-tight">New Journey Update</h3>
+                            <button onClick={() => setShowJourneyModal(false)} className="text-gray-400 hover:text-gray-600 transition">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">Update Type</label>
+                                <select
+                                    value={newJourneyPost.postType}
+                                    onChange={e => setNewJourneyPost({ ...newJourneyPost, postType: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl text-sm border bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none border-gray-200 dark:border-gray-700 font-medium"
+                                >
+                                    <option value="general">General Update</option>
+                                    <option value="milestone">Milestone Reached</option>
+                                    <option value="funding">Funding / Revenue</option>
+                                    <option value="product_release">Product Release</option>
+                                    <option value="hiring">Hiring</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">Title <span className="text-gray-400 font-normal">(Optional)</span></label>
+                                <input
+                                    value={newJourneyPost.title}
+                                    onChange={e => setNewJourneyPost({ ...newJourneyPost, title: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl text-sm border bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none border-gray-200 dark:border-gray-700 font-medium placeholder-gray-400"
+                                    placeholder="e.g., We just crossed 10k users!"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">Share your progress</label>
+                                <textarea
+                                    value={newJourneyPost.description}
+                                    onChange={e => setNewJourneyPost({ ...newJourneyPost, description: e.target.value })}
+                                    rows={5}
+                                    className="w-full px-4 py-3 rounded-xl text-sm border bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none resize-none border-gray-200 dark:border-gray-700 font-medium placeholder-gray-400"
+                                    placeholder="What's new? Tell your followers what you've been working on..."
+                                />
+                            </div>
+                            
+                            <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-800 mt-6">
+                                <button
+                                    onClick={() => setShowJourneyModal(false)}
+                                    disabled={submitting}
+                                    className="flex-1 py-3 rounded-xl text-sm font-semibold border-2 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCreateJourneyPost}
+                                    disabled={submitting || !newJourneyPost.description}
+                                    className="flex-1 py-3 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition shadow-sm hover:shadow-md flex justify-center items-center"
+                                >
+                                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Publish Update'}
                                 </button>
                             </div>
                         </div>

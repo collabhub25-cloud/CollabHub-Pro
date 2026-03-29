@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Startup, User, Subscription } from '@/lib/models';
+import { Startup, User, Subscription, TeamMember } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { validateInput, CreateStartupSchema, StartupUpdateSchema } from '@/lib/validation/schemas';
 import { checkPlanLimit, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
@@ -203,6 +203,18 @@ export async function POST(request: NextRequest) {
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
+    });
+
+    // Create Founder team member record
+    await TeamMember.create({
+      userId: payload.userId,
+      startupId: startup._id,
+      role: 'Founder',
+      isFounder: true,
+      skills: user.skills || [],
+      equity: 100, // Or appropriate default
+      status: 'active',
+      joinedAt: new Date(),
     });
 
     await startup.populate([

@@ -6,7 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MapPin, Building2, Github, Linkedin, Globe, Calendar, ArrowLeft, User as UserIcon } from 'lucide-react';
+import { Loader2, MapPin, Building2, Github, Linkedin, Globe, Calendar, ArrowLeft, User as UserIcon, Send } from 'lucide-react';
+import { useAuthStore } from '@/store';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface UserProfile {
     _id: string;
@@ -44,6 +58,85 @@ export default function ProfilePage() {
     const [startups, setStartups] = useState<Startup[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const { user } = useAuthStore();
+    const isFounder = user?.role === 'founder';
+    const isInvestor = profile?.role === 'investor';
+    
+    // Pitch state
+    const [founderStartupId, setFounderStartupId] = useState('');
+    const [pitchAmount, setPitchAmount] = useState('');
+    const [pitchEquity, setPitchEquity] = useState('');
+    const [pitchMessage, setPitchMessage] = useState('');
+    const [pitchLoading, setPitchLoading] = useState(false);
+    const [pitchDialogOpen, setPitchDialogOpen] = useState(false);
+    const [accessReqStatus, setAccessReqStatus] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isFounder) {
+            fetch('/api/startups')
+                .then(res => res.json())
+                .then(async data => {
+                    if (data.startups && data.startups.length > 0) {
+                        const sid = data.startups[0]._id;
+                        setFounderStartupId(sid);
+                        
+                        if (isInvestor) {
+                            try {
+                                const accRes = await fetch(`/api/funding/request-access?startupId=${sid}`);
+                                if (accRes.ok) {
+                                    const accData = await accRes.json();
+                                    const req = (accData.requests || []).find((r: any) => 
+                                        r.investorId?._id === id || r.investorId === id
+                                    );
+                                    if (req) {
+                                        setAccessReqStatus(req.status);
+                                    } else {
+                                        setAccessReqStatus('none');
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Error fetching access request:', e);
+                            }
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [isFounder, isInvestor, id]);
+
+    const handlePitchSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!founderStartupId) {
+            toast.error('You need a startup array to pitch. Please create one.');
+            return;
+        }
+        setPitchLoading(true);
+        try {
+            const res = await fetch('/api/pitches', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startupId: founderStartupId,
+                    investorId: id,
+                    amountRequested: Number(pitchAmount),
+                    equityOffered: Number(pitchEquity),
+                    message: pitchMessage
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success('Pitch sent successfully!');
+                setPitchDialogOpen(false);
+            } else {
+                toast.error(data.error || 'Failed to send pitch');
+            }
+        } catch (error) {
+            toast.error('Error sending pitch');
+        } finally {
+            setPitchLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!id) {
@@ -164,6 +257,95 @@ export default function ProfilePage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Founder Action: Pitch Investor */}
+                    {isFounder && isInvestor && (
+                        <Card className="border-purple-500/30 shadow-lg shadow-purple-500/5 bg-gradient-to-br from-card to-purple-500/5">
+                            <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4">
+                                <h3 className="font-semibold text-lg text-foreground">Pitch for Investment</h3>
+                                <p className="text-sm text-muted-foreground">Send your startup's pitch directly to this investor.</p>
+                                
+                                {accessReqStatus === 'approved' ? (
+                                    <Dialog open={pitchDialogOpen} onOpenChange={setPitchDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                                                <Send className="mr-2 h-4 w-4" /> Pitch Investor
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                        <form onSubmit={handlePitchSubmit}>
+                                            <DialogHeader>
+                                                <DialogTitle>Pitch {profile.name}</DialogTitle>
+                                                <DialogDescription>
+                                                    Outline your proposal details below. Make it compelling!
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <div className="flex gap-4">
+                                                    <div className="grid gap-2 flex-1">
+                                                        <Label htmlFor="amountRequested">Amount ($)</Label>
+                                                        <Input
+                                                            id="amountRequested"
+                                                            type="number"
+                                                            required
+                                                            min="1000"
+                                                            placeholder="e.g. 500000"
+                                                            value={pitchAmount}
+                                                            onChange={(e) => setPitchAmount(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="grid gap-2 flex-1">
+                                                        <Label htmlFor="equityOffered">Equity (%)</Label>
+                                                        <Input
+                                                            id="equityOffered"
+                                                            type="number"
+                                                            required
+                                                            step="0.1"
+                                                            min="0"
+                                                            max="100"
+                                                            placeholder="e.g. 5.5"
+                                                            value={pitchEquity}
+                                                            onChange={(e) => setPitchEquity(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="message">Pitch Message</Label>
+                                                    <Textarea
+                                                        id="message"
+                                                        placeholder="Why should they invest? (Optional)"
+                                                        value={pitchMessage}
+                                                        onChange={(e) => setPitchMessage(e.target.value)}
+                                                        rows={4}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button type="button" variant="outline" onClick={() => setPitchDialogOpen(false)}>Cancel</Button>
+                                                <Button type="submit" disabled={pitchLoading}>
+                                                    {pitchLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                    Send Pitch
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                    </Dialog>
+                                ) : accessReqStatus === 'pending' ? (
+                                    <Button disabled className="w-full bg-yellow-500/50 hover:bg-yellow-500/50 text-white opacity-100 cursor-not-allowed">
+                                        Request Pending
+                                    </Button>
+                                ) : accessReqStatus === 'rejected' ? (
+                                    <Button disabled className="w-full bg-red-500/50 hover:bg-red-500/50 text-white opacity-100 cursor-not-allowed">
+                                        Request Rejected
+                                    </Button>
+                                ) : (
+                                    <Button disabled className="w-full bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed opacity-100" title="Investor must request access to your startup first">
+                                        Waiting for Investor to Request Access
+                                    </Button>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Trust & Verification */}
                     <Card>
