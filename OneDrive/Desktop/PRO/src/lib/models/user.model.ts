@@ -24,6 +24,7 @@ export interface IUser extends Document {
     kycVerifiedBy?: mongoose.Types.ObjectId;
     bio?: string;
     skills?: string[];
+    interestedRoles?: string[];
     experience?: string;
     githubUrl?: string;
     linkedinUrl?: string;
@@ -58,6 +59,7 @@ const UserSchema = new Schema<IUser>(
         kycVerifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
         bio: { type: String, maxlength: 1000 },
         skills: [{ type: String }],
+        interestedRoles: [{ type: String }],
         experience: { type: String },
         githubUrl: { type: String },
         linkedinUrl: { type: String },

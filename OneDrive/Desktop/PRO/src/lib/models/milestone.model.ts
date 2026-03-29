@@ -37,7 +37,7 @@ const MilestoneSchema = new Schema<IMilestone>(
     {
         startupId: { type: Schema.Types.ObjectId, ref: 'Startup', required: true },
         assignedTo: { type: Schema.Types.ObjectId, ref: 'User' },
-        agreementId: { type: Schema.Types.ObjectId, ref: 'Agreement' },
+
         title: { type: String, required: true },
         description: { type: String, required: true },
         amount: { type: Number, required: true },

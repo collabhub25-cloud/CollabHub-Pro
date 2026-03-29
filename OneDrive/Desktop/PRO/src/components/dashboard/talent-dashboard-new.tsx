@@ -20,24 +20,21 @@ import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { formatCurrencyShort, QuickActionCard, StatsCard, StatusBadge, StatusDot } from '@/components/dashboard/shared-components';
-import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
-
 interface TalentDashboardData {
   applications: any[];
   milestones: any[];
-  agreements: any[];
   matchingStartups?: any[];
   startupActivities?: any[];
   stats: {
     totalApplications: number;
     pendingApplications: number;
     acceptedApplications: number;
+    rejectedApplications: number;
     activeMilestones: number;
     completedMilestones: number;
     totalMilestones: number;
     totalEarnings: number;
     pendingEarnings: number;
-    pendingAgreements: number;
   };
 }
 
@@ -60,23 +57,20 @@ export function TalentDashboardNew() {
     try {
       setLoading(true);
       
-      const [applicationsRes, agreementsRes, notificationsRes] = await Promise.all([
+      const [applicationsRes, notificationsRes] = await Promise.all([
         apiFetch('/api/applications'),
-        apiFetch('/api/agreements'),
         apiFetch('/api/notifications?limit=5'),
       ]);
 
       const applicationsData = applicationsRes.ok ? await applicationsRes.json() : { applications: [] };
-      const agreements = agreementsRes.ok ? await agreementsRes.json() : [];
       const notifData = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
 
       const applications = Array.isArray(applicationsData) ? applicationsData : applicationsData.applications || [];
-      const agreementList = Array.isArray(agreements) ? agreements : agreements.agreements || [];
       const notifications = notifData.notifications || [];
 
       const pendingApps = applications.filter((a: any) => a.status === 'pending');
       const acceptedApps = applications.filter((a: any) => a.status === 'accepted');
-      const pendingAgreements = agreementList.filter((a: any) => a.status === 'pending');
+      const rejectedApps = applications.filter((a: any) => a.status === 'rejected');
 
       let milestoneList: any[] = [];
       let startupActivities: any[] = [];
@@ -139,17 +133,16 @@ export function TalentDashboardNew() {
         milestones: milestoneList,
         matchingStartups,
         startupActivities,
-        agreements: agreementList,
         stats: {
           totalApplications: applications.length,
           pendingApplications: pendingApps.length,
           acceptedApplications: acceptedApps.length,
+          rejectedApplications: rejectedApps.length,
           activeMilestones: milestoneList.filter((m: any) => m.status === 'in_progress').length,
           completedMilestones: milestoneList.filter((m: any) => m.status === 'completed').length,
           totalMilestones: milestoneList.length,
           totalEarnings,
           pendingEarnings,
-          pendingAgreements: pendingAgreements.length,
         },
       });
     } catch (error) {
@@ -176,12 +169,12 @@ export function TalentDashboardNew() {
     totalApplications: 0,
     pendingApplications: 0,
     acceptedApplications: 0,
+    rejectedApplications: 0,
     activeMilestones: 0,
     completedMilestones: 0,
     totalMilestones: 0,
     totalEarnings: 0,
     pendingEarnings: 0,
-    pendingAgreements: 0,
   };
 
   const milestoneProgress = stats.totalMilestones > 0 
@@ -239,66 +232,107 @@ export function TalentDashboardNew() {
         />
       </div>
 
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <StatsCard
-          icon={Briefcase}
-          iconColor="text-blue-500"
-          label="Applications"
-          value={stats.totalApplications}
-          subtext={`${stats.pendingApplications} pending · ${stats.acceptedApplications} accepted`}
-          onClick={() => setActiveTab('applications')}
-        />
-        {stats.acceptedApplications > 0 && (
-          <StatsCard
-            icon={Building2}
-            iconColor="text-emerald-500"
-            label="My Startup Milestones"
-            value={`${stats.completedMilestones}/${stats.totalMilestones}`}
-            subtext={`${stats.activeMilestones} in progress`}
-            progress={milestoneProgress}
-            onClick={() => setActiveTab('milestones')}
-          />
-        )}
-      </div>
+      {/* Hired Banner */}
+      {stats.acceptedApplications > 0 ? (
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/20 backdrop-blur-xl shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+          <CardHeader className="pt-6 pb-2">
+            <CardTitle className="flex items-center gap-2 text-xl font-bold text-emerald-700 dark:text-emerald-400">
+              <span className="text-2xl animate-bounce">🎉</span> You're Hired!
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data?.applications?.filter((a: any) => a.status === 'accepted').map((app: any) => (
+              <div key={app._id} className="flex flex-col md:flex-row gap-5 items-start md:items-center bg-card/60 p-5 rounded-2xl border border-emerald-500/10 dark:border-white/5 transition-all hover:bg-card/80 mt-2">
+                 <Avatar className="h-16 w-16 border-2 border-emerald-500/20 shadow-sm">
+                   <AvatarImage src={app.startupId?.logo} />
+                   <AvatarFallback className="bg-emerald-500/10 text-emerald-600 font-bold text-lg">{getInitials(app.startupId?.name || 'S')}</AvatarFallback>
+                 </Avatar>
+                 <div className="flex-1 space-y-1">
+                   <h3 className="text-xl font-extrabold tracking-tight">{app.startupId?.name}</h3>
+                   <div className="flex flex-wrap gap-2 items-center">
+                     <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-none font-semibold">
+                       {app.roleTitle || 'Team Member'}
+                     </Badge>
+                     {app.startupId?.industry && <span className="text-xs text-muted-foreground">• {app.startupId.industry}</span>}
+                   </div>
+                   {app.coverLetter && <p className="text-sm text-foreground/80 mt-2 line-clamp-2 leading-relaxed">{app.coverLetter}</p>}
+                 </div>
+                 <Button onClick={() => router.push(`/startup/${app.startupId?._id}`)} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md ml-auto shrink-0 transition-transform active:scale-95">
+                   View Startup Profile
+                 </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-muted/30 border-dashed border-2 shadow-none">
+          <CardContent className="flex flex-col items-center justify-center p-10 text-muted-foreground text-center">
+             <div className="h-12 w-12 rounded-full bg-background flex items-center justify-center mb-3">
+               <Briefcase className="h-5 w-5 opacity-40" />
+             </div>
+             <p className="font-semibold text-foreground/80">No active engagements yet</p>
+             <p className="text-sm mt-1 mb-4">Keep applying to top startups to land your dream role.</p>
+             <Button variant="outline" onClick={() => setActiveTab('search')}>Browse Opportunities</Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Applications & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Applications List */}
         <Card className="lg:col-span-2 bg-card/50 backdrop-blur border-border/50">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-blue-500" />
-                <CardTitle className="text-base">My Applications</CardTitle>
-                <Badge variant="secondary" className="text-xs">{data?.applications?.length || 0}</Badge>
+          <CardHeader className="pb-4 border-b border-border/50 mb-0">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-blue-500" />
+                  Applications Overview
+                </CardTitle>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab('applications')}>
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
             </div>
+            
+            {/* Unified Metrics Section */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 mb-2">
+              <div className="bg-muted/40 p-3 rounded-xl border border-border/50">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total</p>
+                <p className="text-2xl font-bold mt-0.5">{stats.totalApplications}</p>
+              </div>
+              <div className="bg-blue-500/5 p-3 rounded-xl border border-blue-500/10">
+                <p className="text-[10px] text-blue-600/70 dark:text-blue-400/70 font-semibold uppercase tracking-wider">Pending</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-0.5">{stats.pendingApplications}</p>
+              </div>
+              <div className="bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/10">
+                <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 font-semibold uppercase tracking-wider">Accepted</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{stats.acceptedApplications}</p>
+              </div>
+              <div className={`bg-red-500/5 p-3 rounded-xl border border-red-500/10 ${stats.rejectedApplications === 0 && 'opacity-50'}`}>
+                 <p className="text-[10px] text-red-600/70 dark:text-red-400/70 font-semibold uppercase tracking-wider">Rejected</p>
+                 <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-0.5">{stats.rejectedApplications}</p>
+              </div>
+            </div>
+
             <Tabs value={applicationFilter} onValueChange={setApplicationFilter}>
-              <TabsList className="h-8 bg-muted/50">
-                <TabsTrigger value="all" className="text-xs h-6">All</TabsTrigger>
-                <TabsTrigger value="pending" className="text-xs h-6">Pending</TabsTrigger>
-                <TabsTrigger value="shortlisted" className="text-xs h-6">Shortlisted</TabsTrigger>
-                <TabsTrigger value="accepted" className="text-xs h-6">Accepted</TabsTrigger>
-                <TabsTrigger value="rejected" className="text-xs h-6">Rejected</TabsTrigger>
+              <TabsList className="h-9 bg-muted/50 p-1 w-full md:w-auto mt-2">
+                <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+                <TabsTrigger value="pending" className="text-xs">Pending</TabsTrigger>
+                <TabsTrigger value="shortlisted" className="text-xs">Shortlisted</TabsTrigger>
+                <TabsTrigger value="accepted" className="text-xs">Accepted</TabsTrigger>
+                <TabsTrigger value="rejected" className="text-xs">Rejected</TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-4">
             {filteredApplications.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Briefcase className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No applications found</p>
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => setActiveTab('search')}>
-                  Browse Startups
-                </Button>
+              <div className="text-center py-10 text-muted-foreground">
+                <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <Briefcase className="h-6 w-6 opacity-30" />
+                </div>
+                <p className="text-sm font-medium">No applications found in this category</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredApplications.slice(0, 4).map((app: any) => (
+                {filteredApplications.map((app: any) => (
                   <ApplicationItem key={app._id} application={app} />
                 ))}
               </div>
@@ -308,9 +342,6 @@ export function TalentDashboardNew() {
 
         {/* Skill Match & Activity */}
         <div className="space-y-4">
-          {/* AI Analytics */}
-          <AIAnalyticsPanel role="talent" />
-
           {/* Verification Status */}
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardContent className="p-4">
@@ -363,7 +394,7 @@ export function TalentDashboardNew() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-2">
-                    {/* Mock activities populated from logic */}
+                    {/* Startup activities from notifications */}
                     {(data as any)?.startupActivities?.map((act: any) => (
                       <div key={act.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 text-xs">
                         <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>

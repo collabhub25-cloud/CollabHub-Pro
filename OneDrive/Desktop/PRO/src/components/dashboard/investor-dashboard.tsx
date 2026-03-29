@@ -182,7 +182,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (roundsRes.ok) {
         const data = await roundsRes.json();
-        setFundingRounds(Array.isArray(data.rounds) ? data.rounds : []);
+        setFundingRounds(Array.isArray(data.rounds) ? data.rounds.filter(r => r && r.startupId) : []);
       } else {
         setFundingRounds([]);
       }
@@ -193,7 +193,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (investmentsRes.ok) {
         const data = await investmentsRes.json();
-        setInvestments(Array.isArray(data.investments) ? data.investments : []);
+        setInvestments(Array.isArray(data.investments) ? data.investments.filter(i => i && i.startupId && i.fundingRoundId) : []);
       } else {
         setInvestments([]);
       }
@@ -204,7 +204,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (accessRes.ok) {
         const data = await accessRes.json();
-        setAccessRequests(Array.isArray(data.requests) ? data.requests : []);
+        setAccessRequests(Array.isArray(data.requests) ? data.requests.filter(r => r && r.startupId) : []);
       } else {
         setAccessRequests([]);
       }
@@ -224,7 +224,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
-        setStartups(Array.isArray(data.startups) ? data.startups : []);
+        setStartups(Array.isArray(data.startups) ? data.startups.filter(s => s && s.name) : []);
       } else {
         setStartups([]);
       }

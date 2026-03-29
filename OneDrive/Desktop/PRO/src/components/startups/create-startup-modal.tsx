@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import { apiPost } from '@/lib/api-client';
@@ -49,6 +50,12 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [addJob, setAddJob] = useState(false);
+  const [jobData, setJobData] = useState({
+    title: '',
+    description: '',
+    experienceLevel: '',
+  });
   const [formData, setFormData] = useState({
     name: '',
     vision: '',
@@ -91,6 +98,23 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
       const data = await response.json();
 
       if (response.ok) {
+        if (addJob && jobData.title && jobData.description && jobData.experienceLevel) {
+          try {
+            await apiPost('/api/jobs/create', {
+              startupId: data.startup._id,
+              title: jobData.title,
+              description: jobData.description,
+              experienceLevel: jobData.experienceLevel,
+              employmentType: 'full-time',
+              locationType: 'remote'
+            });
+            toast.success('Job posted successfully!');
+          } catch(e) {
+            console.error('Job creation failed', e);
+            toast.error('Startup created, but failed to post job');
+          }
+        }
+
         toast.success('Startup created successfully!');
         setOpen(false);
         setFormData({
@@ -103,6 +127,8 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
           fundingAmount: '',
           website: '',
         });
+        setJobData({ title: '', description: '', experienceLevel: '' });
+        setAddJob(false);
         setFieldErrors({});
         onSuccess?.();
       } else {
@@ -255,6 +281,62 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
             />
             {fieldErrors.website && <p className="text-xs text-red-500 mt-1">{fieldErrors.website}</p>}
           </div>
+
+          <div className="pt-4 border-t border-border/40">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Post a Job Opening</Label>
+                <div className="text-sm text-muted-foreground">
+                  Immediately hire talent for your new startup
+                </div>
+              </div>
+              <Switch
+                checked={addJob}
+                onCheckedChange={setAddJob}
+              />
+            </div>
+          </div>
+
+          {addJob && (
+            <div className="space-y-4 pt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="space-y-2">
+                <Label htmlFor="jobTitle">Job Title *</Label>
+                <Input
+                  id="jobTitle"
+                  placeholder="e.g. Senior Full Stack Engineer"
+                  value={jobData.title}
+                  onChange={(e) => setJobData({ ...jobData, title: e.target.value })}
+                  required={addJob}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Experience Level *</Label>
+                <Select value={jobData.experienceLevel} onValueChange={(v) => setJobData({ ...jobData, experienceLevel: v })} required={addJob}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entry">Entry Level</SelectItem>
+                    <SelectItem value="mid">Mid Level</SelectItem>
+                    <SelectItem value="senior">Senior</SelectItem>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jobDesc">Job Description *</Label>
+                <Textarea
+                  id="jobDesc"
+                  placeholder="Describe the role, responsibilities, and requirements"
+                  value={jobData.description}
+                  onChange={(e) => setJobData({ ...jobData, description: e.target.value })}
+                  rows={3}
+                  required={addJob}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

@@ -39,6 +39,7 @@ interface ProfileData {
   location?: string;
   createdAt: string;
   skills?: string[];
+  interestedRoles?: string[];
   experience?: string;
   githubUrl?: string;
   linkedinUrl?: string;
@@ -89,6 +90,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
     linkedinUrl: '',
     portfolioUrl: '',
     skills: '',
+    interestedRoles: '',
     experience: '',
   });
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -203,6 +205,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
           linkedinUrl: profileData.linkedinUrl || '',
           portfolioUrl: profileData.portfolioUrl || '',
           skills: (profileData.skills || []).join(', '),
+          interestedRoles: (profileData.interestedRoles || []).join(', '),
           experience: profileData.experience || '',
         });
       } else {
@@ -238,6 +241,15 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
       // Parse skills from comma-separated string
       if (editForm.skills.trim()) {
         updates.skills = editForm.skills.split(',').map(s => s.trim()).filter(Boolean);
+      } else {
+        updates.skills = [];
+      }
+
+      // Parse interestedRoles from comma-separated string
+      if (editForm.interestedRoles.trim()) {
+        updates.interestedRoles = editForm.interestedRoles.split(',').map(s => s.trim()).filter(Boolean);
+      } else {
+        updates.interestedRoles = [];
       }
 
       // Only add experience for talent
@@ -632,6 +644,36 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
           {/* Talent-specific sections */}
           {profile.role === 'talent' && (
             <>
+              {/* Interested Roles */}
+              {(isOwnProfile || (profile.interestedRoles && profile.interestedRoles.length > 0)) && (
+                <Card className="card-3d-hover bg-white/5 dark:bg-black/20 backdrop-blur-xl border-white/10 dark:border-white/5">
+                  <CardHeader>
+                    <CardTitle>Interested Roles</CardTitle>
+                    <CardDescription>Roles you are looking to be hired for</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={editForm.interestedRoles}
+                          onChange={(e) => setEditForm({ ...editForm, interestedRoles: e.target.value })}
+                          placeholder="e.g., Frontend Developer, Product Manager, UI Designer"
+                        />
+                        <p className="text-xs text-muted-foreground">Separate roles with commas</p>
+                      </div>
+                    ) : profile.interestedRoles && profile.interestedRoles.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {profile.interestedRoles.map((role) => (
+                          <Badge key={role} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">{role}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No roles specified yet</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Skills */}
               {(isOwnProfile || (profile.skills && profile.skills.length > 0)) && (
                 <Card className="card-3d-hover bg-white/5 dark:bg-black/20 backdrop-blur-xl border-white/10 dark:border-white/5">
@@ -651,7 +693,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
                     ) : profile.skills && profile.skills.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {profile.skills.map((skill) => (
-                          <Badge key={skill} variant="secondary">{skill}</Badge>
+                          <Badge key={skill} variant="outline">{skill}</Badge>
                         ))}
                       </div>
                     ) : (

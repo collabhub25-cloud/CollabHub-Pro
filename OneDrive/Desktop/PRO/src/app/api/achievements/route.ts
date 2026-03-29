@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
-import { Achievement, Startup } from '@/lib/models';
+import { Startup } from '@/lib/models';
+import Achievement from '@/lib/models/achievement.model';
 
 export async function GET(request: NextRequest) {
     try {

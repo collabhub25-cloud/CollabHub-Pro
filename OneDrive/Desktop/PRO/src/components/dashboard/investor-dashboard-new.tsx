@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Search, DollarSign, Building2, TrendingUp, Handshake, ChevronRight,
-  Loader2, Bell, PieChart, BarChart3, Eye, MessageSquare, Star, MapPin
+  Loader2, Bell, PieChart, BarChart3, Eye, MessageSquare, Star, MapPin, Activity, Sparkles
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -18,8 +18,6 @@ import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { formatCurrencyShort, QuickActionCard, StatsCard } from '@/components/dashboard/shared-components';
-import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
-
 interface InvestorDashboardData {
   portfolio: any[];
   dealflow: any[];
@@ -28,10 +26,9 @@ interface InvestorDashboardData {
     totalInvested: number;
     portfolioCount: number;
     dealflowCount: number;
-    watchlistCount: number;
-    alliancesCount: number;
     avgTicketSize: number;
   };
+  activity: any[];
 }
 
 export function InvestorDashboardNew() {
@@ -52,37 +49,31 @@ export function InvestorDashboardNew() {
     try {
       setLoading(true);
       
-      const [startupsRes, alliancesRes, investmentsRes] = await Promise.all([
-        apiFetch('/api/startups'),
-        apiFetch('/api/alliances'),
-        user?._id ? apiFetch(`/api/investments?userId=${user._id}`) : Promise.resolve(null),
+      const [startupsRes, portfolioRes, activityRes] = await Promise.all([
+        apiFetch('/api/startups?limit=10'),
+        apiFetch('/api/investor/portfolio'),
+        apiFetch('/api/startups/activity')
       ]);
 
       const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
-      const alliances = alliancesRes.ok ? await alliancesRes.json() : [];
-      const investmentsData = investmentsRes && investmentsRes.ok ? await investmentsRes.json() : null;
+      const portfolioData = portfolioRes.ok ? await portfolioRes.json() : null;
+      const activityData = activityRes.ok ? await activityRes.json() : { activity: [] };
 
-      const startups = startupsData.startups || startupsData || [];
-      const dealflow = Array.isArray(startups) ? startups.slice(0, 10) : [];
-      const allianceList = Array.isArray(alliances) ? alliances : alliances.alliances || [];
-
-      // Extract real portfolio data from investments API
-      const portfolio = investmentsData?.portfolio || [];
-      const totalInvested = investmentsData?.totalInvested || 0;
-      const portfolioCount = portfolio.length;
-      const avgTicketSize = portfolioCount > 0 ? Math.round(totalInvested / portfolioCount) : 0;
+      const dealflow = startupsData.startups || startupsData || [];
+      const portfolio = portfolioData?.investments || [];
+      const stats = portfolioData?.metrics || { totalInvested: 0, numberOfStartups: 0, averageInvestmentSize: 0 };
+      const activity = activityData.activity || [];
 
       setData({
         portfolio,
         dealflow,
-        alliances: allianceList,
+        alliances: [],
+        activity,
         stats: {
-          totalInvested,
-          portfolioCount,
+          totalInvested: stats.totalInvested,
+          portfolioCount: stats.numberOfStartups,
           dealflowCount: dealflow.length,
-          watchlistCount: 0,
-          alliancesCount: allianceList.length,
-          avgTicketSize,
+          avgTicketSize: stats.averageInvestmentSize,
         },
       });
     } catch (error) {
@@ -108,8 +99,6 @@ export function InvestorDashboardNew() {
     totalInvested: 0,
     portfolioCount: 0,
     dealflowCount: 0,
-    watchlistCount: 0,
-    alliancesCount: 0,
     avgTicketSize: 0,
   };
 
@@ -144,9 +133,9 @@ export function InvestorDashboardNew() {
           onClick={() => setActiveTab('search')}
         />
         <QuickActionCard
-          icon={DollarSign}
+          icon={Activity}
           label="Deal Flow"
-          description={`${stats.dealflowCount} startups`}
+          description={`${stats.dealflowCount} active`}
           onClick={() => setActiveTab('dealflow')}
         />
         <QuickActionCard
@@ -156,10 +145,10 @@ export function InvestorDashboardNew() {
           onClick={() => setActiveTab('portfolio')}
         />
         <QuickActionCard
-          icon={Handshake}
-          label="Alliances"
-          description={`${stats.alliancesCount} connections`}
-          onClick={() => setActiveTab('alliances')}
+          icon={Sparkles}
+          label="AI Insights"
+          description="Recommendations"
+          onClick={() => setActiveTab('ai-insights')}
         />
       </div>
 
@@ -178,7 +167,7 @@ export function InvestorDashboardNew() {
           iconColor="text-blue-500"
           label="Portfolio Companies"
           value={stats.portfolioCount}
-          subtext={`${stats.watchlistCount} in watchlist`}
+          subtext="Total investments"
           onClick={() => setActiveTab('portfolio')}
         />
         <StatsCard
@@ -190,9 +179,6 @@ export function InvestorDashboardNew() {
           onClick={() => setActiveTab('dealflow')}
         />
       </div>
-
-      {/* AI-Powered Deal Flow Matches */}
-      <AIMatchingPanel type="investor-startup" />
 
       {/* Deal Flow & Portfolio */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -301,28 +287,24 @@ export function InvestorDashboardNew() {
             </CardHeader>
             <CardContent className="pt-0">
               {(() => {
-                const activities: { label: string; color: string }[] = [];
-                if (data?.portfolio) {
-                  data.portfolio.slice(0, 2).forEach((item: any) => {
-                    activities.push({ label: `Invested in ${item.startup?.name || 'startup'}`, color: 'bg-green-500' });
-                  });
-                }
-                if (data?.alliances) {
-                  data.alliances.slice(0, 2).forEach((alliance: any) => {
-                    activities.push({ label: `Connected with ${alliance.targetUser?.name || 'User'}`, color: 'bg-blue-500' });
-                  });
-                }
+                const activities = data?.activity || [];
                 return activities.length > 0 ? (
-                <div className="space-y-2">
-                  {activities.slice(0, 4).map((act, i: number) => (
-                    <div key={i} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 text-xs">
-                      <span className={`h-2 w-2 rounded-full ${act.color}`} />
-                      <span className="truncate flex-1">{act.label}</span>
+                <div className="space-y-3">
+                  {activities.slice(0, 4).map((act: any, i: number) => (
+                    <div key={i} className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors text-xs border border-border/40">
+                      <div className="flex justify-between items-start">
+                        <span className="font-semibold text-primary">{act.title}</span>
+                        <span className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(act.timestamp), { addSuffix: true })}</span>
+                      </div>
+                      <span className="truncate flex-1 text-muted-foreground">{act.description}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-4">No recent activity</p>
+                <div className="text-center py-6">
+                  <Activity className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">No recent activity from portfolio startups</p>
+                </div>
               );
               })()}
             </CardContent>

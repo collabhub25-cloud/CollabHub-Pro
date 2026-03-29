@@ -50,33 +50,8 @@ FavoriteSchema.index({ userId: 1, targetId: 1, targetType: 1 }, { unique: true }
 export const Favorite = mongoose.models.Favorite || mongoose.model<IFavorite>('Favorite', FavoriteSchema);
 
 // ============================================
-// INVESTMENT & ACCESS REQUEST SCHEMA
+// ACCESS REQUEST SCHEMA
 // ============================================
-export interface IInvestment extends Document {
-    startupId: mongoose.Types.ObjectId;
-    investorId: mongoose.Types.ObjectId;
-    amount: number;
-    status: 'pending' | 'completed' | 'failed' | 'cancelled';
-    razorpayOrderId?: string;
-    razorpayPaymentId?: string;
-    razorpaySignature?: string;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-const InvestmentSchema = new Schema<IInvestment>(
-    {
-        startupId: { type: Schema.Types.ObjectId, ref: 'Startup', required: true },
-        investorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-        amount: { type: Number, required: true },
-        status: { type: String, enum: ['pending', 'completed', 'failed', 'cancelled'], default: 'pending' },
-        razorpayOrderId: { type: String },
-        razorpayPaymentId: { type: String },
-        razorpaySignature: { type: String },
-    },
-    { timestamps: true }
-);
-export const Investment = mongoose.models.Investment || mongoose.model<IInvestment>('Investment', InvestmentSchema);
 
 export type AccessRequestStatus = 'pending' | 'approved' | 'rejected' | 'revoked';
 

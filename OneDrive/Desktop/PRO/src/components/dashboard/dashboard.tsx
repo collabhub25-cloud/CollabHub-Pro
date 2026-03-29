@@ -28,7 +28,7 @@ import { AdminDashboard } from './admin-dashboard';
 import { DashboardSidebar } from './sidebar';
 import { Logo } from '@/components/ui/logo';
 
-import AgreementsDashboardWithBoundary from '@/components/agreements/agreements-dashboard';
+
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
 import { VerificationProgress } from '@/components/verification/verification-progress';
 import { SearchPage } from '@/components/search/search-page';
@@ -40,6 +40,11 @@ import { CreateMilestoneModal } from '@/components/milestones/create-milestone-m
 import { AlliancePage } from '@/components/alliances/alliance-page';
 import { AccessDenied } from '@/components/common/access-denied';
 import { PageSkeleton, ErrorBoundary } from '@/components/common/loading-error-handlers';
+import { AiInsightsPage } from '@/components/ai/ai-insights-page';
+import { AchievementsPage } from '@/components/achievements/achievements-page';
+import { ManageJobs } from '@/components/jobs/manage-jobs';
+import { TalentJobsPage } from '@/components/jobs/talent-jobs-page';
+import { PortfolioPage } from '@/components/investor/portfolio-page';
 import { SubscriptionBadge } from './shared-components';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
@@ -139,7 +144,12 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const renderContent = () => {
     // Common tabs across all roles
     if (activeTab === 'search') return <SearchPage />;
+    if (activeTab === 'ai-insights') return <AiInsightsPage />;
+    if (activeTab === 'achievements') return <AchievementsPage />;
+    if (activeTab === 'jobs') return <TalentJobsPage />;
+    if (activeTab === 'portfolio') return <PortfolioPage />;
     if (activeTab === 'messages') return <MessagingPage />;
+    if (activeTab === 'manage-jobs') return <ManageJobs />;
     if (activeTab === 'profile') return <ProfilePage profileId={viewProfileId} />;
     if (activeTab === 'alliances') return <AlliancePage />;
     if (activeTab === 'settings') return <SettingsPage />;
@@ -149,7 +159,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       case 'founder':
         // Founder-specific tabs
         if (activeTab === 'startups' || activeTab === 'applications' || 
-            activeTab === 'milestones' || activeTab === 'agreements' || 
+            activeTab === 'milestones' || 
             activeTab === 'payments') {
           return <FounderDashboard activeTab={activeTab === 'payments' ? 'funding' : activeTab} />;
         }
@@ -157,8 +167,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
         
       case 'talent':
         // Talent-specific tabs
-        if (activeTab === 'applications' || activeTab === 'projects' || 
-            activeTab === 'agreements') {
+        if (activeTab === 'applications' || activeTab === 'projects') {
           return <TalentDashboard activeTab={activeTab} />;
         }
         return <TalentDashboardNew />;
@@ -166,7 +175,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       case 'investor':
         // Investor-specific tabs
         if (activeTab === 'dealflow' || activeTab === 'portfolio' || 
-            activeTab === 'investments' || activeTab === 'agreements') {
+            activeTab === 'investments') {
           return <InvestorDashboard activeTab={activeTab} />;
         }
         return <InvestorDashboardNew />;

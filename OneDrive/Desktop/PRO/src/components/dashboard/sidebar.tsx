@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
+import Link from 'next/link';
 
 import { getInitials } from '@/lib/client-utils';
 import {
@@ -38,11 +39,12 @@ const getNavigation = (role: string) => {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'search', label: 'Discover', icon: Search },
-        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles, externalRoute: '/founder/ai-insights' },
       ],
       workspace: [
         { id: 'startups', label: 'My Startup', icon: Building2 },
         { id: 'milestones', label: 'Milestones', icon: Target },
+        { id: 'manage-jobs', label: 'Manage Jobs', icon: Briefcase },
         { id: 'achievements', label: 'Achievements', icon: Trophy },
       ],
       finance: [
@@ -56,12 +58,13 @@ const getNavigation = (role: string) => {
     talent: {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'jobs', label: 'Find Jobs', icon: Briefcase },
         { id: 'search', label: 'Discover', icon: Search },
-        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles, externalRoute: '/talent/ai-insights' },
       ],
       workspace: [
         { id: 'applications', label: 'My Applications', icon: Briefcase, countKey: 'applications' },
-        { id: 'agreements', label: 'Agreements', icon: FileText, countKey: 'agreements' },
+        { id: 'achievements', label: 'Achievements', icon: Trophy },
       ],
       finance: [],
       communication: [
@@ -73,7 +76,7 @@ const getNavigation = (role: string) => {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'search', label: 'Discover', icon: Search },
-        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles, externalRoute: '/investor/ai-insights' },
       ],
       workspace: [
         { id: 'dealflow', label: 'Deal Flow', icon: DollarSign },
@@ -132,23 +135,13 @@ const NavSection = ({ title, items, collapsed, activeTab, counts, onTabChange }:
         {items.map((item) => {
           const isSelected = activeTab === item.id;
           const count = item.countKey ? counts[item.countKey as keyof typeof counts] : undefined;
-
-          return (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              title={collapsed ? item.label : undefined}
-              data-testid={`sidebar-${item.id}`}
-              className={`relative flex h-9 w-full items-center gap-3 rounded-lg px-3 transition-all duration-200 group ${
-                isSelected
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              }`}
-            >
-              {isSelected && (
+          
+          const content = (
+            <>
+              {isSelected && !item.externalRoute && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r" />
               )}
-              <item.icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
+              <item.icon className={`h-4 w-4 shrink-0 ${isSelected && !item.externalRoute ? 'text-primary' : ''}`} />
               {!collapsed && (
                 <>
                   <span className="text-sm flex-1 text-left truncate">{item.label}</span>
@@ -156,7 +149,7 @@ const NavSection = ({ title, items, collapsed, activeTab, counts, onTabChange }:
                     <Badge 
                       variant="secondary" 
                       className={`h-5 min-w-5 px-1.5 text-[10px] font-semibold ${
-                        isSelected ? 'bg-primary/20 text-primary' : 'bg-muted'
+                        isSelected && !item.externalRoute ? 'bg-primary/20 text-primary' : 'bg-muted'
                       }`}
                     >
                       {count}
@@ -164,6 +157,38 @@ const NavSection = ({ title, items, collapsed, activeTab, counts, onTabChange }:
                   )}
                 </>
               )}
+            </>
+          );
+          
+          const className = `relative flex h-9 w-full items-center gap-3 rounded-lg px-3 transition-all duration-200 group ${
+            isSelected && !item.externalRoute
+              ? 'bg-primary/10 text-primary font-medium'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+          }`;
+
+          if (item.externalRoute) {
+             return (
+               <Link
+                 href={item.externalRoute}
+                 key={item.id}
+                 title={collapsed ? item.label : undefined}
+                 data-testid={`sidebar-${item.id}`}
+                 className={className}
+               >
+                 {content}
+               </Link>
+             );
+          }
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              title={collapsed ? item.label : undefined}
+              data-testid={`sidebar-${item.id}`}
+              className={className}
+            >
+              {content}
             </button>
           );
         })}

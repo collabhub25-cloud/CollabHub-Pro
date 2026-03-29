@@ -18,7 +18,6 @@ import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { formatCurrencyShort } from '@/components/dashboard/shared-components';
-import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
 
 interface DashboardData {
   startup: any;
@@ -180,7 +179,7 @@ export function FounderDashboardNew() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column (Main Focus) */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-12 space-y-6">
           
           {/* Funding Overview (Hero Card) */}
           <Card className="overflow-hidden relative border-0 shadow-2xl bg-gradient-to-br from-background via-background to-muted/20 pb-2">
@@ -385,113 +384,7 @@ export function FounderDashboardNew() {
           </div>
         </div>
 
-        {/* Right Column (AI Insights) */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* Real AI Analytics Panel */}
-          <AIAnalyticsPanel role="founder" />
 
-          {/* AI Talent Recommendations */}
-          <Card className="bg-background/60 backdrop-blur-xl border-border/40 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-            <CardHeader className="pb-2 pt-5">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-500">
-                  <UserPlus className="h-4 w-4" />
-                </div>
-                <CardTitle className="text-sm font-bold uppercase tracking-wide">Suggested Talent</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-              {data?.talentRecommendations && data.talentRecommendations.length > 0 ? (
-                <div className="space-y-4">
-                  {data.talentRecommendations.map((talent: any) => (
-                    <div key={talent._id} className="p-3 rounded-xl bg-muted/40 hover:bg-muted/80 transition-colors border border-border/30 cursor-pointer group">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8 border border-border/50">
-                            <AvatarImage src={talent.avatar} />
-                            <AvatarFallback className="text-xs bg-primary/5">{getInitials(talent.name)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-semibold leading-tight">{talent.name}</p>
-                            <p className="text-[10px] text-muted-foreground">{talent.role || 'Talent'}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {talent.skills?.slice(0, 3).map((skill: string) => (
-                          <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded-sm bg-background border border-border/50 text-muted-foreground">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <UserPlus className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                  <p className="text-xs text-muted-foreground">No talent on the platform yet</p>
-                </div>
-              )}
-              <Button variant="ghost" className="w-full mt-3 text-xs text-primary hover:text-primary hover:bg-primary/5">
-                View all pipeline matches
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* AI Investor Profiles */}
-          <Card className="bg-background/60 backdrop-blur-xl border-border/40 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-            <CardHeader className="pb-2 pt-5">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-500">
-                  <Target className="h-4 w-4" />
-                </div>
-                <CardTitle className="text-sm font-bold uppercase tracking-wide">Target Investors</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-              {data?.investorRecommendations && data.investorRecommendations.length > 0 ? (
-                <div className="space-y-4">
-                  {data.investorRecommendations.map((investor: any) => (
-                    <div key={investor._id} className="p-3 rounded-xl bg-muted/40 hover:bg-muted/80 transition-colors border border-border/30 cursor-pointer group">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8 border border-border/50">
-                            <AvatarImage src={investor.avatar} />
-                            <AvatarFallback className="text-xs bg-emerald-500/10 text-emerald-600">{getInitials(investor.name)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-semibold leading-tight">{investor.name}</p>
-                            <p className="text-[10px] text-muted-foreground">{investor.role || 'Investor'}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {investor.sectors?.slice(0, 2).map((sector: string) => (
-                          <span key={sector} className="text-[9px] px-1.5 py-0.5 rounded-sm bg-background border border-border/50 text-muted-foreground">
-                            {sector}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <Target className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                  <p className="text-xs text-muted-foreground">No investors on the platform yet</p>
-                </div>
-              )}
-              <Button variant="ghost" className="w-full mt-3 text-xs text-primary hover:text-primary hover:bg-primary/5">
-                Explore capital network
-              </Button>
-            </CardContent>
-          </Card>
-
-        </div>
       </div>
     </div>
   );
