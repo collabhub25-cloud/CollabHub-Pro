@@ -5,9 +5,10 @@ import Achievement from '@/lib/models/achievement.model';
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const authResult = await requireAuth(request);
         if (!authResult.success) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
@@ -15,7 +16,7 @@ export async function DELETE(
 
         await connectDB();
 
-        const achievementId = params.id;
+        const achievementId = id;
         const userId = authResult.user.userId;
 
         // Atomic ownership-checked delete

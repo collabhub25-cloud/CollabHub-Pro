@@ -4,11 +4,11 @@ import { Job } from '@/lib/models';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: 'Startup ID is required' }, { status: 400 });

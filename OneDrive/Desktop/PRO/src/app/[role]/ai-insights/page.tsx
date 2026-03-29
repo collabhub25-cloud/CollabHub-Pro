@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useUIStore } from '@/store';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { Dashboard } from '@/components/dashboard/dashboard';
 
-export default function AiInsightsRolePage({ params }: { params: { role: string } }) {
+export default function AiInsightsRolePage({ params }: { params: Promise<{ role: string }> }) {
+    const { role } = use(params);
     const { isAuthenticated, user, isLoading, fetchUser, setLoading, logout } = useAuthStore();
     const { setActiveTab } = useUIStore();
     const router = useRouter();
@@ -23,10 +24,10 @@ export default function AiInsightsRolePage({ params }: { params: { role: string 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
             router.push('/login');
-        } else if (!isLoading && isAuthenticated && user?.role !== params.role) {
+        } else if (!isLoading && isAuthenticated && user?.role !== role) {
             router.push(`/dashboard/${user?.role}`);
         }
-    }, [isLoading, isAuthenticated, user, router, params.role]);
+    }, [isLoading, isAuthenticated, user, router, role]);
 
     useEffect(() => {
         // Enforce the active tab as AI Insights when this route is hit
@@ -39,11 +40,11 @@ export default function AiInsightsRolePage({ params }: { params: { role: string 
                 investor: 'var(--accent-investor)',
                 talent: 'var(--accent-talent)',
             };
-            document.documentElement.style.setProperty('--role-accent', roleAccentMap[params.role] || roleAccentMap.founder);
+            document.documentElement.style.setProperty('--role-accent', roleAccentMap[role] || roleAccentMap.founder);
         }
-    }, [isAuthenticated, setActiveTab, params.role]);
+    }, [isAuthenticated, setActiveTab, role]);
 
-    if (isLoading || !isAuthenticated || user?.role !== params.role) {
+    if (isLoading || !isAuthenticated || user?.role !== role) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-transparent">
                 <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent" />

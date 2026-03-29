@@ -14,6 +14,7 @@ export * from './models/misc.model';
 export * from './models/team-member.model';
 export * from './models/achievement.model';
 export * from './models/investment.model';
+export * from './models/agreement.model';
 import mongoose, { Schema, Document } from 'mongoose';
 // ============================================
 // TRUST SCORE LOG SCHEMA

@@ -6,11 +6,12 @@ import { NextRequest } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
-    const job = await Job.findById(params.id).populate('startupId', 'name logo industry location');
+    const job = await Job.findById(id).populate('startupId', 'name logo industry location');
     
     if (!job) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -25,9 +26,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = extractTokenFromCookies(request);
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -39,7 +41,7 @@ export async function PUT(
     await connectDB();
     const data = await request.json();
 
-    const job = await Job.findByIdAndUpdate(params.id, data, { new: true, runValidators: true });
+    const job = await Job.findByIdAndUpdate(id, data, { new: true, runValidators: true });
     
     if (!job) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -54,9 +56,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = extractTokenFromCookies(request);
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -66,7 +69,7 @@ export async function DELETE(
     }
 
     await connectDB();
-    const job = await Job.findByIdAndDelete(params.id);
+    const job = await Job.findByIdAndDelete(id);
     
     if (!job) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
