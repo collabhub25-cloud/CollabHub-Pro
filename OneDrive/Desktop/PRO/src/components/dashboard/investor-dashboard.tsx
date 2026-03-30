@@ -478,7 +478,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
   // Dashboard Overview
   if (activeTab === 'dashboard') {
-    const dueDiligenceCount = accessRequests.filter(r => r.status === 'approved' || r.status === 'pending').length;
+    const dueDiligenceCount = pitches.filter(p => p.pitchStatus === 'requested' || p.pitchStatus === 'sent').length;
 
     return (
       <div className="space-y-6 page-enter relative">
