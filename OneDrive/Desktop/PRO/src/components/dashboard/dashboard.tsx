@@ -159,7 +159,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       case 'founder':
         // Founder-specific tabs
         if (activeTab === 'startups' || activeTab === 'applications' || 
-            activeTab === 'milestones' || 
+            activeTab === 'milestones' || activeTab === 'pitch-requests' ||
             activeTab === 'payments') {
           return <FounderDashboard activeTab={activeTab === 'payments' ? 'funding' : activeTab} />;
         }

@@ -27,6 +27,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -44,6 +45,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
+import { formatDistanceToNow } from 'date-fns';
 
 interface FundingRound {
   _id: string;
@@ -86,19 +88,31 @@ interface Investment {
   createdAt: string;
 }
 
-interface AccessRequest {
+interface Pitch {
   _id: string;
-  startupId: {
-    _id: string;
-    name: string;
-    industry: string;
-    stage?: string;
-    logo?: string;
-    vision?: string;
-  };
-  status: string;
+  startupId: { _id: string; name: string; industry: string; logo?: string };
+  investorId: string;
+  pitchStatus: 'requested' | 'sent' | 'rejected' | 'invested' | 'expired';
   message?: string;
+  pitchDocumentUrl?: string;
+  pitchMessage?: string;
+  pitchSentAt?: string;
   createdAt: string;
+}
+
+interface InvestmentConfirmation {
+  _id: string;
+  startupId: { _id: string; name: string; logo?: string };
+  investorId: { _id: string; name: string };
+  pitchId: string;
+  status: 'pending' | 'awaiting_entries' | 'founder_submitted' | 'investor_submitted' | 'matched' | 'mismatched' | 'expired';
+  founderAmount?: number;
+  founderEquity?: number;
+  investorAmount?: number;
+  investorEquity?: number;
+  promptSentAt?: string;
+  expiresAt?: string;
+  retryCount: number;
 }
 
 interface Startup {
@@ -133,15 +147,20 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
-  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
+  const [pitches, setPitches] = useState<Pitch[]>([]);
+  const [confirmations, setConfirmations] = useState<InvestmentConfirmation[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [startups, setStartups] = useState<Startup[]>([]);
+  const [pitchLoading, setPitchLoading] = useState(false);
+  const [confirmationLoading, setConfirmationLoading] = useState(false);
 
   // Modal states
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [selectedRound, setSelectedRound] = useState<FundingRound | null>(null);
   const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState<InvestmentConfirmation | null>(null);
+  const [confirmTerms, setConfirmTerms] = useState({ amount: '', equity: '' });
 
   // Form states
   const [investAmount, setInvestAmount] = useState('');
@@ -198,15 +217,15 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
         setInvestments([]);
       }
 
-      // Fetch access requests (investor's own requests)
-      const accessRes = await fetch('/api/funding/request-access', {
+      // Fetch pitches (investor's own requests)
+      const pitchesRes = await fetch('/api/pitches?investor=true', {
         credentials: 'include',
       });
-      if (accessRes.ok) {
-        const data = await accessRes.json();
-        setAccessRequests(Array.isArray(data.requests) ? data.requests.filter(r => r && r.startupId) : []);
+      if (pitchesRes.ok) {
+        const data = await pitchesRes.json();
+        setPitches(Array.isArray(data.pitches) ? data.pitches : []);
       } else {
-        setAccessRequests([]);
+        setPitches([]);
       }
 
       // Fetch favorites
@@ -230,19 +249,50 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       }
     } catch (error) {
       console.error('Error fetching investor data:', error);
-      toast.error('Failed to load data safely');
       setFundingRounds([]);
       setInvestments([]);
-      setAccessRequests([]);
+      setPitches([]);
       setStartups([]);
     }
 
     setLoading(false);
   }, []);
 
+  const fetchPitches = useCallback(async () => {
+    setPitchLoading(true);
+    try {
+      const res = await fetch('/api/pitches?investor=true', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setPitches(data.pitches || []);
+      }
+    } catch (err) {
+      console.error('Error fetching pitches:', err);
+    } finally {
+      setPitchLoading(false);
+    }
+  }, []);
+
+  const fetchConfirmations = useCallback(async () => {
+    setConfirmationLoading(true);
+    try {
+      const res = await fetch('/api/investment-confirmation', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setConfirmations(data.confirmations || []);
+      }
+    } catch (err) {
+      console.error('Error fetching confirmations:', err);
+    } finally {
+      setConfirmationLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchPitches();
+    fetchConfirmations();
+  }, [fetchData, fetchPitches, fetchConfirmations]);
 
   // Calculate portfolio stats
   const portfolioStats = {
@@ -250,8 +300,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     totalEquity: investments.reduce((sum, inv) => sum + inv.equityPercent, 0),
     activeInvestments: investments.filter(i => i.status === 'completed').length,
     pendingInvestments: investments.filter(i => i.status === 'pending' || i.status === 'processing').length,
-    pendingAccessRequests: accessRequests.filter(r => r.status === 'pending').length,
-    approvedAccess: accessRequests.filter(r => r.status === 'approved').length,
+    pendingPitches: pitches.filter(p => p.pitchStatus === 'requested').length,
+    receivedPitches: pitches.filter(p => p.pitchStatus === 'sent').length,
+    pendingConfirmations: confirmations.filter(c => c.status === 'awaiting_entries' || c.status === 'founder_submitted' || c.status === 'mismatched').length,
   };
 
   // Handle favorite toggle
@@ -281,13 +332,13 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     }
   };
 
-  // Handle request access
-  const handleRequestAccess = async () => {
+  // Handle request pitch
+  const handleRequestPitch = async () => {
     if (!selectedStartup) return;
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/funding/request-access', {
+      const res = await fetch('/api/pitches', {
         credentials: 'include',
         method: 'POST',
         headers: {
@@ -302,10 +353,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success('Access request sent!');
+        toast.success('Pitch request sent!');
         setShowAccessModal(false);
         setAccessMessage('');
-        fetchData();
+        fetchPitches();
       } else {
         toast.error(data.error || 'Failed to send request');
       }
@@ -314,6 +365,37 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     }
 
     setSubmitting(false);
+  };
+
+  const handleSubmitInvestmentTerms = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showConfirmModal) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/investment-confirmation/investor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          confirmationId: showConfirmModal._id,
+          investorAmount: Number(confirmTerms.amount),
+          investorEquity: Number(confirmTerms.equity)
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.matched ? 'Investment confirmed! Match found. 🎉' : 'Details submitted. Awaiting founder entry.');
+        setShowConfirmModal(null);
+        setConfirmTerms({ amount: '', equity: '' });
+        fetchConfirmations();
+        fetchData(); 
+      } else {
+        toast.error(data.error || 'Failed to submit terms');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Handle contact founder for investment
@@ -382,10 +464,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     setIsEditing(false);
   };
 
-  // Check if access already requested
-  const getAccessStatus = (startupId: string) => {
-    const request = accessRequests.find(req => req.startupId?._id === startupId);
-    return request?.status || null;
+  // Check if pitch already requested
+  const getPitchStatus = (startupId: string) => {
+    const pitch = pitches.find(p => p.startupId?._id === startupId);
+    return pitch?.pitchStatus || null;
   };
 
   // View startup detail page
@@ -454,24 +536,46 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
           ))}
         </div>
 
-        {/* Pending Access Requests Alert */}
-        {portfolioStats.pendingAccessRequests > 0 && (
-          <Card className="border-yellow-500/50 bg-yellow-500/5">
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-yellow-500" />
-                <div>
-                  <p className="font-medium">Pending Access Requests</p>
-                  <p className="text-sm text-muted-foreground">
-                    {portfolioStats.pendingAccessRequests} request(s) awaiting founder approval
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setGlobalTab('dealflow')}>
-                View Requests
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Pending Pitch Requests / Confirmations Alerts */}
+        {(portfolioStats.pendingPitches > 0 || portfolioStats.pendingConfirmations > 0) && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {portfolioStats.pendingPitches > 0 && (
+              <Card className="border-blue-500/50 bg-blue-500/5">
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <p className="font-medium text-sm">Pitches Requested</p>
+                      <p className="text-xs text-muted-foreground">
+                        {portfolioStats.pendingPitches} request(s) awaiting founder response
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setGlobalTab('dealflow')}>
+                    View Status
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+            {portfolioStats.pendingConfirmations > 0 && (
+              <Card className="border-orange-500/50 bg-orange-500/5 shadow-lg shadow-orange-500/10">
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-5 w-5 text-orange-500" />
+                    <div>
+                      <p className="font-semibold text-sm">Action Required: Confirmation</p>
+                      <p className="text-xs text-muted-foreground">
+                        {portfolioStats.pendingConfirmations} investment(s) awaiting your term entry
+                      </p>
+                    </div>
+                  </div>
+                  <Button size="sm" onClick={() => setGlobalTab('investments')} className="bg-orange-600 hover:bg-orange-700 text-white">
+                    Confirm Now
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         <Card className="rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.06)' }}>
@@ -626,21 +730,21 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
           </div>
         </div>
 
-        {/* Access Requests Summary */}
-        {accessRequests.length > 0 && (
+        {/* Pitch Requests Summary */}
+        {pitches.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Your Access Requests</CardTitle>
+              <CardTitle className="text-base text-primary">Your Pitch Requests</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-4">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm">{portfolioStats.pendingAccessRequests} Pending</span>
+                  <Clock className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm font-medium">{portfolioStats.pendingPitches} Awaiting Pitch</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">{portfolioStats.approvedAccess} Approved</span>
+                  <span className="text-sm font-medium">{portfolioStats.receivedPitches} Pitches Received</span>
                 </div>
               </div>
             </CardContent>
@@ -661,7 +765,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" style={{ animationDelay: '0.1s' }}>
             {startups.map((startup) => {
-              const accessStatus = getAccessStatus(startup._id);
+              const pitchStatus = getPitchStatus(startup._id);
 
               return (
                 <Card key={startup._id} className="hover:border-primary/50 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
@@ -702,22 +806,22 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                           View Profile
                         </Button>
                         <Button
-                          variant={accessStatus === 'approved' ? 'default' : 'outline'}
+                          variant={pitchStatus === 'sent' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => {
-                            if (!accessStatus || accessStatus === 'rejected') {
+                            if (!pitchStatus || pitchStatus === 'rejected') {
                               setSelectedStartup(startup);
                               setShowAccessModal(true);
                             }
                           }}
-                          disabled={accessStatus === 'pending' || accessStatus === 'approved'}
+                          disabled={pitchStatus === 'requested' || pitchStatus === 'sent'}
                         >
-                          {accessStatus === 'approved' ? (
+                          {pitchStatus === 'sent' ? (
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          ) : accessStatus === 'pending' ? (
-                            <Clock className="h-4 w-4 text-yellow-500" />
+                          ) : pitchStatus === 'requested' ? (
+                            <Clock className="h-4 w-4 text-blue-500" />
                           ) : (
-                            'Request Access'
+                            'Request Pitch'
                           )}
                         </Button>
                         <Button
@@ -740,9 +844,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
         <Dialog open={showAccessModal} onOpenChange={setShowAccessModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Request Access</DialogTitle>
+              <DialogTitle>Request Pitch</DialogTitle>
               <DialogDescription>
-                Send a request to the founder of <span className="font-semibold">{selectedStartup?.name}</span> to view detailed startup information.
+                Send a request to the founder of <span className="font-semibold">{selectedStartup?.name}</span> to receive their pitch deck.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -763,7 +867,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                   Cancel
                 </Button>
                 <InteractiveHoverButton
-                  onClick={handleRequestAccess}
+                  onClick={handleRequestPitch}
                   disabled={submitting}
                   text={submitting ? 'Sending...' : 'Send Request'}
                   className="w-40"
@@ -947,8 +1051,60 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
             )}
           </TabsContent>
 
-          <TabsContent value="pending" className="space-y-4 mt-4">
-            {pendingInvestments.length === 0 ? (
+          <TabsContent value="pending" className="space-y-4 mt-6">
+            {/* Investment Confirmations Section */}
+            {confirmations.length > 0 && (
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-2 px-1">
+                  <Shield className="h-5 w-5 text-orange-500" />
+                  <h3 className="font-bold text-lg">Confirmations Required</h3>
+                </div>
+                {confirmations.map((conf) => (
+                  <Card key={conf._id} className="border-orange-500/20 bg-orange-500/5 shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12 border-2 border-orange-500/20">
+                            <AvatarImage src={conf.startupId.logo} />
+                            <AvatarFallback>{conf.startupId.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h4 className="font-bold">{conf.startupId.name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              {conf.status === 'mismatched' ? (
+                                <Badge variant="destructive" className="text-[10px] py-0 h-4">Mismatch Flagged</Badge>
+                              ) : conf.status === 'investor_submitted' ? (
+                                <Badge variant="outline" className="text-[10px] py-0 h-4 border-orange-500 text-orange-500">Awaiting Founder</Badge>
+                              ) : (
+                                <Badge variant="secondary" className="text-[10px] py-0 h-4">Awaiting Your Entry</Badge>
+                              )}
+                              <span className="text-[10px] text-muted-foreground italic">
+                                {conf.expiresAt ? `Expires ${formatDistanceToNow(new Date(conf.expiresAt))} ago` : 'Confirmation period active'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={() => {
+                            setConfirmTerms({ 
+                              amount: conf.investorAmount?.toString() || '', 
+                              equity: conf.investorEquity?.toString() || '' 
+                            });
+                            setShowConfirmModal(conf);
+                          }}
+                          disabled={conf.status === 'investor_submitted' || conf.status === 'matched'}
+                          className="bg-orange-600 hover:bg-orange-700 text-white"
+                        >
+                          {conf.status === 'investor_submitted' ? 'Submitted' : 'Confirm Terms'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {pendingInvestments.length === 0 && confirmations.length === 0 ? (
               <Card>
                 <CardContent className="flex items-center justify-center py-8">
                   <p className="text-muted-foreground">No pending investments</p>
@@ -1280,9 +1436,77 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Investment Confirmation Modal for Investor */}
+        <Dialog open={!!showConfirmModal} onOpenChange={(open) => !open && setShowConfirmModal(null)}>
+          <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-none shadow-2xl text-foreground">
+            <div className="p-6 pb-0" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.08) 0%, rgba(234,88,12,0.06) 100%)' }}>
+              <DialogHeader>
+                <div className="h-12 w-12 rounded-2xl bg-white/80 backdrop-blur shadow-sm flex items-center justify-center mb-4 border border-white/40">
+                  <Shield className="h-6 w-6 text-orange-500" />
+                </div>
+                <DialogTitle className="text-xl">Submit Investment Details</DialogTitle>
+                <DialogDescription className="text-muted-foreground/80">
+                  Enter the final terms for your investment in {showConfirmModal?.startupId.name}.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+            <div className="p-6 pt-6">
+              <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl mb-6">
+                <p className="text-xs text-orange-700 font-bold flex items-center gap-2 mb-1">
+                  <Zap className="h-3 w-3" /> Double Confirmation System
+                </p>
+                <p className="text-[11px] text-orange-700/80 leading-relaxed">
+                  Both you and the founder must enter these terms independently. If they match <strong>exactly</strong>, the investment will be officially recorded on-platform.
+                </p>
+              </div>
+              <form onSubmit={handleSubmitInvestmentTerms} className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Amount ($) *</Label>
+                    <div className="relative group">
+                      <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50 transition-colors group-focus-within:text-primary" />
+                      <Input 
+                        type="number" 
+                        placeholder="e.g. 50000" 
+                        className="pl-10 h-10 transition-all border-muted focus:border-primary/50 bg-background"
+                        value={confirmTerms.amount}
+                        onChange={(e) => setConfirmTerms({...confirmTerms, amount: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Equity (%) *</Label>
+                    <div className="relative group">
+                      <Target className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50 transition-colors group-focus-within:text-primary" />
+                      <Input 
+                        type="number" 
+                        step="0.001"
+                        placeholder="e.g. 2.5" 
+                        className="pl-10 h-10 transition-all border-muted focus:border-primary/50 bg-background"
+                        value={confirmTerms.equity}
+                        onChange={(e) => setConfirmTerms({...confirmTerms, equity: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter className="pt-2">
+                  <Button type="button" variant="ghost" onClick={() => setShowConfirmModal(null)} className="h-10">Cancel</Button>
+                  <Button type="submit" disabled={submitting} className="h-10 px-8 bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-500/20 text-white border-none transition-all">
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                    Confirm Details
+                  </Button>
+                </DialogFooter>
+              </form>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
+
 
   // Settings handled by Dashboard component
 
@@ -1350,6 +1574,16 @@ function AgreementsSection() {
       toast.error('Failed to sign agreement');
     }
     setSigningId(null);
+  };
+
+  const getAgreementTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      investment: 'bg-green-500',
+      employment: 'bg-blue-500',
+      partnership: 'bg-purple-500',
+      nda: 'bg-orange-500',
+    };
+    return colors[type.toLowerCase()] || 'bg-gray-500';
   };
 
   const getStatusColor = (status: string) => {

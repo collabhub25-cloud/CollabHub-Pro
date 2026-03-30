@@ -121,6 +121,35 @@ interface Agreement {
   signedBy: Array<{ userId: string; signedAt: string }>;
 }
 
+interface Pitch {
+  _id: string;
+  startupId: { _id: string; name: string };
+  investorId: { _id: string; name: string; avatar?: string; verificationLevel: number; email: string };
+  pitchStatus: 'requested' | 'sent' | 'rejected' | 'invested' | 'expired';
+  message?: string;
+  amountRequested?: number;
+  equityOffered?: number;
+  pitchDocumentUrl?: string;
+  pitchMessage?: string;
+  pitchSentAt?: string;
+  createdAt: string;
+}
+
+interface InvestmentConfirmation {
+  _id: string;
+  startupId: { _id: string; name: string; logo?: string };
+  investorId: { _id: string; name: string; avatar?: string; email: string };
+  pitchId: string;
+  status: 'pending' | 'awaiting_entries' | 'founder_submitted' | 'investor_submitted' | 'matched' | 'mismatched' | 'expired';
+  founderAmount?: number;
+  founderEquity?: number;
+  investorAmount?: number;
+  investorEquity?: number;
+  promptSentAt?: string;
+  expiresAt?: string;
+  retryCount: number;
+}
+
 
 const chartConfig = {
   sales: {
@@ -162,6 +191,16 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const [showCreateAchievement, setShowCreateAchievement] = useState(false);
   const [newAchievement, setNewAchievement] = useState({ title: '', description: '', type: 'milestone', visibility: 'public', startupId: '' });
   const [achievementSubmitting, setAchievementSubmitting] = useState(false);
+
+  // Pitches & Confirmations
+  const [pitches, setPitches] = useState<Pitch[]>([]);
+  const [confirmations, setConfirmations] = useState<InvestmentConfirmation[]>([]);
+  const [pitchLoading, setPitchLoading] = useState(false);
+  const [confirmationLoading, setConfirmationLoading] = useState(false);
+  const [showSendPitchModal, setShowSendPitchModal] = useState<Pitch | null>(null);
+  const [sendPitchData, setSendPitchData] = useState({ pitchDocumentUrl: '', message: '' });
+  const [showConfirmModal, setShowConfirmModal] = useState<InvestmentConfirmation | null>(null);
+  const [confirmTerms, setConfirmTerms] = useState({ amount: '', equity: '' });
 
   // Compute dynamic chart data from real user data
   const dynamicChartData = React.useMemo(() => {
@@ -279,14 +318,46 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     } catch { /* silent */ }
   }, []);
 
+  const fetchPitches = useCallback(async () => {
+    setPitchLoading(true);
+    try {
+      const res = await fetch('/api/pitches', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setPitches(data.pitches || []);
+      }
+    } catch (err) {
+      console.error('Error fetching pitches:', err);
+    } finally {
+      setPitchLoading(false);
+    }
+  }, []);
+
+  const fetchConfirmations = useCallback(async () => {
+    setConfirmationLoading(true);
+    try {
+      const res = await fetch('/api/investment-confirmation', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setConfirmations(data.confirmations || []);
+      }
+    } catch (err) {
+      console.error('Error fetching confirmations:', err);
+    } finally {
+      setConfirmationLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
-      if (activeTab === 'dashboard' || activeTab === 'startups' || activeTab === 'applications' || activeTab === 'milestones' || activeTab === 'funding' || activeTab === 'agreements' || activeTab === 'achievements') {
+      if (activeTab === 'dashboard' || activeTab === 'startups' || activeTab === 'applications' || activeTab === 'milestones' || activeTab === 'funding' || activeTab === 'agreements' || activeTab === 'achievements' || activeTab === 'pitch-requests') {
         await fetchData();
+        await fetchPitches();
+        await fetchConfirmations();
       }
     };
     loadData();
-  }, [activeTab, fetchData]);
+  }, [activeTab, fetchData, fetchPitches, fetchConfirmations]);
 
   // Fetch achievements
   const fetchAchievements = useCallback(async () => {
@@ -546,6 +617,90 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     return colors[type] || 'bg-gray-500';
   };
 
+  const handleSendPitch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showSendPitchModal) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/pitches', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: showSendPitchModal._id,
+          action: 'send_pitch',
+          pitchDocumentUrl: sendPitchData.pitchDocumentUrl,
+          message: sendPitchData.message
+        }),
+      });
+      if (res.ok) {
+        toast.success('Pitch sent successfully!');
+        setShowSendPitchModal(null);
+        setSendPitchData({ pitchDocumentUrl: '', message: '' });
+        fetchPitches();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to send pitch');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRejectPitch = async (pitchId: string) => {
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/pitches', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: pitchId, action: 'reject' }),
+      });
+      if (res.ok) {
+        toast.success('Pitch request rejected');
+        fetchPitches();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to reject pitch');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitInvestmentTerms = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showConfirmModal) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/investment-confirmation/founder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          confirmationId: showConfirmModal._id,
+          founderAmount: Number(confirmTerms.amount),
+          founderEquity: Number(confirmTerms.equity)
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.matched ? 'Investment confirmed! Match found. 🎉' : 'Details submitted. Awaiting investor entry.');
+        setShowConfirmModal(null);
+        setConfirmTerms({ amount: '', equity: '' });
+        fetchConfirmations();
+        fetchData(); // Refresh funding stats
+      } else {
+        toast.error(data.error || 'Failed to submit terms');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Dashboard Overview
   if (activeTab === 'dashboard') {
     const activeMilestones = milestones.filter(m => m.status !== 'completed');
@@ -596,6 +751,26 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             </div>
             <Button variant="outline" className="cursor-pointer hover:bg-primary/5" style={{ borderColor: 'var(--sea-green)', color: 'var(--sea-green)' }} onClick={() => useUIStore.getState().setActiveTab('verification')}>Continue →</Button>
           </div>
+        )}
+
+        {/* Pending Investment Confirmations */}
+        {confirmations.some(c => c.status === 'awaiting_entries' || c.status === 'investor_submitted' || c.status === 'mismatched') && (
+          <Card className="border-orange-500/50 bg-orange-500/5">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+                <div>
+                  <p className="font-semibold text-sm">Action Required: Investment Confirmation</p>
+                  <p className="text-xs text-muted-foreground">
+                    You have {confirmations.filter(c => c.status === 'awaiting_entries' || c.status === 'investor_submitted' || c.status === 'mismatched').length} investment(s) awaiting your term confirmation.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" onClick={() => useUIStore.getState().setActiveTab('funding')}>
+                Confirm Now
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -1367,6 +1542,85 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             )}
           </CardContent>
         </Card>
+
+        {/* Investment Confirmations */}
+        <Card className="mt-6 border-orange-500/20 bg-muted/30">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Shield className="h-5 w-5 text-orange-500" />
+              Investment Confirmations
+            </CardTitle>
+            <CardDescription>Finalize deals by confirming agreed terms independently.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {confirmationLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : confirmations.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground italic border rounded-lg border-dashed">
+                <p>No investment confirmations in progress</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {confirmations.map((conf) => (
+                  <div key={conf._id} className="flex items-center justify-between p-4 rounded-xl border bg-white dark:bg-black/40 shadow-sm transition-all hover:shadow-md">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-10 w-10 border">
+                        <AvatarImage src={conf.investorId.avatar} />
+                        <AvatarFallback>{conf.investorId.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-sm">{conf.investorId.name}</h4>
+                          <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-muted rounded">Deal ID: {conf._id.substring(18)}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{conf.startupId.name}</p>
+                        <div className="flex gap-2 mt-2">
+                          {conf.status === 'matched' ? (
+                            <Badge className="bg-green-500 text-[10px] py-0 h-4">✅ Matched</Badge>
+                          ) : conf.status === 'mismatched' ? (
+                            <Badge className="bg-red-500 text-[10px] py-0 h-4">❌ Mismatch</Badge>
+                          ) : conf.status === 'founder_submitted' ? (
+                            <Badge variant="outline" className="text-[10px] py-0 h-4 border-orange-500 text-orange-500">Awaiting Investor</Badge>
+                          ) : conf.status === 'investor_submitted' ? (
+                            <Badge variant="outline" className="text-[10px] py-0 h-4 border-blue-500 text-blue-500">Awaiting You</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-[10px] py-0 h-4">Awaiting Both</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div className="hidden md:block text-right">
+                        <p className="text-[10px] text-muted-foreground uppercase font-medium">Terms</p>
+                        {conf.status === 'matched' || conf.status === 'mismatched' ? (
+                          <div className="text-xs font-bold text-primary">
+                            ${conf.founderAmount?.toLocaleString()} / {conf.founderEquity}%
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground italic">Hidden until match</div>
+                        )}
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant={conf.status === 'investor_submitted' || conf.status === 'mismatched' ? 'default' : 'outline'}
+                        onClick={() => {
+                          setConfirmTerms({ 
+                            amount: conf.founderAmount?.toString() || '', 
+                            equity: conf.founderEquity?.toString() || '' 
+                          });
+                          setShowConfirmModal(conf);
+                        }}
+                        disabled={conf.status === 'matched' || conf.status === 'founder_submitted'}
+                      >
+                        {conf.status === 'matched' ? 'Confirmed' : conf.status === 'founder_submitted' ? 'Submitted' : 'Confirm Terms'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -1511,6 +1765,103 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 </Card>
               ))
             )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
+
+  // Pitch Requests
+  if (activeTab === 'pitch-requests') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Pitch Requests</h1>
+            <p className="text-sm text-muted-foreground">Investors interested in viewing your pitch deck</p>
+          </div>
+        </div>
+
+        <Tabs defaultValue="pending">
+          <TabsList>
+            <TabsTrigger value="pending">Pending ({pitches.filter(p => p.pitchStatus === 'requested').length})</TabsTrigger>
+            <TabsTrigger value="sent">Sent ({pitches.filter(p => p.pitchStatus === 'sent').length})</TabsTrigger>
+            <TabsTrigger value="all">All ({pitches.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pending" className="space-y-4 mt-6">
+            {pitchLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            ) : pitches.filter(p => p.pitchStatus === 'requested').length === 0 ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">No pending pitch requests</CardContent></Card>
+            ) : (
+              pitches.filter(p => p.pitchStatus === 'requested').map((pitch) => (
+                <Card key={pitch._id} className="overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={pitch.investorId.avatar} />
+                          <AvatarFallback>{pitch.investorId.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-semibold text-lg">{pitch.investorId.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">{pitch.startupId.name} • {formatDistanceToNow(new Date(pitch.createdAt))} ago</p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">Level {pitch.investorId.verificationLevel} Investor</Badge>
+                            {pitch.investorId.verificationLevel >= 3 && <AlloySphereVerifiedBadge verified={true} />}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600" onClick={() => handleRejectPitch(pitch._id)}>Decline</Button>
+                        <Button size="sm" onClick={() => setShowSendPitchModal(pitch)}>Send Pitch Deck</Button>
+                      </div>
+                    </div>
+                    {pitch.message && (
+                      <div className="mt-4 p-4 rounded-lg bg-muted/50 border italic text-sm text-muted-foreground">
+                        &quot;{pitch.message}&quot;
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="sent" className="space-y-4 mt-6">
+            {pitches.filter(p => p.pitchStatus === 'sent').map((pitch) => (
+              <Card key={pitch._id}>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-center">
+                    <div className="flex gap-4 items-center">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={pitch.investorId.avatar} />
+                        <AvatarFallback>{pitch.investorId.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold">{pitch.investorId.name}</h3>
+                        <p className="text-sm text-muted-foreground">Sent {formatDistanceToNow(new Date(pitch.pitchSentAt!))} ago</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-green-500">Pitch Sent</Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted p-1 px-2 rounded-full">
+                              <Clock className="h-3 w-3" />
+                              2h Timer Active
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>Investment confirmation will be enabled 2 hours after sending the pitch.</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </TabsContent>
         </Tabs>
       </div>
@@ -1710,3 +2061,4 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     </div>
   );
 }
+

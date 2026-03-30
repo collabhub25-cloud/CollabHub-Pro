@@ -16,6 +16,7 @@ export * from './models/achievement.model';
 export * from './models/investment.model';
 export * from './models/agreement.model';
 export * from './models/pitch.model';
+export * from './models/investment-confirmation.model';
 export * from './models/journey-post.model';
 import mongoose, { Schema, Document } from 'mongoose';
 // ============================================
@@ -189,7 +190,12 @@ export type NotificationType =
   | 'alliance_request'
   | 'alliance_accepted'
   | 'alliance_rejected'
-  | 'message_received';
+  | 'message_received'
+  | 'pitch_requested'
+  | 'pitch_sent'
+  | 'investment_entry_prompt'
+  | 'investment_matched'
+  | 'investment_mismatched';
 
 export interface INotification extends Document {
   userId: mongoose.Types.ObjectId;

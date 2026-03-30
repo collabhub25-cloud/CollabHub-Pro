@@ -282,3 +282,119 @@ export async function sendAgreementNotificationEmail(
         console.error('[MAILER] Error sending agreement notification email:', error);
     }
 }
+
+// ============================================
+// Investment Prompt Email (2-hour timer trigger)
+// ============================================
+export async function sendInvestmentPromptEmail(
+    email: string,
+    recipientName: string,
+    startupName: string,
+    partnerName: string,
+    role: 'founder' | 'investor'
+) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.warn(`[MAILER] DEV MODE - Investment prompt email for ${email}`);
+        return;
+    }
+
+    const roleMessage = role === 'founder'
+        ? `It's time to confirm the investment details agreed upon with <strong>${partnerName}</strong> for <strong>${startupName}</strong>.`
+        : `It's time to confirm your investment details for <strong>${startupName}</strong> as discussed with the founder.`;
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"AlloySphere" <${FROM_EMAIL}>`,
+            to: email,
+            subject: `Enter Investment Details — ${startupName}`,
+            text: `Time to enter investment details for ${startupName}`,
+            html: wrapInBrandedTemplate('Enter Investment Details', `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">Hi ${recipientName},</p>
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">${roleMessage}</p>
+                <div style="background: linear-gradient(135deg, rgba(46,139,87,0.08), rgba(0,71,171,0.08)); padding: 20px; border-radius: 10px; margin: 24px 0; border: 1px solid rgba(46,139,87,0.15);">
+                  <p style="color: #1a1a1a; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">What you need to enter:</p>
+                  <ul style="color: #4a4a4a; font-size: 13px; margin: 0; padding-left: 20px;">
+                    <li>Investment Amount ($)</li>
+                    <li>Equity Percentage (%)</li>
+                  </ul>
+                </div>
+                <p style="color: #71717a; font-size: 13px; margin: 0 0 20px 0;"><strong>Important:</strong> Both parties must enter details independently. The system will verify both entries match before confirming the investment.</p>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard/${role}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E8B57, #0047AB); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Enter Details Now</a>
+                </div>
+                <p style="color: #71717a; font-size: 12px; margin: 0;">You have 48 hours to submit your entry.</p>
+            `),
+        });
+        return info.messageId;
+    } catch (error) {
+        console.error('[MAILER] Error sending investment prompt email:', error);
+    }
+}
+
+// ============================================
+// Investment Match/Mismatch Email
+// ============================================
+export async function sendInvestmentResultEmail(
+    email: string,
+    recipientName: string,
+    startupName: string,
+    matched: boolean,
+    amount?: number,
+    equity?: number
+) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.warn(`[MAILER] DEV MODE - Investment ${matched ? 'match' : 'mismatch'} email for ${email}`);
+        return;
+    }
+
+    const subject = matched
+        ? `Investment Confirmed — ${startupName}`
+        : `Investment Discrepancy — ${startupName}`;
+
+    const body = matched
+        ? `
+            <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">Great news! The investment details for <strong>${startupName}</strong> have been verified and confirmed.</p>
+            <div style="background: linear-gradient(135deg, rgba(46,139,87,0.08), rgba(0,71,171,0.08)); padding: 20px; border-radius: 10px; margin: 24px 0; border: 1px solid rgba(46,139,87,0.15);">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Amount</td>
+                  <td style="color: #2E8B57; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">$${amount?.toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Equity</td>
+                  <td style="color: #2E8B57; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">${equity}%</td>
+                </tr>
+                <tr>
+                  <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Status</td>
+                  <td style="color: #2E8B57; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">✅ Confirmed</td>
+                </tr>
+              </table>
+            </div>
+        `
+        : `
+            <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">The investment details submitted for <strong>${startupName}</strong> don't match between both parties.</p>
+            <div style="background: #fef2f2; padding: 20px; border-radius: 10px; margin: 24px 0; border: 1px solid #fecaca;">
+              <p style="color: #dc2626; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">⚠️ Discrepancy Detected</p>
+              <p style="color: #4a4a4a; font-size: 13px; margin: 0;">Please coordinate with the other party and re-enter your investment details from your dashboard.</p>
+            </div>
+        `;
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"AlloySphere" <${FROM_EMAIL}>`,
+            to: email,
+            subject,
+            text: `Investment ${matched ? 'confirmed' : 'discrepancy'} for ${startupName}`,
+            html: wrapInBrandedTemplate(
+                matched ? 'Investment Confirmed! 🎉' : 'Investment Discrepancy',
+                `<p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 16px 0;">Hi ${recipientName},</p>${body}
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E8B57, #0047AB); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View on Dashboard</a>
+                </div>`
+            ),
+        });
+        return info.messageId;
+    } catch (error) {
+        console.error('[MAILER] Error sending investment result email:', error);
+    }
+}
