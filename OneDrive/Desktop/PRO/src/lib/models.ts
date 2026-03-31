@@ -105,7 +105,7 @@ const PaymentSchema = new Schema<IPayment>(
   {
     type: { type: String, enum: ['milestone', 'investment', 'subscription', 'commission'], required: true },
     amount: { type: Number, required: true },
-    currency: { type: String, default: 'USD' },
+    currency: { type: String, default: 'INR' },
     status: { type: String, enum: ['pending', 'processing', 'completed', 'failed', 'refunded'], default: 'pending' },
     fromUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     toUserId: { type: Schema.Types.ObjectId, ref: 'User' },

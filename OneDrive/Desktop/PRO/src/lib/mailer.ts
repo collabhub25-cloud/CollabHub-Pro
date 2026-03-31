@@ -358,7 +358,7 @@ export async function sendInvestmentResultEmail(
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Amount</td>
-                  <td style="color: #2E8B57; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">$${amount?.toLocaleString()}</td>
+                  <td style="color: #2E8B57; font-size: 14px; font-weight: 600; text-align: right; padding: 6px 0;">₹${amount?.toLocaleString('en-IN')}</td>
                 </tr>
                 <tr>
                   <td style="color: #71717a; font-size: 13px; padding: 6px 0;">Equity</td>

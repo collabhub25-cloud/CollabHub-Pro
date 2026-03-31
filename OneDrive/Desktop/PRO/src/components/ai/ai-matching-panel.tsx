@@ -171,8 +171,8 @@ export function AIMatchingPanel({ type, onConnect }: AIMatchingPanelProps) {
                     {match.fundingRound && (
                       <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
                         <span>{match.fundingRound.name} Round</span>
-                        <span>Target: ${match.fundingRound.target?.toLocaleString()}</span>
-                        <span>Min: ${match.fundingRound.minInvestment?.toLocaleString()}</span>
+                        <span>Target: ₹{match.fundingRound.target?.toLocaleString('en-IN')}</span>
+                        <span>Min: ₹{match.fundingRound.minInvestment?.toLocaleString('en-IN')}</span>
                       </div>
                     )}
                   </div>

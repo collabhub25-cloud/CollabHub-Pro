@@ -192,7 +192,7 @@ export function ApplyModal({ startup, open, onOpenChange, onSuccess }: ApplyModa
                             <span className="text-sm">
                               <span className="text-primary">{role.equityPercent}%</span>
                               {' + '}
-                              <span className="text-green-600">${role.cashAmount.toLocaleString()}</span>
+                              <span className="text-green-600">₹{role.cashAmount.toLocaleString('en-IN')}</span>
                             </span>
                           )}
                         </div>

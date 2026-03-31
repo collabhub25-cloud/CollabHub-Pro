@@ -1,23 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '@/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Trophy, Plus, Trash2, Calendar, Link as LinkIcon, Building } from 'lucide-react';
+import { Loader2, Trophy, Plus, Trash2, ImagePlus, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface Achievement {
   _id: string;
   title: string;
   description?: string;
-  type: string;
-  organization?: string;
-  date?: string;
-  proofLink?: string;
+  imageUrl: string;
+  createdAt: string;
 }
 
 export function AchievementsPage() {
@@ -26,14 +24,13 @@ export function AchievementsPage() {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'award',
-    organization: '',
-    date: '',
-    proofLink: '',
   });
 
   const fetchAchievements = useCallback(async () => {
@@ -56,25 +53,64 @@ export function AchievementsPage() {
     fetchAchievements();
   }, [fetchAchievements]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only JPEG, PNG, WebP, and GIF images are allowed');
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
       toast.error('Title is required');
       return;
     }
-    
+    if (!imageFile) {
+      toast.error('Image is required');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const res = await apiFetch('/api/achievements/create', {
+      const fd = new FormData();
+      fd.append('title', formData.title.trim());
+      fd.append('description', formData.description.trim());
+      fd.append('image', imageFile);
+
+      const res = await fetch('/api/achievements/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        credentials: 'include',
+        body: fd,
       });
 
       if (res.ok) {
         toast.success('Achievement added successfully!');
         setIsAdding(false);
-        setFormData({ title: '', description: '', type: 'award', organization: '', date: '', proofLink: '' });
+        setFormData({ title: '', description: '' });
+        clearImage();
         fetchAchievements();
       } else {
         const err = await res.json();
@@ -102,6 +138,12 @@ export function AchievementsPage() {
     }
   };
 
+  const handleCancel = () => {
+    setIsAdding(false);
+    setFormData({ title: '', description: '' });
+    clearImage();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -119,7 +161,7 @@ export function AchievementsPage() {
             My Achievements
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Showcase your awards, hackathons, and certifications to stand out to startups.
+            Showcase your milestones and accomplishments with visual cards.
           </p>
         </div>
         {!isAdding && (
@@ -133,70 +175,69 @@ export function AchievementsPage() {
         <Card className="border-primary/20 shadow-md">
           <CardHeader>
             <CardTitle className="text-lg">Add New Achievement</CardTitle>
-            <CardDescription>Fill in the details below to add to your profile.</CardDescription>
+            <CardDescription>Fill in the details and upload an image.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Title *</label>
-                  <Input 
-                    value={formData.title} 
-                    onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g. 1st Place - Global Hackathon"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Type</label>
-                  <select 
-                    value={formData.type}
-                    onChange={e => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background md:text-sm"
-                  >
-                    <option value="award">Award</option>
-                    <option value="hackathon">Hackathon</option>
-                    <option value="certification">Certification</option>
-                    <option value="publication">Publication</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Organization / Issuer</label>
-                  <Input 
-                    value={formData.organization} 
-                    onChange={e => setFormData(prev => ({ ...prev, organization: e.target.value }))}
-                    placeholder="e.g. Google, MIT, Coursera"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Date Received</label>
-                  <Input 
-                    type="date"
-                    value={formData.date} 
-                    onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  />
-                </div>
-              </div>
-              
               <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
-                <textarea 
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm md:text-sm"
-                  value={formData.description}
-                  onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe what you accomplished or learned..."
+                <label className="text-sm font-medium">Title *</label>
+                <Input
+                  value={formData.title}
+                  onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g. 1st Place - Global Hackathon"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Proof / Credential URL</label>
-                <Input 
-                  type="url"
-                  value={formData.proofLink} 
-                  onChange={e => setFormData(prev => ({ ...prev, proofLink: e.target.value }))}
-                  placeholder="https://"
+                <label className="text-sm font-medium">Description</label>
+                <textarea
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm md:text-sm"
+                  value={formData.description}
+                  onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe what you accomplished..."
                 />
+              </div>
+
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Image *</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                  id="achievement-image"
+                />
+                
+                {imagePreview ? (
+                  <div className="relative group w-full max-w-sm">
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-muted">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearImage}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="achievement-image"
+                    className="flex flex-col items-center justify-center w-full max-w-sm aspect-video rounded-xl border-2 border-dashed border-muted-foreground/25 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
+                  >
+                    <ImagePlus className="h-10 w-10 text-muted-foreground/40 mb-2" />
+                    <p className="text-sm font-medium text-muted-foreground">Click to upload image</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">JPEG, PNG, WebP, GIF · Max 5MB</p>
+                  </label>
+                )}
               </div>
 
               <div className="flex items-center gap-3 pt-4">
@@ -204,7 +245,7 @@ export function AchievementsPage() {
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Save Achievement
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setIsAdding(false)}>
+                <Button type="button" variant="ghost" onClick={handleCancel}>
                   Cancel
                 </Button>
               </div>
@@ -221,64 +262,41 @@ export function AchievementsPage() {
             </div>
             <p className="text-lg font-semibold text-foreground/80">No achievements yet</p>
             <p className="text-sm mt-1 max-w-sm mb-6">
-              Share your milestones, awards, and certifications to increase your chances of getting hired.
+              Share your milestones and accomplishments to stand out.
             </p>
             <Button onClick={() => setIsAdding(true)} variant="outline">Create your first achievement</Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {achievements.map((item) => (
-            <Card key={item._id} className="group hover:border-primary/30 transition-colors bg-card/50 backdrop-blur">
-              <CardContent className="p-5 flex flex-col h-full">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="capitalize text-xs font-medium">
-                      {item.type}
-                    </Badge>
-                    {item.date && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(item.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
-                      </span>
-                    )}
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleDelete(item._id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <h3 className="text-base font-bold text-foreground mt-1 leading-tight">{item.title}</h3>
-                
-                {item.organization && (
-                  <p className="text-sm text-primary flex items-center gap-1.5 mt-2 font-medium">
-                    <Building className="h-3.5 w-3.5" /> {item.organization}
-                  </p>
-                )}
-
+            <Card key={item._id} className="group hover:border-primary/30 transition-all overflow-hidden bg-card/50 backdrop-blur hover:shadow-lg hover:-translate-y-0.5 duration-200">
+              {/* Image */}
+              <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8 bg-black/40 hover:bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                  onClick={() => handleDelete(item._id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-base font-bold text-foreground leading-tight">{item.title}</h3>
                 {item.description && (
-                  <p className="text-sm text-muted-foreground mt-3 line-clamp-3 leading-relaxed flex-1">
+                  <p className="text-sm text-muted-foreground mt-2 line-clamp-3 leading-relaxed">
                     {item.description}
                   </p>
                 )}
-
-                {item.proofLink && (
-                  <div className="mt-4 pt-4 border-t border-border/50">
-                    <a 
-                      href={item.proofLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1.5 transition-colors font-medium w-fit"
-                    >
-                      <LinkIcon className="h-3.5 w-3.5" /> View Credential
-                    </a>
-                  </div>
-                )}
+                <p className="text-[10px] text-muted-foreground/60 mt-3 uppercase tracking-wider">
+                  {new Date(item.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </p>
               </CardContent>
             </Card>
           ))}

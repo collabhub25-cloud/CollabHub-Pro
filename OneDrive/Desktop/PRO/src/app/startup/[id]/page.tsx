@@ -1191,7 +1191,7 @@ export default function StartupPage({
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-lg font-bold font-mono text-gray-900 dark:text-gray-100">${(round.targetAmount || 0).toLocaleString()}</p>
+                                            <p className="text-lg font-bold font-mono text-gray-900 dark:text-gray-100">₹{(round.targetAmount || 0).toLocaleString('en-IN')}</p>
                                             <p className={`text-xs mt-1 font-bold uppercase tracking-wider ${round.status === 'active' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>{round.status}</p>
                                         </div>
                                     </div>

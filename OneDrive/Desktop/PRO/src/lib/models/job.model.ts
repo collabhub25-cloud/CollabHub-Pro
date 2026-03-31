@@ -49,7 +49,7 @@ const JobSchema = new Schema<IJob>(
         compensation: {
             minSalary: { type: Number },
             maxSalary: { type: Number },
-            currency: { type: String, default: 'USD' },
+            currency: { type: String, default: 'INR' },
             equityRange: { type: String }
         },
         isActive: { type: Boolean, default: true }

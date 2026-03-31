@@ -72,7 +72,7 @@ async function runMatchingLogic(confirmationId: string) {
       userId: confirmation.investorId,
       type: 'investment_matched',
       title: 'Investment Confirmed! 🎉',
-      message: `Your investment of $${confirmation.founderAmount.toLocaleString()} for ${confirmation.founderEquity}% equity in ${startup?.name} has been verified`,
+      message: `Your investment of ₹${confirmation.founderAmount.toLocaleString('en-IN')} for ${confirmation.founderEquity}% equity in ${startup?.name} has been verified`,
       actionUrl: '/dashboard/investor',
       metadata: {
         confirmationId: confirmation._id.toString(),
@@ -88,7 +88,7 @@ async function runMatchingLogic(confirmationId: string) {
         userId: startup.founderId,
         type: 'investment_matched',
         title: 'Investment Confirmed! 🎉',
-        message: `${investor?.name}'s investment of $${confirmation.founderAmount.toLocaleString()} for ${confirmation.founderEquity}% equity in ${startup.name} has been verified`,
+        message: `${investor?.name}'s investment of ₹${confirmation.founderAmount.toLocaleString('en-IN')} for ${confirmation.founderEquity}% equity in ${startup.name} has been verified`,
         actionUrl: '/dashboard/founder',
         metadata: {
           confirmationId: confirmation._id.toString(),

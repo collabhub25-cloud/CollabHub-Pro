@@ -183,18 +183,18 @@ export function safeMax(values: unknown[], fallback = 0): number {
 /**
  * Format currency with safe handling
  */
-export function formatCurrency(value: unknown, currency = 'USD'): string {
+export function formatCurrency(value: unknown, currency = 'INR'): string {
   const num = safeParseNumber(value, 0);
 
   try {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(num);
   } catch {
-    return `$${num.toLocaleString()}`;
+    return `₹${num.toLocaleString('en-IN')}`;
   }
 }
 

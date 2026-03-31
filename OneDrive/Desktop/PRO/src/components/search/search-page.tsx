@@ -435,7 +435,7 @@ export function SearchPage() {
                               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <DollarSign className="h-3 w-3" />
-                                  ${result.investorDetails.ticketSize.min.toLocaleString()} - ${result.investorDetails.ticketSize.max.toLocaleString()}
+                                  ₹{result.investorDetails.ticketSize.min.toLocaleString('en-IN')} - ₹{result.investorDetails.ticketSize.max.toLocaleString('en-IN')}
                                 </span>
                               </div>
                             )}

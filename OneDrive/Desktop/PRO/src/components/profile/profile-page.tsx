@@ -22,7 +22,7 @@ import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-b
 import { VerificationProgress } from '@/components/verification/verification-progress';
 
 import { PremiumGithub, PremiumLinkedIn, PremiumGlobe } from '@/components/ui/social-icons';
-import { KycDashboard } from '@/components/kyc/kyc-dashboard';
+
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
 import { toast } from 'sonner';
@@ -532,7 +532,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
           {[
             { id: 'overview', label: 'Overview', icon: Building2 },
             { id: 'verification', label: 'Verification', icon: Shield },
-            { id: 'compliance', label: 'KYC & Compliance', icon: ShieldCheck },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -556,12 +555,7 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         <VerificationProgress />
       )}
 
-      {/* Compliance / KYC Tab */}
-      {profileTab === 'compliance' && isOwnProfile && (
-        <KycDashboard />
-      )}
 
-      {/* Overview Tab Content */}
       {(profileTab === 'overview' || !isOwnProfile) && (
         <>
 
@@ -898,7 +892,7 @@ function InvestmentProfileSection({ userId }: { userId: string }) {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          ['Total Invested', `$${(data.totalInvested || 0).toLocaleString()}`],
+          ['Total Invested', `₹${(data.totalInvested || 0).toLocaleString('en-IN')}`],
           ['Portfolio', `${data.portfolio?.length || 0} startups`],
           ['Avg Equity', `${(data.averageEquity || 0).toFixed(1)}%`],
           ['Active Rounds', `${data.activeRounds || 0}`],
@@ -934,7 +928,7 @@ function InvestmentProfileSection({ userId }: { userId: string }) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-mono">${(item.amount || 0).toLocaleString()}</p>
+                  <p className="text-sm font-mono">₹{(item.amount || 0).toLocaleString('en-IN')}</p>
                   <p className="text-xs text-muted-foreground">{(item.equity || 0).toFixed(1)}% equity</p>
                 </div>
               </button>

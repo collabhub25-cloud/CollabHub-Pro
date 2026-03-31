@@ -58,7 +58,7 @@ export function MilestonePaymentModal({ milestone, isOpen, onClose, onSuccess }:
                         Milestone Payment: {milestone.title}
                     </DialogTitle>
                     <DialogDescription>
-                        Securely track off-platform escrow transfers for legal compliance. Amount: <strong className="text-green-600 dark:text-green-400">${milestone.amount.toLocaleString()}</strong>
+                        Securely track off-platform escrow transfers for legal compliance. Amount: <strong className="text-green-600 dark:text-green-400">₹{milestone.amount.toLocaleString('en-IN')}</strong>
                     </DialogDescription>
                 </DialogHeader>
 
@@ -140,7 +140,7 @@ export function MilestonePaymentModal({ milestone, isOpen, onClose, onSuccess }:
 
                     {mode === 'confirm' && (
                         <div className="space-y-4 animate-in slide-in-from-bottom-2 fade-in">
-                            <p className="text-sm text-muted-foreground">Are you sure you want to verify receipt of <strong className="text-foreground">${milestone.amount.toLocaleString()}</strong>? This action will permanently lock the milestone payment status.</p>
+                            <p className="text-sm text-muted-foreground">Are you sure you want to verify receipt of <strong className="text-foreground">₹{milestone.amount.toLocaleString('en-IN')}</strong>? This action will permanently lock the milestone payment status.</p>
                             <div className="flex gap-2">
                                 <Button variant="outline" onClick={() => setMode(null)} className="flex-1">Back</Button>
                                 <Button onClick={() => handleAction('confirm-receipt', {})} className="flex-1 bg-green-600 hover:bg-green-700" disabled={loading}>

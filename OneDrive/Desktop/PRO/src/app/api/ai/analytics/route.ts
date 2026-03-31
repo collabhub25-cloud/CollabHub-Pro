@@ -177,7 +177,7 @@ Max 3 insights, 3 predictions, 3 recommendations. Be practical and encouraging.`
     productivityScore,
     insights: [
       { title: 'Milestone Completion', description: `${completedMilestones} of ${milestones.length} milestones completed`, type: completedMilestones > 0 ? 'positive' : 'info' },
-      { title: 'Total Earned', description: `$${totalEarned.toLocaleString()} earned from completed milestones`, type: 'info' },
+      { title: 'Total Earned', description: `₹${totalEarned.toLocaleString('en-IN')} earned from completed milestones`, type: 'info' },
     ],
     predictions: [
       { metric: 'Productivity', value: `${productivityScore}%`, trend: productivityScore > 60 ? 'up' : 'stable' },
@@ -238,7 +238,7 @@ Max 3 insights, 3 predictions, 3 recommendations. Be analytical and cautious.`,
       { title: 'Active Deals', description: `${dataSummary.activeDeals} active funding rounds`, type: dataSummary.activeDeals > 0 ? 'positive' : 'info' },
     ],
     predictions: [
-      { metric: 'Portfolio Value', value: `$${totalInvested.toLocaleString()}`, trend: totalInvested > 0 ? 'up' : 'stable' },
+      { metric: 'Portfolio Value', value: `₹${totalInvested.toLocaleString('en-IN')}`, trend: totalInvested > 0 ? 'up' : 'stable' },
       { metric: 'Active Deals', value: `${dataSummary.activeDeals}`, trend: 'stable' },
     ],
     recommendations: [

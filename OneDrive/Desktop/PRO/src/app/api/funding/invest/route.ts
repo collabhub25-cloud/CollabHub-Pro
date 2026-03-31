@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (amount < round.minInvestment) {
       return NextResponse.json(
-        { error: `Minimum investment is $${round.minInvestment.toLocaleString()}` },
+        { error: `Minimum investment is ₹${round.minInvestment.toLocaleString('en-IN')}` },
         { status: 400 }
       );
     }
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const remainingCapacity = round.targetAmount - round.raisedAmount;
     if (amount > remainingCapacity) {
       return NextResponse.json(
-        { error: `Maximum investment allowed is $${remainingCapacity.toLocaleString()}` },
+        { error: `Maximum investment allowed is ₹${remainingCapacity.toLocaleString('en-IN')}` },
         { status: 400 }
       );
     }

@@ -114,11 +114,11 @@ export function safePercentage(value: number, total: number): number {
  */
 export function formatCurrency(amount: number | undefined | null): string {
   if (amount === undefined || amount === null || isNaN(amount)) {
-    return '$0';
+    return '₹0';
   }
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
@@ -131,7 +131,7 @@ export function formatNumber(num: number | undefined | null): string {
   if (num === undefined || num === null || isNaN(num)) {
     return '0';
   }
-  return new Intl.NumberFormat('en-US').format(num);
+  return new Intl.NumberFormat('en-IN').format(num);
 }
 
 /**

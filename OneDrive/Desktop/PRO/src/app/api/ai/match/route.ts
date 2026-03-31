@@ -243,7 +243,7 @@ Find the best investment opportunities for this investor based on industry fit, 
       vision: item.startup.vision,
       score: Math.max(40, 90 - i * 10),
       explanation: 'Active funding round available for investment.',
-      reasons: [`${item.round.name} round`, `$${item.round.target?.toLocaleString()} target`, item.startup.industry || 'Growing sector'],
+      reasons: [`${item.round.name} round`, `₹${item.round.target?.toLocaleString('en-IN')} target`, item.startup.industry || 'Growing sector'],
       fundingRound: item.round,
     }));
   }

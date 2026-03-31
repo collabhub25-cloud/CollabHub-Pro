@@ -1365,7 +1365,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className="text-right">
-                        <p className="font-semibold">${milestone.amount.toLocaleString()}</p>
+                        <p className="font-semibold">₹{milestone.amount.toLocaleString('en-IN')}</p>
                         <p className="text-sm text-muted-foreground">Due: {new Date(milestone.dueDate).toLocaleDateString()}</p>
                       </div>
                       <Button
@@ -1528,8 +1528,8 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       <h3 className="font-semibold">{round.roundName}</h3>
                       <p className="text-sm text-muted-foreground">{round.startupId?.name}</p>
                       <div className="flex gap-4 mt-2 text-sm">
-                        <span>Target: ${round.targetAmount.toLocaleString()}</span>
-                        <span>Raised: ${round.raisedAmount.toLocaleString()}</span>
+                        <span>Target: ₹{round.targetAmount.toLocaleString('en-IN')}</span>
+                        <span>Raised: ₹{round.raisedAmount.toLocaleString('en-IN')}</span>
                         <span>Equity: {round.equityOffered}%</span>
                       </div>
                     </div>
@@ -1594,7 +1594,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                         <p className="text-[10px] text-muted-foreground uppercase font-medium">Terms</p>
                         {conf.status === 'matched' || conf.status === 'mismatched' ? (
                           <div className="text-xs font-bold text-primary">
-                            ${conf.founderAmount?.toLocaleString()} / {conf.founderEquity}%
+                            ₹{conf.founderAmount?.toLocaleString('en-IN')} / {conf.founderEquity}%
                           </div>
                         ) : (
                           <div className="text-xs text-muted-foreground italic">Hidden until match</div>

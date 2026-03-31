@@ -5,8 +5,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 // ============================================
 export type UserRole = 'founder' | 'talent' | 'investor' | 'admin';
 export type VerificationLevel = 0 | 1 | 2 | 3 | 4 | 5;
-export type KYCStatus = 'not_submitted' | 'pending' | 'verified' | 'rejected';
-export type KYCLevel = 0 | 1 | 2;
+
 
 export interface IUser extends Document {
     email: string;
@@ -18,10 +17,7 @@ export interface IUser extends Document {
     avatar?: string;
     verificationLevel: VerificationLevel;
 
-    kycStatus: KYCStatus;
-    kycLevel: KYCLevel;
-    kycVerifiedAt?: Date;
-    kycVerifiedBy?: mongoose.Types.ObjectId;
+
     bio?: string;
     skills?: string[];
     interestedRoles?: string[];
@@ -53,10 +49,7 @@ const UserSchema = new Schema<IUser>(
         avatar: { type: String },
         verificationLevel: { type: Number, enum: [0, 1, 2, 3, 4, 5], default: 0 },
 
-        kycStatus: { type: String, enum: ['not_submitted', 'pending', 'verified', 'rejected'], default: 'not_submitted' },
-        kycLevel: { type: Number, enum: [0, 1, 2], default: 0 },
-        kycVerifiedAt: { type: Date },
-        kycVerifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+
         bio: { type: String, maxlength: 1000 },
         skills: [{ type: String }],
         interestedRoles: [{ type: String }],

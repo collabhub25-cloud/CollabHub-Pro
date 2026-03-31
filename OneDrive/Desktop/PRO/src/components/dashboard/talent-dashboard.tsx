@@ -257,7 +257,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
             { title: 'Active Projects', value: activeMilestones.length, sub: 'In progress', icon: Briefcase, iconColor: '#0047AB', bg: 'rgba(0,71,171,0.06)' },
             { title: 'Completed Tasks', value: completedMilestones.length, sub: 'Total completed', icon: CheckCircle2, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)' },
             { title: 'Pending Applications', value: pendingApplications.length, sub: 'Awaiting response', icon: Clock, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)' },
-            { title: 'Total Earnings', value: `$${totalEarnings.toLocaleString()}`, sub: 'From completed tasks', icon: DollarSign, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)', tooltip: 'Based on your completed milestones.' },
+            { title: 'Total Earnings', value: `₹${totalEarnings.toLocaleString('en-IN')}`, sub: 'From completed tasks', icon: DollarSign, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)', tooltip: 'Based on your completed milestones.' },
             { title: 'Next Deadline', value: nextDeadline, sub: 'Upcoming milestone', icon: Calendar, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)', truncate: true },
           ].map((stat, index) => (
             <div data-aos="fade-up" data-aos-delay={index * 100} key={stat.title} className="group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg" style={{ background: `linear-gradient(135deg, ${stat.bg} 0%, rgba(255,255,255,0.9) 100%)`, backdropFilter: 'blur(20px)', border: '1px solid rgba(0,0,0,0.2)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transformStyle: 'preserve-3d' }}>
@@ -692,7 +692,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="text-right">
-                          <p className="text-lg font-bold text-green-600">${milestone.amount.toLocaleString()}</p>
+                          <p className="text-lg font-bold text-green-600">₹{milestone.amount.toLocaleString('en-IN')}</p>
                           <Badge variant={milestone.status === 'in_progress' ? 'default' : 'secondary'}>
                             {milestone.status === 'in_progress' ? 'In Progress' : 'Pending'}
                           </Badge>
@@ -733,7 +733,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-green-600">${milestone.amount.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-green-600">₹{milestone.amount.toLocaleString('en-IN')}</p>
                         <Badge className="bg-green-500">Completed</Badge>
                       </div>
                     </div>
@@ -875,7 +875,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               <CardTitle className="text-sm font-medium">Available</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-500">${totalEarnings.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-500">₹{totalEarnings.toLocaleString('en-IN')}</div>
             </CardContent>
           </Card>
           <Card>
@@ -883,7 +883,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               <CardTitle className="text-sm font-medium">Pending</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-500">${pendingPayments.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-yellow-500">₹{pendingPayments.toLocaleString('en-IN')}</div>
             </CardContent>
           </Card>
           <Card>
@@ -891,7 +891,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
               <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalEarnings.toLocaleString()}</div>
+              <div className="text-2xl font-bold">₹{totalEarnings.toLocaleString('en-IN')}</div>
             </CardContent>
           </Card>
         </div>
@@ -919,7 +919,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                       <p className="text-xs text-muted-foreground">{milestone.startupId?.name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-green-600">${milestone.amount.toLocaleString()}</p>
+                      <p className="font-semibold text-green-600">₹{milestone.amount.toLocaleString('en-IN')}</p>
                       <Badge variant="secondary" className="text-xs">Completed</Badge>
                     </div>
                   </div>

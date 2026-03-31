@@ -62,7 +62,7 @@ export function PortfolioPage() {
                     <DollarSign className="h-4 w-4 text-emerald-600" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold">${data?.metrics?.totalInvested?.toLocaleString() || '0'}</p>
+                <p className="text-3xl font-bold">₹{data?.metrics?.totalInvested?.toLocaleString('en-IN') || '0'}</p>
               </CardContent>
             </Card>
 
@@ -86,7 +86,7 @@ export function PortfolioPage() {
                     <Activity className="h-4 w-4 text-purple-600" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold">${data?.metrics?.averageInvestmentSize?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '0'}</p>
+                <p className="text-3xl font-bold">₹{data?.metrics?.averageInvestmentSize?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}</p>
               </CardContent>
             </Card>
           </div>
@@ -116,7 +116,7 @@ export function PortfolioPage() {
                       <div className="flex md:flex-row flex-col gap-6 md:items-center">
                         <div>
                           <p className="text-sm text-muted-foreground">Invested</p>
-                          <p className="font-bold">${inv.amountInvested.toLocaleString()}</p>
+                          <p className="font-bold">₹{inv.amountInvested.toLocaleString('en-IN')}</p>
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Equity</p>
@@ -124,7 +124,7 @@ export function PortfolioPage() {
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Valuation</p>
-                          <p className="font-bold">${inv.valuationAtInvestment?.toLocaleString() || 'Undisclosed'}</p>
+                          <p className="font-bold">₹{inv.valuationAtInvestment?.toLocaleString('en-IN') || 'Undisclosed'}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] text-muted-foreground">Investment Date</p>

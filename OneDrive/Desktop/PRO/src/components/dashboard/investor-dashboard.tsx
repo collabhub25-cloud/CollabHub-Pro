@@ -494,28 +494,14 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
           </Button>
         </div>
 
-        {/* KYC/Accreditation Warning — Premium */}
-        {(user?.verificationLevel || 0) < 3 && (
-          <div className="flex items-center justify-between p-5 rounded-2xl transition-all duration-300 hover:shadow-lg" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.06) 0%, rgba(249,115,22,0.02) 100%)', border: '1px solid rgba(249,115,22,0.2)', backdropFilter: 'blur(12px)' }}>
-            <div className="flex items-center gap-4">
-              <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.05) 100%)' }}>
-                <Shield className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <p className="font-semibold text-base-body">Verification Required</p>
-                <p className="text-sm text-muted-foreground">Complete Verification Level 3 to unlock investing capabilities.</p>
-              </div>
-            </div>
-            <Button size="sm" className="rounded-xl" style={{ background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', boxShadow: '0 4px 12px rgba(249,115,22,0.25)', color: 'white' }} onClick={() => setGlobalTab('settings')}>Verify Now</Button>
-          </div>
-        )}
+
 
         {/* Stats Cards — Premium Glassmorphic */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" style={{ perspective: '1000px' }}>
           {[
             { title: 'Active Due Diligence', value: dueDiligenceCount, sub: 'Approved or pending access', icon: FileText, iconColor: '#F97316', bg: 'rgba(249,115,22,0.06)' },
             { title: 'Average Equity', value: `${(portfolioStats.totalEquity / Math.max(portfolioStats.activeInvestments, 1)).toFixed(2)}%`, sub: 'Per investment', icon: Target, iconColor: '#7C3AED', bg: 'rgba(124,58,237,0.06)' },
-            { title: 'Total Invested', value: `$${portfolioStats.totalInvested.toLocaleString()}`, sub: `${portfolioStats.activeInvestments} investments`, icon: TrendingUp, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)' },
+            { title: 'Total Invested', value: `₹${portfolioStats.totalInvested.toLocaleString('en-IN')}`, sub: `${portfolioStats.activeInvestments} investments`, icon: TrendingUp, iconColor: '#2E8B57', bg: 'rgba(46,139,87,0.06)' },
             { title: 'Portfolio Equity', value: `${portfolioStats.totalEquity.toFixed(4)}%`, sub: 'Across all investments', icon: Briefcase, iconColor: '#2A2623', bg: 'rgba(42,38,35,0.04)' },
             { title: 'Open Rounds', value: fundingRounds.length, sub: 'Available for investment', icon: Building2, iconColor: '#0047AB', bg: 'rgba(0,71,171,0.06)' },
           ].map((stat, index) => (
@@ -621,7 +607,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     </div>
                     <div className="flex items-center gap-8">
                       <div className="text-right">
-                        <p className="font-semibold">${round.targetAmount.toLocaleString()}</p>
+                        <p className="font-semibold">₹{round.targetAmount.toLocaleString('en-IN')}</p>
                         <p className="text-xs text-muted-foreground">
                           {((round.raisedAmount / round.targetAmount) * 100).toFixed(0)}% filled
                         </p>
@@ -676,11 +662,11 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Target:</span>
-                  <span className="ml-2 font-medium">${selectedRound?.targetAmount.toLocaleString()}</span>
+                  <span className="ml-2 font-medium">₹{selectedRound?.targetAmount.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Raised:</span>
-                  <span className="ml-2 font-medium">${selectedRound?.raisedAmount.toLocaleString()}</span>
+                  <span className="ml-2 font-medium">₹{selectedRound?.raisedAmount.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Equity:</span>
@@ -688,7 +674,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Valuation:</span>
-                  <span className="ml-2 font-medium">${selectedRound?.valuation.toLocaleString()}</span>
+                  <span className="ml-2 font-medium">₹{selectedRound?.valuation.toLocaleString('en-IN')}</span>
                 </div>
               </div>
               <div className="rounded-md border p-3 bg-muted/50">
@@ -892,7 +878,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <CardTitle className="text-sm font-medium">Total Invested</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">${portfolioStats.totalInvested.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">₹{portfolioStats.totalInvested.toLocaleString('en-IN')}</div>
             </CardContent>
           </Card>
           <Card>
@@ -951,7 +937,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     <div className="flex items-center gap-8">
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Invested</p>
-                        <p className="font-medium">${inv.amount.toLocaleString()}</p>
+                        <p className="font-medium">₹{inv.amount.toLocaleString('en-IN')}</p>
                       </div>
                       <Badge className={
                         inv.status === 'completed' ? 'bg-green-500' :
@@ -1019,7 +1005,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                         <div>
                           <h3 className="font-semibold">{round.startupId.name} - {round.roundName}</h3>
                           <p className="text-sm text-muted-foreground">
-                            ${round.raisedAmount.toLocaleString()} / ${round.targetAmount.toLocaleString()} raised
+                            ₹{round.raisedAmount.toLocaleString('en-IN')} / ₹{round.targetAmount.toLocaleString('en-IN')} raised
                           </p>
                         </div>
                       </div>
@@ -1124,7 +1110,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                         </Avatar>
                         <div>
                           <h3 className="font-semibold">{inv.startupId.name}</h3>
-                          <p className="text-sm text-muted-foreground">${inv.amount.toLocaleString()} for {inv.equityPercent.toFixed(4)}% equity</p>
+                          <p className="text-sm text-muted-foreground">₹{inv.amount.toLocaleString('en-IN')} for {inv.equityPercent.toFixed(4)}% equity</p>
                         </div>
                       </div>
                       <Badge className="bg-yellow-500">Processing</Badge>
@@ -1156,7 +1142,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                         </Avatar>
                         <div>
                           <h3 className="font-semibold">{inv.startupId.name}</h3>
-                          <p className="text-sm text-muted-foreground">${inv.amount.toLocaleString()} for {inv.equityPercent.toFixed(4)}% equity</p>
+                          <p className="text-sm text-muted-foreground">₹{inv.amount.toLocaleString('en-IN')} for {inv.equityPercent.toFixed(4)}% equity</p>
                         </div>
                       </div>
                       <Badge className="bg-green-500">Completed</Badge>
@@ -1181,11 +1167,11 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Target:</span>
-                  <span className="ml-2 font-medium">${selectedRound?.targetAmount.toLocaleString()}</span>
+                  <span className="ml-2 font-medium">₹{selectedRound?.targetAmount.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Raised:</span>
-                  <span className="ml-2 font-medium">${selectedRound?.raisedAmount.toLocaleString()}</span>
+                  <span className="ml-2 font-medium">₹{selectedRound?.raisedAmount.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Equity:</span>
@@ -1193,7 +1179,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Valuation:</span>
-                  <span className="ml-2 font-medium">${selectedRound?.valuation.toLocaleString()}</span>
+                  <span className="ml-2 font-medium">₹{selectedRound?.valuation.toLocaleString('en-IN')}</span>
                 </div>
               </div>
               <div className="rounded-md border p-3 bg-muted/50">
