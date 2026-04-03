@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
-import { BeamBackground } from "@/components/ui/beam-background";
+import { ConditionalBeamBg } from "@/components/providers/conditional-beam-bg";
 import { AOSProvider } from "@/components/providers/aos-provider";
 
 const inter = Inter({
@@ -47,8 +48,10 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-transparent text-foreground`}
       >
         <AOSProvider>
-          <BeamBackground />
-          {children}
+          <ConditionalBeamBg />
+          <Suspense fallback={null}>
+            {children}
+          </Suspense>
           <Toaster />
         </AOSProvider>
       </body>

@@ -39,9 +39,10 @@ export const BeamBackground = () => {
     const noiseRef = useRef<HTMLCanvasElement>(null);
     const beamsRef = useRef<Beam[]>([]);
     const animationFrameRef = useRef<number>(0);
+    const noiseGenerated = useRef(false);
   
     const LAYERS = 3;
-    const BEAMS_PER_LAYER = 8;
+    const BEAMS_PER_LAYER = 4;
   
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -67,6 +68,7 @@ export const BeamBackground = () => {
         nCtx.setTransform(1, 0, 0, 1, 0, 0);
         nCtx.scale(dpr, dpr);
   
+        noiseGenerated.current = false;
         beamsRef.current = [];
         for (let layer = 1; layer <= LAYERS; layer++) {
           for (let i = 0; i < BEAMS_PER_LAYER; i++) {
@@ -128,7 +130,10 @@ export const BeamBackground = () => {
           drawBeam(beam);
         });
   
-        generateNoise();
+        if (!noiseGenerated.current) {
+          generateNoise();
+          noiseGenerated.current = true;
+        }
         animationFrameRef.current = requestAnimationFrame(animate);
       };
       animate();

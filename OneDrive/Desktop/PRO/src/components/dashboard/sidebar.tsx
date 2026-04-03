@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore, useUIStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -197,7 +197,7 @@ const NavSection = ({ title, items, collapsed, activeTab, counts, onTabChange }:
   );
 };
 
-export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {} }: SidebarProps) {
+export const DashboardSidebar = React.memo(function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {} }: SidebarProps) {
   const { user } = useAuthStore();
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const [collapsed, setCollapsed] = useState(false);
@@ -318,4 +318,4 @@ export function DashboardSidebar({ onLogout, onTabChange, activeTab, counts = {}
     </nav>
     </>
   );
-}
+});

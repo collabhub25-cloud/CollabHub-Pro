@@ -52,50 +52,11 @@ export function FounderDashboardNew() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      const res = await apiFetch('/api/dashboard/founder');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const dashData = await res.json();
 
-      const [startupsRes, notificationsRes] = await Promise.all([
-        apiFetch('/api/startups'),
-        apiFetch('/api/notifications?limit=10'),
-      ]);
-
-      const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
-      const notifData = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
-
-      const startups = startupsData.startups || startupsData || [];
-      const startup = Array.isArray(startups) ? startups[0] : startups;
-      const notifications = notifData.notifications || [];
-
-      let appList: any[] = [];
-      let milestonesList: any[] = [];
-      let pitchesList: any[] = [];
-      let achievementsList: any[] = [];
-
-      if (startup?._id) {
-        const [applicationsRes, milestonesRes, pitchesRes, achievementsRes] = await Promise.all([
-          apiFetch(`/api/applications/received?startupId=${startup._id}`),
-          apiFetch(`/api/milestones?startupId=${startup._id}`),
-          apiFetch(`/api/pitches?startupId=${startup._id}`),
-          apiFetch(`/api/achievements?startupId=${startup._id}`),
-        ]);
-
-        const applications = applicationsRes.ok ? await applicationsRes.json() : [];
-        const milestonesData = milestonesRes.ok ? await milestonesRes.json() : { milestones: [] };
-        const pitchesData = pitchesRes.ok ? await pitchesRes.json() : { pitches: [] };
-        const achievementsData = achievementsRes.ok ? await achievementsRes.json() : { achievements: [] };
-
-        appList = Array.isArray(applications) ? applications : applications.applications || [];
-        milestonesList = milestonesData.milestones || [];
-        pitchesList = pitchesData.pitches || [];
-        achievementsList = achievementsData.achievements || [];
-      }
-
-      const pendingApps = appList.filter((a: any) => a.status === 'pending');
-      const pendingMilestones = milestonesList.filter((m: any) => m.status !== 'completed' && m.status !== 'cancelled');
-      const pendingPitchRequests = pitchesList.filter((p: any) => p.pitchStatus === 'requested');
-      const totalTeam = Array.isArray(startups) ? startups.reduce((sum: number, s: any) => sum + (s.team?.length || 0), 0) : 0;
-
-      // Build real activity feed from notifications
-      const realActivities = notifications.slice(0, 6).map((notif: any) => {
+      const activities = (dashData.activities || []).map((notif: any) => {
         let icon = Bell;
         let color = 'text-blue-500';
         let bg = 'bg-blue-500/10';
@@ -103,33 +64,17 @@ export function FounderDashboardNew() {
         else if (notif.type?.includes('milestone')) { icon = Target; color = 'text-emerald-500'; bg = 'bg-emerald-500/10'; }
         else if (notif.type?.includes('pitch')) { icon = Presentation; color = 'text-purple-500'; bg = 'bg-purple-500/10'; }
         else if (notif.type?.includes('alliance')) { icon = Users; color = 'text-orange-500'; bg = 'bg-orange-500/10'; }
-        return {
-          id: notif._id,
-          type: notif.type,
-          title: notif.title || 'Notification',
-          description: notif.message || '',
-          date: notif.createdAt,
-          icon,
-          color,
-          bg,
-        };
+        return { ...notif, icon, color, bg };
       });
 
       setData({
-        startup,
-        applications: appList,
-        activities: realActivities,
-        milestones: milestonesList,
-        pitches: pitchesList,
-        achievements: achievementsList,
-        stats: {
-          pendingApplications: pendingApps.length,
-          pendingMilestones: pendingMilestones.length,
-          pendingPitchRequests: pendingPitchRequests.length,
-          totalAchievements: achievementsList.length,
-          totalTeam,
-          startupsCount: Array.isArray(startups) ? startups.length : 1,
-        },
+        startup: dashData.startup,
+        applications: dashData.applications || [],
+        activities,
+        milestones: dashData.milestones || [],
+        pitches: dashData.pitches || [],
+        achievements: dashData.achievements || [],
+        stats: dashData.stats,
       });
     } catch (error) {
       toast.error('Failed to load dashboard data');
