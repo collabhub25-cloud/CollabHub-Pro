@@ -10,6 +10,7 @@ import {
 } from '@/lib/auth';
 import { RegisterSchema, validateInput } from '@/lib/validation/schemas';
 import { checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
+import { sanitizeObject } from '@/lib/security/sanitize';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +24,8 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = sanitizeObject(rawBody);
 
     // Zod validation
     const validation = validateInput(RegisterSchema, body);

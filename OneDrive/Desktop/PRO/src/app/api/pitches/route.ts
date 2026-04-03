@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Pitch, Startup, User, Notification } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
+import { sanitizeObject } from '@/lib/security/sanitize';
 
 // GET /api/pitches — Fetch pitches for current user
 export async function GET(request: NextRequest) {
@@ -70,7 +71,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only investors can request pitches' }, { status: 403 });
     }
 
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = sanitizeObject(rawBody);
     const { startupId, message } = body;
 
     if (!startupId) {

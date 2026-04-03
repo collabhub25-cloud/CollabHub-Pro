@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store';
+import { useTheme } from 'next-themes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,7 @@ export function SettingsPage() {
     const [loading, setLoading] = useState(false);
     const [startups, setStartups] = useState<any[]>([]);
     const [startupsLoading, setStartupsLoading] = useState(false);
+    const { theme, setTheme } = useTheme();
 
     // Helper to read CSRF token from cookie
     const getCsrfToken = () => {
@@ -283,6 +285,38 @@ export function SettingsPage() {
                     </CardContent>
                 </Card>
 
+                {/* THEME / APPEARANCE */}
+                <Card className="col-span-1 card-3d-hover glassmorphic">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <SettingsIcon className="h-5 w-5 icon-float" style={{ color: 'var(--cobalt-blue)' }} />
+                            Appearance
+                        </CardTitle>
+                        <CardDescription>Customize the look and feel</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <Label>Theme</Label>
+                                <p className="text-sm text-muted-foreground">Choose your preferred color scheme</p>
+                            </div>
+                            <div className="flex gap-2">
+                                {(['light', 'dark', 'system'] as const).map(t => (
+                                    <Button
+                                        key={t}
+                                        variant={theme === t ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => setTheme(t)}
+                                        className="capitalize"
+                                    >
+                                        {t}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* NOTIFICATIONS */}
                 <Card className="col-span-1 card-3d-hover glassmorphic">
                     <CardHeader>
@@ -361,11 +395,10 @@ export function SettingsPage() {
                         <CardContent className="relative z-10 space-y-4">
                             {/* How it works */}
                             <div
-                                className="p-4 rounded-lg border"
                                 style={{
-                                    background: 'rgba(255, 255, 255, 0.5)',
                                     borderColor: 'rgba(46, 139, 87, 0.12)',
                                 }}
+                                className="p-4 rounded-lg border bg-background/50"
                             >
                                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                                     <Shield className="h-4 w-4" style={{ color: 'var(--sea-green)' }} />
@@ -415,7 +448,7 @@ export function SettingsPage() {
                                                     : undefined,
                                                 background: startup.AlloySphereVerified
                                                     ? 'linear-gradient(135deg, rgba(46, 139, 87, 0.06) 0%, rgba(0, 71, 171, 0.03) 100%)'
-                                                    : 'rgba(255, 255, 255, 0.4)',
+                                                    : undefined,
                                             }}
                                         >
                                             <div className="flex items-center gap-3 flex-1 min-w-0">

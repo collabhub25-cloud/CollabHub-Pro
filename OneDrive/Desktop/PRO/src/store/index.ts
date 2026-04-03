@@ -148,7 +148,7 @@ export const useAuthStore = create<AuthState>()(
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
-      sidebarOpen: true,
+      sidebarOpen: false,
       theme: 'system',
       activeTab: 'dashboard',
       modalOpen: null,

@@ -17,14 +17,16 @@ const nextConfig: NextConfig = {
   async headers() {
     const ContentSecurityPolicy = `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
-      style-src 'self' 'unsafe-inline' https:;
-      img-src 'self' data: blob: https:;
-      font-src 'self' data: https:;
-      connect-src 'self' https:;
+      script-src 'self' 'unsafe-inline' https://accounts.google.com https://checkout.razorpay.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      img-src 'self' data: blob: https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.cloudfront.net;
+      font-src 'self' data: https://fonts.gstatic.com;
+      connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://generativelanguage.googleapis.com https://livelog.razorpay.com;
+      frame-src 'self' https://accounts.google.com https://api.razorpay.com;
       frame-ancestors 'none';
       base-uri 'self';
       form-action 'self';
+      object-src 'none';
     `;
 
     const securityHeaders = [
@@ -46,7 +48,7 @@ const nextConfig: NextConfig = {
       },
       {
         key: 'X-Frame-Options',
-        value: 'SAMEORIGIN'
+        value: 'DENY'
       },
       {
         key: 'X-Content-Type-Options',
