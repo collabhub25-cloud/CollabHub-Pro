@@ -33,44 +33,45 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
             <style>{`
                 @keyframes signup-gradient { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
                 .signup-bg { background: linear-gradient(135deg, rgba(46,139,87,0.04), rgba(0,71,171,0.03), rgba(124,58,237,0.02), rgba(46,139,87,0.04)); background-size: 400% 400%; animation: signup-gradient 15s ease infinite; }
+                .dark .signup-bg { background: linear-gradient(135deg, rgba(46,139,87,0.06), rgba(0,71,171,0.04), rgba(124,58,237,0.03), rgba(46,139,87,0.06)); }
             `}</style>
             
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                <div className="absolute rounded-full opacity-20" style={{ width: 400, height: 400, top: '-15%', right: '-10%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', filter: 'blur(80px)' }} />
-                <div className="absolute rounded-full opacity-15" style={{ width: 300, height: 300, bottom: '-10%', left: '-5%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', filter: 'blur(60px)' }} />
+                <div className="absolute rounded-full opacity-20 dark:opacity-10" style={{ width: 400, height: 400, top: '-15%', right: '-10%', background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', filter: 'blur(80px)' }} />
+                <div className="absolute rounded-full opacity-15 dark:opacity-8" style={{ width: 300, height: 300, bottom: '-10%', left: '-5%', background: 'radial-gradient(circle, #2E8B57 0%, transparent 70%)', filter: 'blur(60px)' }} />
             </div>
             {/* Left Side Branding */}
             <div className="hidden lg:flex flex-col justify-center p-16 lg:w-[45%] xl:w-[50%] relative">
                 <div className="absolute top-8 left-8">
                      <Link href="/" className="flex items-center gap-2">
-                        <Logo size={24} className="text-[#111]" />
-                        <span className="text-lg font-bold tracking-tight">AlloySphere</span>
+                        <Logo size={24} className="text-foreground" />
+                        <span className="text-lg font-bold tracking-tight text-foreground">AlloySphere</span>
                     </Link>
                 </div>
 
                 <div className="max-w-lg mx-auto z-10 w-full pl-0 xl:pl-10">
-                    <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-xs font-bold" style={{ background: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>
+                    <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400">
                         THE INNOVATION NETWORK
                     </div>
-                    <h1 className="text-5xl font-extrabold tracking-tight mb-6 leading-tight text-[#111]">
-                        Architecting the future of <span className="italic text-[#085340]">connected</span> capital.
+                    <h1 className="text-5xl font-extrabold tracking-tight mb-6 leading-tight text-foreground">
+                        Architecting the future of <span className="italic text-emerald-700 dark:text-emerald-400">connected</span> capital.
                     </h1>
-                    <p className="text-lg text-gray-600 mb-12 max-w-md">
+                    <p className="text-lg text-muted-foreground mb-12 max-w-md">
                         Join the ecosystem where high-growth founders meet sophisticated investors and elite talent.
                     </p>
 
                     {/* Image placeholders matching the layout visual */}
                     <div className="flex gap-4 items-end mt-8 relative">
-                         <div className="w-[200px] h-[260px] bg-gray-200 rounded-2xl overflow-hidden shadow-lg border border-gray-300 relative z-20">
+                         <div className="w-[200px] h-[260px] bg-muted rounded-2xl overflow-hidden shadow-lg border border-border relative z-20">
                              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/modern_glass_office_1774367778077.png')" }}></div>
                          </div>
-                         <div className="w-[240px] h-[200px] bg-gray-300 rounded-2xl overflow-hidden shadow-xl border border-gray-300 relative z-10 transform translate-x-[-20px] translate-y-[-20px]">
+                         <div className="w-[240px] h-[200px] bg-muted rounded-2xl overflow-hidden shadow-xl border border-border relative z-10 transform translate-x-[-20px] translate-y-[-20px]">
                             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/green_building_1774367889748.png')" }}></div>
                          </div>
                     </div>
                 </div>
 
-                <div className="absolute bottom-8 left-8 text-xs text-gray-400">
+                <div className="absolute bottom-8 left-8 text-xs text-muted-foreground">
                     © {new Date().getFullYear()} AlloySphere Inc. Engineered for Innovation.
                 </div>
             </div>
@@ -79,22 +80,22 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
             <main className="flex-1 flex flex-col justify-center items-center p-6 relative">
                  <div className="w-full max-w-md lg:hidden mb-12 flex justify-center">
                      <Link href="/" className="flex items-center gap-2">
-                        <Logo size={24} className="text-[#111]" />
-                        <span className="text-lg font-bold tracking-tight">AlloySphere</span>
+                        <Logo size={24} className="text-foreground" />
+                        <span className="text-lg font-bold tracking-tight text-foreground">AlloySphere</span>
                     </Link>
                  </div>
                  
-                 <div className="w-full max-w-md mx-auto bg-white p-10 rounded-[2rem] shadow-xl shadow-gray-200/50">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl mb-8">
-                        <Logo size={20} className="text-[#111]" />
-                        <span className="font-bold text-lg tracking-tight">AlloySphere</span>
+                 <div className="w-full max-w-md mx-auto bg-card text-card-foreground p-10 rounded-[2rem] shadow-xl shadow-black/5 dark:shadow-black/30 border border-border/50">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-xl mb-8">
+                        <Logo size={20} className="text-foreground" />
+                        <span className="font-bold text-lg tracking-tight text-foreground">AlloySphere</span>
                     </div>
 
-                    <h2 className="text-3xl font-bold tracking-tight mb-2 text-[#111]">Create an account</h2>
-                    <p className="text-gray-500 mb-8">{subtitle || 'Join the AlloySphere network.'}</p>
+                    <h2 className="text-3xl font-bold tracking-tight mb-2 text-foreground">Create an account</h2>
+                    <p className="text-muted-foreground mb-8">{subtitle || 'Join the AlloySphere network.'}</p>
 
                     <div className="mb-8">
-                        <label className="block text-sm font-semibold mb-3 text-gray-800">Select your role</label>
+                        <label className="block text-sm font-semibold mb-3 text-foreground">Select your role</label>
                         <div className="flex gap-3">
                             {roles.map((r) => (
                                 <Link
@@ -102,12 +103,12 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
                                     href={`/signup/${r.id}`}
                                     className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 transition-all ${
                                         role === r.id
-                                            ? 'border-transparent bg-gray-100'
-                                            : 'border-transparent bg-gray-50 hover:bg-gray-100 text-gray-400'
+                                            ? 'border-transparent bg-muted text-foreground'
+                                            : 'border-transparent bg-secondary hover:bg-muted text-muted-foreground'
                                     }`}
                                 >
                                     <span className="text-xl opacity-80">{r.emoji}</span>
-                                    <span className="text-xs font-bold tracking-wider text-gray-600">{r.label}</span>
+                                    <span className="text-xs font-bold tracking-wider">{r.label}</span>
                                 </Link>
                             ))}
                         </div>
@@ -115,9 +116,9 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
 
                     <div className="relative flex items-center justify-center mb-8">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-200"></div>
+                            <div className="w-full border-t border-border"></div>
                         </div>
-                        <div className="relative bg-white px-4 text-xs font-bold text-gray-400 tracking-wider">
+                        <div className="relative bg-card px-4 text-xs font-bold text-muted-foreground tracking-wider">
                             CONTINUE WITH
                         </div>
                     </div>
@@ -147,16 +148,16 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
                         </LiquidButton>
                     </div>
 
-                    <p className="text-center text-sm font-medium text-gray-600 mt-8">
+                    <p className="text-center text-sm font-medium text-muted-foreground mt-8">
                         Already have an account?{' '}
-                        <Link href="/login" className="font-bold text-emerald-800 hover:text-emerald-900">Sign in</Link>
+                        <Link href="/login" className="font-bold text-primary hover:text-primary/80">Sign in</Link>
                     </p>
                  </div>
 
-                <div className="mt-8 flex gap-4 text-xs font-semibold text-gray-500">
-                    <Link href="/privacy" className="hover:text-gray-800">Privacy Policy</Link>
-                    <Link href="/terms" className="hover:text-gray-800">Terms of Service</Link>
-                    <Link href="/help" className="hover:text-gray-800">Help Center</Link>
+                <div className="mt-8 flex gap-4 text-xs font-semibold text-muted-foreground">
+                    <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+                    <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+                    <Link href="/help" className="hover:text-foreground transition-colors">Help Center</Link>
                 </div>
             </main>
         </div>

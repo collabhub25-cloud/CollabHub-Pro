@@ -39,10 +39,11 @@ export const BeamBackground = () => {
     const noiseRef = useRef<HTMLCanvasElement>(null);
     const beamsRef = useRef<Beam[]>([]);
     const animationFrameRef = useRef<number>(0);
+    const isDarkRef = useRef(false);
+    const frameCountRef = useRef(0);
   
     const LAYERS = 3;
-    const BEAMS_PER_LAYER = 8;
-  
+
     useEffect(() => {
       const canvas = canvasRef.current;
       const noiseCanvas = noiseRef.current;
@@ -50,6 +51,19 @@ export const BeamBackground = () => {
       const ctx = canvas.getContext("2d");
       const nCtx = noiseCanvas.getContext("2d");
       if (!ctx || !nCtx) return;
+
+      // Detect dark mode from <html> class
+      const checkDark = () => {
+        isDarkRef.current = document.documentElement.classList.contains('dark');
+      };
+      checkDark();
+
+      // Watch for theme changes
+      const observer = new MutationObserver(checkDark);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+      // Responsive beam count: fewer on mobile for performance
+      const getBeamsPerLayer = () => window.innerWidth < 768 ? 4 : 8;
   
       const resizeCanvas = () => {
         const dpr = window.devicePixelRatio || 1;
@@ -67,9 +81,10 @@ export const BeamBackground = () => {
         nCtx.setTransform(1, 0, 0, 1, 0, 0);
         nCtx.scale(dpr, dpr);
   
+        const beamsPerLayer = getBeamsPerLayer();
         beamsRef.current = [];
         for (let layer = 1; layer <= LAYERS; layer++) {
-          for (let i = 0; i < BEAMS_PER_LAYER; i++) {
+          for (let i = 0; i < beamsPerLayer; i++) {
             beamsRef.current.push(createBeam(window.innerWidth, window.innerHeight, layer));
           }
         }
@@ -85,7 +100,7 @@ export const BeamBackground = () => {
           imgData.data[i] = v;
           imgData.data[i + 1] = v;
           imgData.data[i + 2] = v;
-          imgData.data[i + 3] = 12;
+          imgData.data[i + 3] = isDarkRef.current ? 8 : 12;
         }
         nCtx.putImageData(imgData, 0, 0);
       };
@@ -95,13 +110,26 @@ export const BeamBackground = () => {
         ctx.translate(beam.x, beam.y);
         ctx.rotate((beam.angle * Math.PI) / 180);
   
-        const pulsingOpacity = Math.min(1, beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.4));
+        const dark = isDarkRef.current;
+        const opacityMult = dark ? 0.6 : 1;
+        const pulsingOpacity = Math.min(1, beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.4) * opacityMult);
+        
         const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
-        gradient.addColorStop(0, `rgba(46,139,87,0)`); // Sea Green
-        gradient.addColorStop(0.2, `rgba(46,139,87,${pulsingOpacity * 0.3})`);
-        gradient.addColorStop(0.5, `rgba(0,71,171,${pulsingOpacity * 0.6})`); // Cobalt Blue
-        gradient.addColorStop(0.8, `rgba(0,71,171,${pulsingOpacity * 0.3})`);
-        gradient.addColorStop(1, `rgba(0,71,171,0)`);
+        if (dark) {
+          // Dark mode: softer, more visible beams with adjusted colors
+          gradient.addColorStop(0, `rgba(74,222,128,0)`);
+          gradient.addColorStop(0.2, `rgba(74,222,128,${pulsingOpacity * 0.2})`);
+          gradient.addColorStop(0.5, `rgba(96,165,250,${pulsingOpacity * 0.4})`);
+          gradient.addColorStop(0.8, `rgba(96,165,250,${pulsingOpacity * 0.2})`);
+          gradient.addColorStop(1, `rgba(96,165,250,0)`);
+        } else {
+          // Light mode: original colors
+          gradient.addColorStop(0, `rgba(46,139,87,0)`);
+          gradient.addColorStop(0.2, `rgba(46,139,87,${pulsingOpacity * 0.3})`);
+          gradient.addColorStop(0.5, `rgba(0,71,171,${pulsingOpacity * 0.6})`);
+          gradient.addColorStop(0.8, `rgba(0,71,171,${pulsingOpacity * 0.3})`);
+          gradient.addColorStop(1, `rgba(0,71,171,0)`);
+        }
   
         ctx.fillStyle = gradient;
         ctx.filter = `blur(${2 + beam.layer * 2}px)`;
@@ -111,10 +139,17 @@ export const BeamBackground = () => {
   
       const animate = () => {
         if (!canvas || !ctx) return;
+        frameCountRef.current++;
+        const dark = isDarkRef.current;
   
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, "#ffffff");
-        gradient.addColorStop(1, "#f8fafc");
+        if (dark) {
+          gradient.addColorStop(0, "#09090B");
+          gradient.addColorStop(1, "#0c0c0e");
+        } else {
+          gradient.addColorStop(0, "#ffffff");
+          gradient.addColorStop(1, "#f8fafc");
+        }
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
   
@@ -128,12 +163,16 @@ export const BeamBackground = () => {
           drawBeam(beam);
         });
   
-        generateNoise();
+        // Throttle noise: regenerate every 3rd frame for performance
+        if (frameCountRef.current % 3 === 0) {
+          generateNoise();
+        }
         animationFrameRef.current = requestAnimationFrame(animate);
       };
       animate();
   
       return () => {
+        observer.disconnect();
         window.removeEventListener("resize", resizeCanvas);
         cancelAnimationFrame(animationFrameRef.current);
       };

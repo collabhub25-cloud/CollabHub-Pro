@@ -36,7 +36,7 @@ export default function Home() {
   if (isAuthenticated) return null;
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <LandingPage
         onLogin={() => router.push('/login')}
         onRegister={() => router.push('/signup/founder')}

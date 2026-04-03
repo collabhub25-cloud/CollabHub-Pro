@@ -18,7 +18,9 @@ export * from './models/investment.model';
 export * from './models/pitch.model';
 export * from './models/investment-confirmation.model';
 export * from './models/journey-post.model';
+export * from './models/email-preferences.model';
 import mongoose, { Schema, Document } from 'mongoose';
+import { triggerNotificationEmail } from './email-service';
 // ============================================
 // TRUST SCORE LOG SCHEMA
 // ============================================
@@ -223,6 +225,20 @@ const NotificationSchema = new Schema<INotification>(
 
 NotificationSchema.index({ userId: 1, read: 1 });
 NotificationSchema.index({ createdAt: -1 });
+
+// Global post-save hook to trigger email notifications
+NotificationSchema.post('save', function (doc) {
+  // We use process.nextTick to ensure this doesn't block the save operation
+  process.nextTick(() => {
+    triggerNotificationEmail(doc.userId.toString(), doc.type, {
+      ...doc.metadata,
+      title: doc.title,
+      message: doc.message,
+      actionUrl: doc.actionUrl,
+      entityId: doc._id.toString(),
+    }).catch(err => console.error('[NOTIFICATIONS] Global Email trigger error:', err));
+  });
+});
 
 export const Notification = mongoose.models.Notification || mongoose.model<INotification>('Notification', NotificationSchema);
 

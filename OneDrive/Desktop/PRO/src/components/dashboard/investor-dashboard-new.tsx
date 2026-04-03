@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,6 +117,19 @@ export function InvestorDashboardNew() {
     );
   }
 
+  const filteredDeals = useMemo(() => {
+    return data?.dealflow?.filter((deal: any) => {
+      if (dealflowFilter === 'all') return true;
+      if (dealflowFilter === 'new') {
+        const created = new Date(deal.createdAt);
+        const daysSince = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+        return daysSince <= 7;
+      }
+      if (dealflowFilter === 'watching') return data.alliances?.some((a: any) => a.targetId === deal._id || a.targetUser?._id === deal.founderId);
+      return true;
+    }) || [];
+  }, [data?.dealflow, data?.alliances, dealflowFilter]);
+
   const stats = data?.stats || {
     totalInvested: 0,
     portfolioCount: 0,
@@ -227,18 +240,7 @@ export function InvestorDashboardNew() {
             </Tabs>
           </CardHeader>
           <CardContent className="pt-0">
-            {(() => {
-              const filteredDeals = data?.dealflow?.filter((deal: any) => {
-                if (dealflowFilter === 'all') return true;
-                if (dealflowFilter === 'new') {
-                  const created = new Date(deal.createdAt);
-                  const daysSince = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
-                  return daysSince <= 7;
-                }
-                if (dealflowFilter === 'watching') return data.alliances?.some((a: any) => a.targetId === deal._id || a.targetUser?._id === deal.founderId);
-                return true;
-              }) || [];
-              return filteredDeals.length > 0 ? (
+            {filteredDeals.length > 0 ? (
               <div className="space-y-3">
                 {filteredDeals.slice(0, 4).map((deal: any) => (
                   <DealItem key={deal._id} deal={deal} />
@@ -252,8 +254,7 @@ export function InvestorDashboardNew() {
                   Discover Startups
                 </Button>
               </div>
-            );
-            })()}
+            )}
           </CardContent>
         </Card>
 

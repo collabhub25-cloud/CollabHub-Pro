@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { useAuthStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
     Loader2, Shield, Settings as SettingsIcon, Bell,
     User as UserIcon, LogOut, Trash2, BadgeCheck,
-    Building2, CheckCircle2, Clock, Send
+    Building2, CheckCircle2, Clock, Send, Sun, Moon, Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -31,6 +32,7 @@ import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-b
 
 export function SettingsPage() {
     const { user, updateUser, logout } = useAuthStore();
+    const { theme, setTheme } = useTheme();
     const [loading, setLoading] = useState(false);
     const [startups, setStartups] = useState<any[]>([]);
     const [startupsLoading, setStartupsLoading] = useState(false);
@@ -328,6 +330,40 @@ export function SettingsPage() {
                     </CardContent>
                 </Card>
 
+                {/* APPEARANCE */}
+                <Card className="col-span-1 md:col-span-2 card-3d-hover glassmorphic">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Sun className="h-5 w-5 icon-float" style={{ color: 'var(--cobalt-blue)' }} />
+                            Appearance
+                        </CardTitle>
+                        <CardDescription>Customize how AlloySphere looks on your device</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-3 gap-3">
+                            {[
+                                { value: 'light', label: 'Light', icon: Sun },
+                                { value: 'dark', label: 'Dark', icon: Moon },
+                                { value: 'system', label: 'System', icon: Monitor },
+                            ].map(({ value, label, icon: Icon }) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => setTheme(value)}
+                                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                                        theme === value
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-transparent bg-secondary hover:bg-muted'
+                                    }`}
+                                >
+                                    <Icon className={`h-5 w-5 ${theme === value ? 'text-primary' : 'text-muted-foreground'}`} />
+                                    <span className={`text-sm font-medium ${theme === value ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* AlloySphere VERIFICATION PANEL (Founder only) */}
                 {user?.role === 'founder' && (
                     <Card
@@ -361,9 +397,8 @@ export function SettingsPage() {
                         <CardContent className="relative z-10 space-y-4">
                             {/* How it works */}
                             <div
-                                className="p-4 rounded-lg border"
+                                className="p-4 rounded-lg border bg-card/50"
                                 style={{
-                                    background: 'rgba(255, 255, 255, 0.5)',
                                     borderColor: 'rgba(46, 139, 87, 0.12)',
                                 }}
                             >
@@ -415,7 +450,7 @@ export function SettingsPage() {
                                                     : undefined,
                                                 background: startup.AlloySphereVerified
                                                     ? 'linear-gradient(135deg, rgba(46, 139, 87, 0.06) 0%, rgba(0, 71, 171, 0.03) 100%)'
-                                                    : 'rgba(255, 255, 255, 0.4)',
+                                                    : undefined,
                                             }}
                                         >
                                             <div className="flex items-center gap-3 flex-1 min-w-0">

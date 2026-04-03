@@ -40,7 +40,7 @@ export default function TalentDashboardPage() {
     }
 
     return (
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Dashboard onLogout={() => { logout(); router.push('/login'); }} />
             <Toaster />
         </ThemeProvider>
