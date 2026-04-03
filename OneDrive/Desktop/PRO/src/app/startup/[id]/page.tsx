@@ -138,7 +138,6 @@ export default function StartupPage({
                 setFundingRounds(data.fundingRounds || []);
                 setTeamMembers(data.teamMembers || []);
             } catch (err: any) {
-                console.error('Startup fetch error:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -167,7 +166,6 @@ export default function StartupPage({
                     setJourneyPosts(data.posts || []);
                 }
             } catch (err) {
-                console.error('Error fetching journey posts:', err);
             } finally {
                 setJourneyLoading(false);
             }
@@ -196,7 +194,6 @@ export default function StartupPage({
                     setAccessStatus(myRequest?.status || null);
                 }
             } catch (err) {
-                console.error('Error fetching investor data:', err);
             }
         };
         fetchInvestorData();

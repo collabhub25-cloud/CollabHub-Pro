@@ -78,12 +78,12 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
       {/* Navigation - Glass Effect */}
       <header
-        className="sticky top-0 z-50 w-full transition-all duration-300 border-none"
         style={{
           background: scrolled ? 'rgba(255,255,255,0.85)' : 'transparent',
           backdropFilter: scrolled ? 'blur(20px)' : 'none',
           boxShadow: scrolled ? '0 4px 30px rgba(0,0,0,0.04)' : 'none',
         }}
+        className={`sticky top-0 z-50 w-full transition-all duration-300 border-none ${scrolled ? 'dark:!bg-background/85' : ''}`}
       >
         <div className="container mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
           <div className="flex items-center gap-2.5">
@@ -131,11 +131,11 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: 'rgba(124,58,237,0.1)', color: '#7C3AED' }}>
                 <Sparkles className="h-3 w-3" /> THE INNOVATION NETWORK
               </div>
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-[#111]">
+              <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-[#111] dark:text-foreground">
                 Accelerate  your startup<br />
                 with <span style={{ color: '#005b82' }}>AlloySphere.</span><br />
               </h1>
-              <p className="text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
+              <p className="text-base sm:text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
                 The ultimate collaboration ecosystem connecting visionary founders, elite talent, and strategic investors to build the future of the web.
               </p>
               
@@ -161,7 +161,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           {/* Right Content - Generated Dashboard Image */}
           <div className="flex-1 w-full lg:w-auto h-full min-h-[500px] flex justify-end">
             <RevealSection delay={0.3} className="w-full h-full xl:w-[680px] xl:h-[580px]">
-              <div className="w-full h-full rounded-[2rem] bg-white shadow-2xl shadow-gray-200/50 flex flex-col items-center justify-center relative overflow-hidden">
+              <div className="w-full h-full rounded-[2rem] bg-white dark:bg-card shadow-2xl shadow-gray-200/50 dark:shadow-black/30 flex flex-col items-center justify-center relative overflow-hidden">
                 <img src="/images/dashboard_ui_preview_1774367513473.png" alt="AlloySphere Dashboard Overview" className="w-[110%] h-[110%] object-cover object-top opacity-95 transition-transform duration-700 hover:scale-105" />
               </div>
             </RevealSection>
@@ -175,10 +175,10 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <p className="text-muted-foreground mb-12">Uncompromising collaboration for the next generation of startups.</p>
           </RevealSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {/* Unified Tech Stack - Span 2 */}
-            <RevealSection delay={0.2} className="md:col-span-2">
-              <div className="bg-white rounded-[2rem] p-8 h-full shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <RevealSection delay={0.2} className="sm:col-span-2">
+              <div className="bg-white dark:bg-card rounded-[2rem] p-8 h-full shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-100/50 text-emerald-600 flex items-center justify-center mb-6">
                   <Terminal className="w-6 h-6" />
                 </div>
@@ -203,14 +203,14 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </RevealSection>
 
             {/* Encrypted Core - Span 1 */}
-            <RevealSection delay={0.3} className="md:col-span-1">
-              <div className="bg-[#f0f6fc] rounded-[2rem] p-8 h-full flex flex-col justify-between hover:shadow-md transition-shadow">
+            <RevealSection delay={0.3} className="sm:col-span-1">
+              <div className="bg-[#f0f6fc] dark:bg-card rounded-[2rem] p-8 h-full flex flex-col justify-between hover:shadow-md transition-shadow">
                 <div>
                   <div className="text-blue-600 mb-6 mt-2">
                     <Shield className="w-7 h-7" />
                   </div>
-                  <h3 className="text-xl font-bold text-blue-900 mb-3">Secure Collaboration</h3>
-                  <p className="text-blue-800/70 text-sm leading-relaxed mb-6">
+                  <h3 className="text-xl font-bold text-blue-900 dark:text-blue-300 mb-3">Secure Collaboration</h3>
+                  <p className="text-blue-800/70 dark:text-blue-300/70 text-sm leading-relaxed mb-6">
                     Enterprise-grade security for every interaction. Your startup's data privacy is our architectural priority.
                   </p>
                 </div>
@@ -228,8 +228,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </RevealSection>
 
             {/* AI-Optimized - Span 1 */}
-            <RevealSection delay={0.4} className="md:col-span-1">
-              <div className="bg-white rounded-[2rem] p-8 h-full shadow-sm hover:shadow-md transition-shadow">
+            <RevealSection delay={0.4} className="sm:col-span-1">
+              <div className="bg-white dark:bg-card rounded-[2rem] p-8 h-full shadow-sm hover:shadow-md transition-shadow">
                  <div className="text-indigo-600 mb-6 mt-2">
                     <Code2 className="w-7 h-7" />
                   </div>
@@ -241,8 +241,8 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </RevealSection>
 
             {/* Global Network - Span 2 */}
-            <RevealSection delay={0.5} className="md:col-span-2">
-              <div className="bg-white rounded-[2rem] p-8 h-full shadow-sm flex flex-col md:flex-row hover:shadow-md transition-shadow">
+            <RevealSection delay={0.5} className="sm:col-span-2">
+              <div className="bg-white dark:bg-card rounded-[2rem] p-8 h-full shadow-sm flex flex-col md:flex-row hover:shadow-md transition-shadow">
                 <div className="flex-1 md:pr-8 mb-6 md:mb-0">
                   <h3 className="text-xl font-bold mb-3">Global Startup Network</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
@@ -296,7 +296,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="w-full py-8 text-sm mt-10" style={{ background: '#f8fafc' }}>
+      <footer className="w-full py-8 text-sm mt-10 bg-[#f8fafc] dark:bg-card">
         <div className="container mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 md:items-start text-center md:text-left">
             <div className="font-bold flex items-center gap-2">

@@ -292,7 +292,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         setStats(prev => ({ ...prev, activeMilestones: active }));
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
       toast.error('Failed to load data');
     }
     setLoading(false);
@@ -316,7 +315,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         setPitches(data.pitches || []);
       }
     } catch (err) {
-      console.error('Error fetching pitches:', err);
     } finally {
       setPitchLoading(false);
     }
@@ -331,7 +329,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         setConfirmations(data.confirmations || []);
       }
     } catch (err) {
-      console.error('Error fetching confirmations:', err);
     } finally {
       setConfirmationLoading(false);
     }
@@ -363,7 +360,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       }
       setAchievements(allAchievements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch {
-      console.error('Error fetching achievements');
     }
     setAchievementsLoading(false);
   }, [startups]);
@@ -385,7 +381,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         setFundingRounds(data.rounds || []);
       }
     } catch (error) {
-      console.error('Error fetching funding rounds:', error);
     }
   }, []);
 

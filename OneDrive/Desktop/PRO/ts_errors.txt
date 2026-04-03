@@ -1,1 +1,0 @@
-src/components/landing/landing-page.tsx(19,30): error TS2307: Cannot find module './waitlist-form' or its corresponding type declarations.

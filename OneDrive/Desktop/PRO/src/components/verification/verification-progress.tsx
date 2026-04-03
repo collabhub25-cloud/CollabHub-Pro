@@ -133,7 +133,7 @@ export function VerificationProgress() {
         });
       }
     } catch (error) {
-      console.error('Error fetching verification status:', error);
+      // error handled silently
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,6 @@ export function VerificationProgress() {
         return false;
       }
     } catch (error) {
-      console.error('Error submitting verification:', error);
       toast.error('Failed to submit verification');
       return false;
     } finally {
@@ -219,7 +218,6 @@ export function VerificationProgress() {
         toast.error(error.error || 'Failed to upload resume');
       }
     } catch (error) {
-      console.error('Error uploading resume:', error);
       toast.error('Failed to upload resume');
     } finally {
       setSubmitting(false);
@@ -253,7 +251,6 @@ export function VerificationProgress() {
         toast.error(error.error || 'Failed to sign NDA');
       }
     } catch (error) {
-      console.error('Error signing NDA:', error);
       toast.error('Failed to sign NDA');
     } finally {
       setSubmitting(false);

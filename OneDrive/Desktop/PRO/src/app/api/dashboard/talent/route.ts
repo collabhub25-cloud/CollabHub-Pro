@@ -5,10 +5,6 @@ import { User, Application, Milestone, Notification, Startup } from '@/lib/model
 
 export const runtime = 'nodejs';
 
-/**
- * GET /api/dashboard/talent
- * Aggregated talent dashboard data — single call replaces 4+ separate API calls.
- */
 export async function GET(request: NextRequest) {
   try {
     const rateLimitKey = getRateLimitKey(request, 'api');
@@ -29,15 +25,16 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const userId = authResult.user.userId;
 
-    // Parallel queries
-    const [applications, notifications, user] = await Promise.all([
-      Application.find({ talentId: userId }).populate('startupId', 'name logo industry stage').sort({ createdAt: -1 }).lean(),
+    const [applications, notifications] = await Promise.all([
+      Application.find({ talentId: userId })
+        .populate('startupId', 'name logo industry stage')
+        .sort({ createdAt: -1 }).lean(),
       Notification.find({ userId }).sort({ createdAt: -1 }).limit(5).lean(),
-      User.findById(userId).select('skills verificationLevel').lean(),
     ]);
 
     const pendingApps = applications.filter((a: any) => a.status === 'pending');
     const acceptedApps = applications.filter((a: any) => a.status === 'accepted');
+    const rejectedApps = applications.filter((a: any) => a.status === 'rejected');
 
     let milestoneList: any[] = [];
     let matchingStartups: any[] = [];
@@ -48,14 +45,12 @@ export async function GET(request: NextRequest) {
         milestoneList = await Milestone.find({ startupId }).lean();
       }
     } else {
-      // Fetch matching startups for non-hired talent
       matchingStartups = await Startup.find({ status: { $ne: 'closed' } })
         .select('name logo industry stage rolesNeeded')
         .limit(5)
         .lean();
     }
 
-    // Calculate earnings from completed milestones
     const totalEarnings = milestoneList
       .filter((m: any) => m.status === 'completed')
       .reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
@@ -63,8 +58,7 @@ export async function GET(request: NextRequest) {
       .filter((m: any) => m.status === 'completed' && m.paymentStatus !== 'paid')
       .reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
 
-    // Activities from notifications
-    const activities = notifications.map((n: any) => ({
+    const startupActivities = notifications.map((n: any) => ({
       id: n._id,
       title: n.title || 'Activity',
       date: n.createdAt,
@@ -74,11 +68,12 @@ export async function GET(request: NextRequest) {
       applications,
       milestones: milestoneList,
       matchingStartups,
-      startupActivities: activities,
+      startupActivities,
       stats: {
         totalApplications: applications.length,
         pendingApplications: pendingApps.length,
         acceptedApplications: acceptedApps.length,
+        rejectedApplications: rejectedApps.length,
         activeMilestones: milestoneList.filter((m: any) => m.status === 'in_progress').length,
         completedMilestones: milestoneList.filter((m: any) => m.status === 'completed').length,
         totalMilestones: milestoneList.length,

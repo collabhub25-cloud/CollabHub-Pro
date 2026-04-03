@@ -49,40 +49,19 @@ export function InvestorDashboardNew() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      const [startupsRes, portfolioRes, activityRes, pitchesRes] = await Promise.all([
-        apiFetch('/api/startups?limit=10'),
-        apiFetch('/api/investor/portfolio'),
-        apiFetch('/api/startups/activity'),
-        apiFetch('/api/pitches')
-      ]);
-
-      const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
-      const portfolioData = portfolioRes.ok ? await portfolioRes.json() : null;
-      const activityData = activityRes.ok ? await activityRes.json() : { activity: [] };
-      const pitchesData = pitchesRes.ok ? await pitchesRes.json() : { pitches: [] };
-
-      const dealflow = startupsData.startups || startupsData || [];
-      const portfolio = portfolioData?.investments || [];
-      const stats = portfolioData?.metrics || { totalInvested: 0, numberOfStartups: 0, averageInvestmentSize: 0 };
-      const activity = activityData.activity || [];
-      const pitches = pitchesData.pitches?.filter((p: any) => p.pitchStatus === 'pending') || [];
+      const res = await apiFetch('/api/dashboard/investor');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const dashData = await res.json();
 
       setData({
-        portfolio,
-        dealflow,
-        pitches,
-        alliances: [],
-        activity,
-        stats: {
-          totalInvested: stats.totalInvested,
-          portfolioCount: stats.numberOfStartups,
-          dealflowCount: dealflow.length,
-          avgTicketSize: stats.averageInvestmentSize,
-        },
+        portfolio: dashData.portfolio || [],
+        dealflow: dashData.dealflow || [],
+        pitches: dashData.pitches || [],
+        alliances: dashData.alliances || [],
+        activity: dashData.activity || [],
+        stats: dashData.stats,
       });
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }

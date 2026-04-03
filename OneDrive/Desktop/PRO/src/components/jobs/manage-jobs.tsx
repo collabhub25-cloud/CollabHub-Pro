@@ -47,7 +47,6 @@ export function ManageJobs() {
           }
         }
       } catch (error) {
-        console.error('Error fetching jobs:', error);
       } finally {
         setLoading(false);
       }

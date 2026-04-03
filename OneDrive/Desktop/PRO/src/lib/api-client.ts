@@ -38,8 +38,12 @@ async function ensureCsrfToken(): Promise<string | null> {
       credentials: 'include',
     });
     if (res.ok) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      token = getCsrfToken();
+      if (token) return token;
+
       const data = await res.json();
-      return data.csrfToken;
+      return data.csrfToken || null;
     }
   } catch {
     console.warn('Failed to fetch CSRF token');

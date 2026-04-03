@@ -222,7 +222,7 @@ export async function invalidateCachePattern(prefix: string): Promise<void> {
     const stats = cache.getStats();
     // Note: This is a simplified implementation
     // In production with Redis, you'd use pattern matching
-    console.log(`Would invalidate keys matching: ${prefix}*`);
+    // Note: pattern-based invalidation requires Redis in production
   }
 }
 

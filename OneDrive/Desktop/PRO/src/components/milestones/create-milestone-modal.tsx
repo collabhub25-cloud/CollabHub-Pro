@@ -60,7 +60,6 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
             setStartups(data.startups || []);
           }
         } catch (error) {
-          console.error('Error fetching data:', error);
         }
       };
       fetchData();
@@ -109,7 +108,6 @@ export function CreateMilestoneModal({ startupId, onSuccess }: CreateMilestoneMo
         toast.error(data.error || 'Failed to create milestone');
       }
     } catch (error) {
-      console.error('Error creating milestone:', error);
       toast.error('Failed to create milestone');
     } finally {
       setLoading(false);

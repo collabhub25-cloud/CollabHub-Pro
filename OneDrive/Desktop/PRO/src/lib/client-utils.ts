@@ -17,7 +17,9 @@ export const safeLocalStorage = {
     try {
       return localStorage.getItem(key);
     } catch (e) {
-      console.error('localStorage.getItem error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('localStorage.getItem error:', e);
+      }
       return null;
     }
   },
@@ -27,7 +29,9 @@ export const safeLocalStorage = {
     try {
       localStorage.setItem(key, value);
     } catch (e) {
-      console.error('localStorage.setItem error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('localStorage.setItem error:', e);
+      }
     }
   },
 
@@ -36,7 +40,9 @@ export const safeLocalStorage = {
     try {
       localStorage.removeItem(key);
     } catch (e) {
-      console.error('localStorage.removeItem error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('localStorage.removeItem error:', e);
+      }
     }
   },
 
@@ -45,7 +51,9 @@ export const safeLocalStorage = {
     try {
       localStorage.clear();
     } catch (e) {
-      console.error('localStorage.clear error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('localStorage.clear error:', e);
+      }
     }
   }
 };
@@ -59,7 +67,9 @@ export const safeSessionStorage = {
     try {
       return sessionStorage.getItem(key);
     } catch (e) {
-      console.error('sessionStorage.getItem error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('sessionStorage.getItem error:', e);
+      }
       return null;
     }
   },
@@ -69,7 +79,9 @@ export const safeSessionStorage = {
     try {
       sessionStorage.setItem(key, value);
     } catch (e) {
-      console.error('sessionStorage.setItem error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('sessionStorage.setItem error:', e);
+      }
     }
   },
 
@@ -78,7 +90,9 @@ export const safeSessionStorage = {
     try {
       sessionStorage.removeItem(key);
     } catch (e) {
-      console.error('sessionStorage.removeItem error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('sessionStorage.removeItem error:', e);
+      }
     }
   }
 };
@@ -114,7 +128,7 @@ export function safePercentage(value: number, total: number): number {
  */
 export function formatCurrency(amount: number | undefined | null): string {
   if (amount === undefined || amount === null || isNaN(amount)) {
-    return '₹0';
+    return '\u20B90';
   }
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',

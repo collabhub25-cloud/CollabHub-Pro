@@ -110,7 +110,6 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
             });
             toast.success('Job posted successfully!');
           } catch(e) {
-            console.error('Job creation failed', e);
             toast.error('Startup created, but failed to post job');
           }
         }
@@ -143,7 +142,6 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
         }
       }
     } catch (error) {
-      console.error('Error creating startup:', error);
       toast.error('Failed to create startup');
     } finally {
       setLoading(false);

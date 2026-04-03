@@ -45,7 +45,13 @@ function wrapInBrandedTemplate(title: string, bodyHtml: string): string {
 // ============================================
 export async function sendVerificationEmail(email: string, otp: string) {
     if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Verification OTP for ${email}: ${otp}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Verification OTP for ${email}: ${otp}`);
+          }
+
+        }
         return;
     }
 
@@ -65,7 +71,13 @@ export async function sendVerificationEmail(email: string, otp: string) {
         });
         return info.messageId;
     } catch (error) {
-        console.error('[MAILER] Error sending verification email:', error);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending verification email:', error);
+          }
+
+        }
         throw error;
     }
 }
@@ -75,7 +87,13 @@ export async function sendVerificationEmail(email: string, otp: string) {
 // ============================================
 export async function sendPasswordResetEmail(email: string, otp: string) {
     if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Password Reset OTP for ${email}: ${otp}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Password Reset OTP for ${email}: ${otp}`);
+          }
+
+        }
         return;
     }
 
@@ -95,7 +113,13 @@ export async function sendPasswordResetEmail(email: string, otp: string) {
         });
         return info.messageId;
     } catch (error) {
-        console.error('[MAILER] Error sending password reset email:', error);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending password reset email:', error);
+          }
+
+        }
         throw error;
     }
 }
@@ -105,7 +129,9 @@ export async function sendPasswordResetEmail(email: string, otp: string) {
 // ============================================
 export async function sendWelcomeEmail(email: string, name: string, role: string) {
     if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Welcome email for ${email} (${role})`);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[MAILER] DEV MODE - Welcome email for ${email} (${role})`);
+        }
         return;
     }
 
@@ -132,7 +158,13 @@ export async function sendWelcomeEmail(email: string, name: string, role: string
         });
         return info.messageId;
     } catch (error) {
-        console.error('[MAILER] Error sending welcome email:', error);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending welcome email:', error);
+          }
+
+        }
         // Non-critical, don't throw
     }
 }
@@ -142,7 +174,13 @@ export async function sendWelcomeEmail(email: string, name: string, role: string
 // ============================================
 export async function sendSubscriptionEmail(email: string, name: string, planName: string, expiresAt: Date) {
     if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Subscription email for ${email}: upgraded to ${planName}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Subscription email for ${email}: upgraded to ${planName}`);
+          }
+
+        }
         return;
     }
 
@@ -179,7 +217,13 @@ export async function sendSubscriptionEmail(email: string, name: string, planNam
         });
         return info.messageId;
     } catch (error) {
-        console.error('[MAILER] Error sending subscription email:', error);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending subscription email:', error);
+          }
+
+        }
     }
 }
 
@@ -194,7 +238,13 @@ export async function sendApplicationNotificationEmail(
     type: 'received' | 'accepted' | 'rejected'
 ) {
     if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Application ${type} email for ${email}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Application ${type} email for ${email}`);
+          }
+
+        }
         return;
     }
 
@@ -233,7 +283,13 @@ export async function sendApplicationNotificationEmail(
         });
         return info.messageId;
     } catch (error) {
-        console.error('[MAILER] Error sending application notification email:', error);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending application notification email:', error);
+          }
+
+        }
     }
 }
 
@@ -250,7 +306,13 @@ export async function sendInvestmentPromptEmail(
     role: 'founder' | 'investor'
 ) {
     if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Investment prompt email for ${email}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Investment prompt email for ${email}`);
+          }
+
+        }
         return;
     }
 
@@ -283,7 +345,13 @@ export async function sendInvestmentPromptEmail(
         });
         return info.messageId;
     } catch (error) {
-        console.error('[MAILER] Error sending investment prompt email:', error);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending investment prompt email:', error);
+          }
+
+        }
     }
 }
 
@@ -299,7 +367,13 @@ export async function sendInvestmentResultEmail(
     equity?: number
 ) {
     if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Investment ${matched ? 'match' : 'mismatch'} email for ${email}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Investment ${matched ? 'match' : 'mismatch'} email for ${email}`);
+          }
+
+        }
         return;
     }
 
@@ -351,6 +425,12 @@ export async function sendInvestmentResultEmail(
         });
         return info.messageId;
     } catch (error) {
-        console.error('[MAILER] Error sending investment result email:', error);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending investment result email:', error);
+          }
+
+        }
     }
 }

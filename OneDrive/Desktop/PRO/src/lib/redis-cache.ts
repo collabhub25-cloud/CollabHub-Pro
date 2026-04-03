@@ -126,7 +126,13 @@ export class ProductionRedisCache implements CacheInterface {
       this.hits++;
       return JSON.parse(value) as T;
     } catch (error) {
-      console.error('Redis get error:', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis get error:', error);
+        }
+
+      }
       this.misses++;
       return null;
     }
@@ -138,7 +144,13 @@ export class ProductionRedisCache implements CacheInterface {
       const serialized = JSON.stringify(value);
       await this.client.set(fullKey, serialized, { ex: ttl });
     } catch (error) {
-      console.error('Redis set error:', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis set error:', error);
+        }
+
+      }
     }
   }
 
@@ -148,7 +160,13 @@ export class ProductionRedisCache implements CacheInterface {
       const result = await this.client.del(fullKey);
       return result > 0;
     } catch (error) {
-      console.error('Redis delete error:', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis delete error:', error);
+        }
+
+      }
       return false;
     }
   }
@@ -166,7 +184,13 @@ export class ProductionRedisCache implements CacheInterface {
       this.hits = 0;
       this.misses = 0;
     } catch (error) {
-      console.error('Redis clear error:', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis clear error:', error);
+        }
+
+      }
     }
   }
 
@@ -176,7 +200,13 @@ export class ProductionRedisCache implements CacheInterface {
       const value = await this.client.get(fullKey);
       return value !== null;
     } catch (error) {
-      console.error('Redis has error:', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis has error:', error);
+        }
+
+      }
       return false;
     }
   }
@@ -210,7 +240,13 @@ export class ProductionRedisCache implements CacheInterface {
       }
       return keys.length;
     } catch (error) {
-      console.error('Redis invalidatePattern error:', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis invalidatePattern error:', error);
+        }
+
+      }
       return 0;
     }
   }
@@ -251,11 +287,15 @@ export function initializeRedisCache(): CacheInterface {
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!redisUrl) {
-    console.warn('⚠️ No Redis URL configured, falling back to memory cache');
+    if (process.env.NODE_ENV === 'development') {
+
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ No Redis URL configured, falling back to memory cache');
+      }
+
+    }
     return new MemoryCache();
   }
-
-  console.log('✅ Initializing Redis cache...');
 
   if (redisUrl.includes('upstash') && redisToken) {
     // Upstash Redis
@@ -265,7 +305,13 @@ export function initializeRedisCache(): CacheInterface {
 
   // For other Redis providers, would need ioredis or similar
   // For now, fall back to memory cache
-  console.warn('⚠️ Redis provider not fully configured, falling back to memory cache');
+  if (process.env.NODE_ENV === 'development') {
+
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Redis provider not fully configured, falling back to memory cache');
+    }
+
+  }
   return new MemoryCache();
 }
 
@@ -313,7 +359,13 @@ export class RedisRateLimiter {
         resetTime: (window + 1) * windowMs,
       };
     } catch (error) {
-      console.error('Rate limiter error:', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Rate limiter error:', error);
+        }
+
+      }
       // Allow on error (fail open)
       return { allowed: true, remaining: limit, resetTime: now + windowMs };
     }

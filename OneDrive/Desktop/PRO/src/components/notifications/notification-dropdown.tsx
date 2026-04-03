@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Bell, Check, CheckCheck, X, ExternalLink, Loader2 } from 'lucide-react';
@@ -50,7 +50,7 @@ const notificationIcons: Record<string, string> = {
   message_received: '💬',
 };
 
-export function NotificationDropdown() {
+export const NotificationDropdown = React.memo(function NotificationDropdown() {
   const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
   const router = useRouter();
@@ -99,7 +99,7 @@ export function NotificationDropdown() {
         setUnreadCount(data.unreadCount);
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      // error handled silently
     } finally {
       setLoading(false);
     }
@@ -113,12 +113,10 @@ export function NotificationDropdown() {
     });
 
     socketInstance.on('connect', () => {
-      console.log('🔌 Connected to notification service');
       setConnected(true);
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('🔌 Disconnected from notification service');
       setConnected(false);
     });
 
@@ -170,7 +168,7 @@ export function NotificationDropdown() {
         );
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      // error handled silently
     }
   };
 
@@ -191,7 +189,7 @@ export function NotificationDropdown() {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       }
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      // error handled silently
     }
   };
 
@@ -328,4 +326,4 @@ export function NotificationDropdown() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});

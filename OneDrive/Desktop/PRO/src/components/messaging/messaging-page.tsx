@@ -81,7 +81,7 @@ export function MessagingPage() {
         setUnreadTotal(total);
       }
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      // error handled silently
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export function MessagingPage() {
         setOtherUser(data.otherUser);
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      // error handled silently
     } finally {
       setLoadingMessages(false);
     }
@@ -114,12 +114,10 @@ export function MessagingPage() {
     });
 
     socketInstance.on('connect', () => {
-      console.log('🔌 Connected to messaging service');
       setConnected(true);
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('🔌 Disconnected from messaging service');
       setConnected(false);
     });
 
@@ -296,13 +294,11 @@ export function MessagingPage() {
         fetchConversations();
       } else {
         const err = await response.json();
-        console.error('Message send failed:', err.error);
         toast.error(err.error || 'Failed to send message');
         // Remove optimistic message
         setMessages(prev => prev.filter(m => m._id !== tempId));
       }
     } catch (error) {
-      console.error('Message send error:', error);
       toast.error('Failed to send message');
       setMessages(prev => prev.filter(m => m._id !== tempId));
     } finally {
