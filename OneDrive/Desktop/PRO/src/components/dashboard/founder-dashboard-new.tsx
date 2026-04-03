@@ -163,16 +163,16 @@ export function FounderDashboardNew() {
           <CardContent className="pt-4">
             <div className="space-y-3">
               {pendingPitchRequests.slice(0, 3).map((pitch: any) => (
-                <div key={pitch._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50">
-                  <div className="flex items-center gap-3">
+                <div key={pitch._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 gap-2 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                       <AvatarImage src={pitch.investorId?.avatar} />
                       <AvatarFallback className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-foreground font-semibold">
                         {getInitials(pitch.investorId?.name || 'I')}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold text-sm leading-none mb-1">{pitch.investorId?.name || 'Investor'}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm leading-none mb-1 truncate">{pitch.investorId?.name || 'Investor'}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <span className="truncate max-w-[140px]">{pitch.startupId?.name || 'Startup'}</span>
                         <span>•</span>
@@ -180,11 +180,11 @@ export function FounderDashboardNew() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 text-[10px]">
                       Level {pitch.investorId?.verificationLevel || 0}
                     </Badge>
-                    <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setActiveTab('pitch-requests')}>
+                    <Button size="sm" variant="outline" className="hidden sm:inline-flex opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setActiveTab('pitch-requests')}>
                       Respond
                     </Button>
                   </div>
@@ -222,16 +222,16 @@ export function FounderDashboardNew() {
             {pendingApps.length > 0 ? (
               <div className="space-y-4">
                 {pendingApps.slice(0, 4).map((app: any) => (
-                  <div key={app._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 cursor-pointer">
-                    <div className="flex items-center gap-3">
+                  <div key={app._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 cursor-pointer gap-2 overflow-hidden">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Avatar className="h-10 w-10 border-2 border-background shadow-sm group-hover:border-primary/20 transition-colors">
                         <AvatarImage src={app.talentId?.avatar} />
                         <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-foreground font-semibold">
                           {getInitials(app.talentId?.name || 'U')}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-semibold text-sm leading-none mb-1">{app.talentId?.name || 'Unknown'}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm leading-none mb-1 truncate">{app.talentId?.name || 'Unknown'}</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <span className="truncate max-w-[120px]">{app.roleTitle || 'Role'}</span>
                           <span>•</span>
@@ -239,7 +239,7 @@ export function FounderDashboardNew() {
                         </p>
                       </div>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
                         <ArrowRight className="h-4 w-4" />
                       </Button>
@@ -285,21 +285,21 @@ export function FounderDashboardNew() {
             {pendingMilestones.length > 0 ? (
               <div className="space-y-3">
                 {pendingMilestones.slice(0, 4).map((milestone: any) => (
-                  <div key={milestone._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50">
-                    <div className="flex items-center gap-3">
+                  <div key={milestone._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 gap-2 overflow-hidden">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${
                         milestone.status === 'in_progress' ? 'bg-blue-500/10 text-blue-500' : 'bg-orange-500/10 text-orange-500'
                       }`}>
                         {milestone.status === 'in_progress' ? <Clock className="h-4 w-4" /> : <Target className="h-4 w-4" />}
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold leading-tight">{milestone.title}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold leading-tight truncate">{milestone.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {milestone.startupId?.name || 'Startup'} • Due {milestone.dueDate ? formatDistanceToNow(new Date(milestone.dueDate), { addSuffix: true }) : 'N/A'}
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px] capitalize">
+                    <Badge variant="outline" className="text-[10px] capitalize shrink-0">
                       {(milestone.status || 'pending').replace('_', ' ')}
                     </Badge>
                   </div>

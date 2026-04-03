@@ -183,7 +183,13 @@ const NavSection = ({ title, items, collapsed, activeTab, counts, onTabChange }:
           return (
             <button
               key={item.id}
-              onClick={() => onTabChange(item.id)}
+              onClick={() => {
+                onTabChange(item.id);
+                if (window.innerWidth < 768) {
+                  const { sidebarOpen, toggleSidebar } = useUIStore.getState();
+                  if (sidebarOpen) toggleSidebar();
+                }
+              }}
               title={collapsed ? item.label : undefined}
               data-testid={`sidebar-${item.id}`}
               className={className}
@@ -254,7 +260,13 @@ export const DashboardSidebar = React.memo(function DashboardSidebar({ onLogout,
       <div className="border-t border-border/30 p-2">
         {/* Settings */}
         <button
-          onClick={() => onTabChange('settings')}
+          onClick={() => {
+            onTabChange('settings');
+            if (window.innerWidth < 768) {
+              const { sidebarOpen, toggleSidebar } = useUIStore.getState();
+              if (sidebarOpen) toggleSidebar();
+            }
+          }}
           className={`flex items-center gap-3 w-full p-2 rounded-lg transition-all mb-1 ${
             activeTab === 'settings' 
               ? 'bg-primary/10 text-primary' 
@@ -268,7 +280,13 @@ export const DashboardSidebar = React.memo(function DashboardSidebar({ onLogout,
 
         {/* User Profile */}
         <button
-          onClick={() => onTabChange('profile')}
+          onClick={() => {
+            onTabChange('profile');
+            if (window.innerWidth < 768) {
+              const { sidebarOpen, toggleSidebar } = useUIStore.getState();
+              if (sidebarOpen) toggleSidebar();
+            }
+          }}
           className={`flex items-center gap-3 w-full p-2 rounded-lg transition-all ${
             activeTab === 'profile' 
               ? 'bg-primary/10' 
