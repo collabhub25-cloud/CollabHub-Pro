@@ -14,7 +14,7 @@ import {
   UserCheck, DollarSign, AlertTriangle, CheckCircle2,
   Search, Shield, CreditCard as SubscriptionIcon, MessageSquare,
   User, Handshake, Sparkles, ShieldCheck, ChevronDown,
-  ChevronsRight, Bell, HelpCircle
+  ChevronsRight, Bell, HelpCircle, Moon, Sun
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Image from "next/image";
@@ -228,7 +228,16 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+                </button>
 
                 {/* Notifications */}
                 <NotificationDropdown />

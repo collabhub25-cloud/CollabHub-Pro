@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { ConditionalBeamBg } from "@/components/providers/conditional-beam-bg";
 import { AOSProvider } from "@/components/providers/aos-provider";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -47,13 +48,20 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-transparent text-foreground`}
       >
-        <AOSProvider>
-          <ConditionalBeamBg />
-          <Suspense fallback={null}>
-            {children}
-          </Suspense>
-          <Toaster />
-        </AOSProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AOSProvider>
+            <ConditionalBeamBg />
+            <Suspense fallback={null}>
+              {children}
+            </Suspense>
+            <Toaster />
+          </AOSProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
