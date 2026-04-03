@@ -144,8 +144,8 @@ interface InvestmentConfirmation {
 
 
 const chartConfig = {
-  sales: {
-    label: "Revenue",
+  milestones: {
+    label: "Milestones",
     color: "hsl(var(--chart-4))",
   },
   customers: {
@@ -198,38 +198,34 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const dynamicChartData = React.useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const now = new Date();
-    const chartMonths: { month: string; customers: number; sales: number }[] = [];
+    const chartMonths: { month: string; customers: number; milestones: number }[] = [];
 
     // Build last 7 months
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const label = months[d.getMonth()];
-      chartMonths.push({ month: label, customers: 0, sales: 0 });
+      chartMonths.push({ month: label, customers: 0, milestones: 0 });
     }
 
     // Calculate cumulative team members from startups
     const totalTeam = startups.reduce((sum, s) => sum + (s.team?.length || 0), 0);
-    // Calculate total raised from funding rounds
-    const totalRaised = fundingRounds.reduce((sum, r) => sum + (r.raisedAmount || 0), 0);
+    // Calculate total milestones
+    const totalMilestoneCount = milestones.length;
 
     // Distribute growth progressively across months
     chartMonths.forEach((m, idx) => {
       const factor = (idx + 1) / chartMonths.length;
       m.customers = Math.round(totalTeam * factor);
-      m.sales = Math.round(totalRaised * factor);
+      m.milestones = Math.round(totalMilestoneCount * factor);
     });
 
     return chartMonths;
-  }, [startups, fundingRounds]);
+  }, [startups, milestones]);
 
   // Dynamic summary stats
   const totalTeamMembers = startups.reduce((sum, s) => sum + (s.team?.length || 0), 0);
-  const totalRaised = fundingRounds.reduce((sum, r) => sum + (r.raisedAmount || 0), 0);
-  const totalRaisedDisplay = totalRaised >= 1000 ? `$${(totalRaised / 1000).toFixed(1)}K` : `$${totalRaised}`;
   const prevMonthTeam = dynamicChartData.length >= 2 ? dynamicChartData[dynamicChartData.length - 2]?.customers || 0 : 0;
   const teamGrowth = totalTeamMembers - prevMonthTeam;
-  const prevMonthSales = dynamicChartData.length >= 2 ? dynamicChartData[dynamicChartData.length - 2]?.sales || 0 : 0;
-  const salesGrowth = totalRaised - prevMonthSales;
 
   // Form states
   const [newStartup, setNewStartup] = useState({
@@ -689,11 +685,12 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
         </div>
 
         {/* Premium Stat Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { label: 'Startups', value: startups.length, icon: '🏢', gradient: 'rgba(0,0,0,0.03)' },
             { label: 'Team Members', value: totalTeamMembers, icon: '👥', gradient: 'rgba(0,0,0,0.03)' },
             { label: 'Active Milestones', value: activeMilestones.length, icon: '🎯', gradient: 'rgba(0,0,0,0.03)' },
+            { label: 'Pitch Requests', value: pitches.filter(p => p.pitchStatus === 'requested').length, icon: '📊', gradient: 'rgba(0,0,0,0.03)' },
           ].map((stat) => (
             <div key={stat.label} className="p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] cursor-default" style={{ background: stat.gradient, backdropFilter: 'blur(12px)', border: '1px solid rgba(0,0,0,0.25)' }}>
               <div className="text-2xl mb-2">{stat.icon}</div>
@@ -775,29 +772,28 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               )}
             </div>
 
-            {/* Funding Activity */}
+            {/* Pending Pitch Requests */}
             <div className="p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)]" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-semibold flex items-center gap-2"><DollarSign className="h-4 w-4" style={{ color: 'var(--cobalt-blue)' }} /> Funding Activity</h3>
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
+                <h3 className="text-base font-semibold flex items-center gap-2"><Presentation className="h-4 w-4" style={{ color: 'var(--cobalt-blue)' }} /> Pitch Requests</h3>
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0" onClick={() => useUIStore.getState().setActiveTab('pitch-requests')}>View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
               </div>
               {loading ? (
                 <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-              ) : fundingRounds.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8 text-sm">No funding activity yet</p>
+              ) : pitches.filter(p => p.pitchStatus === 'requested').length === 0 ? (
+                <p className="text-center text-muted-foreground py-8 text-sm">No pending pitch requests</p>
               ) : (
                 <div className="space-y-3">
-                  {fundingRounds.slice(0, 3).map((round, index) => (
-                    <div key={round._id} className="flex justify-between items-center p-3 rounded-lg transition-all hover:bg-black/5" style={{ border: '1px solid rgba(0,0,0,0.25)' }}>
+                  {pitches.filter(p => p.pitchStatus === 'requested').slice(0, 3).map((pitch, index) => (
+                    <div key={pitch._id} className="flex justify-between items-center p-3 rounded-lg transition-all hover:bg-black/5" style={{ border: '1px solid rgba(0,0,0,0.25)' }}>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm truncate">
-                          <span className="font-semibold">{round.startupId?.name}</span>{" "}
-                          <span className="font-bold">${(round.targetAmount / 1000).toFixed(0)}k</span>{" "}
-                          <span className="text-muted-foreground text-xs ml-1">{round.roundName} Round</span>
+                          <span className="font-semibold">{pitch.investorId?.name || 'Investor'}</span>{" "}
+                          <span className="text-muted-foreground text-xs ml-1">→ {pitch.startupId?.name || 'Startup'}</span>
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(round.createdAt), { addSuffix: true })}</span>
+                        <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(pitch.createdAt), { addSuffix: true })}</span>
                         {index === 0 && <Badge className="text-caption px-1.5 py-0 h-5" style={{ background: 'linear-gradient(135deg, #2E8B57, #0047AB)', color: 'white' }}>New</Badge>}
                       </div>
                     </div>
@@ -823,10 +819,9 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 <Separator orientation="vertical" className="h-10 hidden sm:block" />
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-semibold">{totalRaisedDisplay}</span>
-                    <span className="text-sm font-medium" style={{ color: 'var(--sea-green)' }}>{salesGrowth >= 0 ? '+' : ''}{salesGrowth >= 1000 ? `$${(salesGrowth / 1000).toFixed(1)}K` : `$${salesGrowth}`}</span>
+                    <span className="text-2xl font-semibold">{milestones.length}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">Revenue <span style={{ color: 'var(--sea-green)' }}>raised this month</span></span>
+                  <span className="text-xs text-muted-foreground">Milestones <span style={{ color: 'var(--sea-green)' }}>{milestones.filter(m => m.status === 'completed').length} completed</span></span>
                 </div>
               </div>
               <div className="h-[200px] w-full">
@@ -837,9 +832,9 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                         <stop offset="5%" stopColor="var(--color-customers)" stopOpacity={0.1} />
                         <stop offset="95%" stopColor="var(--color-customers)" stopOpacity={0.0} />
                       </linearGradient>
-                      <linearGradient id="fillSales" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-sales)" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="var(--color-sales)" stopOpacity={0.0} />
+                      <linearGradient id="fillMilestones" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-milestones)" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="var(--color-milestones)" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
@@ -847,7 +842,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                     <YAxis tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
                     <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <Area type="monotone" dataKey="customers" stroke="var(--color-customers)" strokeWidth={2} fill="url(#fillCustomers)" fillOpacity={1} />
-                    <Area type="monotone" dataKey="sales" stroke="var(--color-sales)" strokeWidth={2} fill="url(#fillSales)" fillOpacity={1} />
+                    <Area type="monotone" dataKey="milestones" stroke="var(--color-milestones)" strokeWidth={2} fill="url(#fillMilestones)" fillOpacity={1} />
                   </AreaChart>
                 </ChartContainer>
               </div>

@@ -335,3 +335,100 @@ export async function getRecommendedTalents(startupId: string): Promise<Recommen
     .sort((a: Recommendation, b: Recommendation) => b.score - a.score)
     .slice(0, 10);
 }
+
+// ============================================
+// 4. FOUNDER → INVESTOR RECOMMENDATIONS
+// Match: startup industry/stage → investor preferences + history
+// ============================================
+export async function getRecommendedInvestors(founderId: string): Promise<Recommendation[]> {
+  await connectDB();
+
+  // Get founder's startups
+  const startups = await Startup.find({ founderId })
+    .select('industry fundingStage stage name')
+    .lean() as any[];
+
+  if (startups.length === 0) return [];
+
+  const founderIndustries = startups.map((s: any) => s.industry?.toLowerCase()).filter(Boolean);
+  const founderStages = startups.map((s: any) => s.fundingStage?.toLowerCase()).filter(Boolean);
+
+  // Get all investors
+  const investors = await User.find({ role: 'investor' })
+    .select('name preferredIndustries stagePreference bio verificationLevel avatar experience')
+    .limit(50)
+    .lean() as any[];
+
+  if (investors.length === 0) return [];
+
+  // Get investment history
+  const investmentHistory = await Investment.find({})
+    .populate('startupId', 'industry')
+    .lean() as any[];
+
+  const scored = investors.map((investor: any) => {
+    let score = 15; // Base score
+    const reasons: string[] = [];
+
+    const prefIndustries = (investor.preferredIndustries || []).map((s: string) => s.toLowerCase().trim());
+    const stagePrefs = (investor.stagePreference || []).map((s: string) => s.toLowerCase().trim());
+
+    // Industry match (35%)
+    const industryMatch = founderIndustries.some((ind: string) => prefIndustries.includes(ind));
+    if (industryMatch) {
+      score += 35;
+      const matchedIndustry = founderIndustries.find((ind: string) => prefIndustries.includes(ind));
+      reasons.push(`Interested in ${matchedIndustry}`);
+    }
+
+    // Stage preference match (25%)
+    const stageMatch = founderStages.some((stage: string) => stagePrefs.includes(stage));
+    if (stageMatch) {
+      score += 25;
+      reasons.push('Stage preference aligns');
+    }
+
+    // Previous investments in similar industries (15%)
+    const investorDeals = investmentHistory.filter((inv: any) => inv.investorId?.toString() === investor._id.toString());
+    const investorIndustries = investorDeals.map((inv: any) => inv.startupId?.industry?.toLowerCase()).filter(Boolean);
+    const historyMatch = founderIndustries.some((ind: string) => investorIndustries.includes(ind));
+    if (historyMatch) {
+      score += 15;
+      reasons.push('Has invested in similar sectors');
+    }
+
+    // Verification bonus (10%)
+    if (investor.verificationLevel >= 2) {
+      score += 10;
+      reasons.push('Verified investor');
+    }
+
+    if (reasons.length === 0) {
+      reasons.push('Active investor on the platform');
+    }
+
+    const explanation = score >= 70
+      ? `Strong match — ${reasons[0]}`
+      : score >= 40
+        ? reasons[0]
+        : 'Potential investor to connect with';
+
+    return {
+      id: investor._id.toString(),
+      name: investor.name,
+      subtitle: investor.experience || 'Investor',
+      score: Math.min(score, 100),
+      explanation,
+      tags: reasons.slice(0, 3),
+      metadata: {
+        avatar: investor.avatar,
+        verificationLevel: investor.verificationLevel,
+        preferredIndustries: investor.preferredIndustries,
+      },
+    };
+  });
+
+  return scored
+    .sort((a: Recommendation, b: Recommendation) => b.score - a.score)
+    .slice(0, 10);
+}
