@@ -53,6 +53,7 @@ import {
 import { toast } from 'sonner';
 import { CreateMilestoneModal } from '@/components/milestones/create-milestone-modal';
 import { apiFetch } from '@/lib/api-client';
+import { safeLocalStorage, STORAGE_KEYS } from '@/lib/client-utils';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
@@ -1615,12 +1616,18 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start">
                       <div className="flex gap-4">
-                        <Avatar className="h-12 w-12">
+                        <Avatar className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+                          safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, pitch.investorId._id);
+                          useUIStore.getState().setActiveTab('profile');
+                        }}>
                           <AvatarImage src={pitch.investorId.avatar} />
                           <AvatarFallback>{pitch.investorId.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-semibold text-lg">{pitch.investorId.name}</h3>
+                          <h3 className="font-semibold text-lg cursor-pointer hover:underline" onClick={() => {
+                            safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, pitch.investorId._id);
+                            useUIStore.getState().setActiveTab('profile');
+                          }}>{pitch.investorId.name}</h3>
                           <p className="text-sm text-muted-foreground mb-2">{pitch.startupId.name} • {formatDistanceToNow(new Date(pitch.createdAt))} ago</p>
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">Level {pitch.investorId.verificationLevel} Investor</Badge>
@@ -1679,6 +1686,45 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             ))}
           </TabsContent>
         </Tabs>
+
+        {/* Send Pitch Modal */}
+        <Dialog open={!!showSendPitchModal} onOpenChange={(open) => !open && setShowSendPitchModal(null)}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Send Pitch Deck</DialogTitle>
+              <DialogDescription>
+                Send your pitch deck to {showSendPitchModal?.investorId?.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="pitchUrl">Pitch Deck URL</Label>
+                <Input
+                  id="pitchUrl"
+                  placeholder="https://..."
+                  value={sendPitchData.pitchDocumentUrl}
+                  onChange={(e) => setSendPitchData({ ...sendPitchData, pitchDocumentUrl: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="message">Message (Optional)</Label>
+                <Textarea
+                  id="message"
+                  placeholder="Hi, here is our requested pitch deck..."
+                  value={sendPitchData.message}
+                  onChange={(e) => setSendPitchData({ ...sendPitchData, message: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSendPitchModal(null)}>Cancel</Button>
+              <Button onClick={handleSendPitch} disabled={submitting}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send Deck
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
