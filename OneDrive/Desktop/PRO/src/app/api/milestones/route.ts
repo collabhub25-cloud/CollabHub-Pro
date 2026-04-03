@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Milestone, Startup, User } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
+import { sanitizeObject } from '@/lib/security/sanitize';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('milestones');
@@ -107,7 +108,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = sanitizeObject(rawBody);
     const { startupId, assignedTo, title, description, amount, dueDate } = body;
 
     // Validation

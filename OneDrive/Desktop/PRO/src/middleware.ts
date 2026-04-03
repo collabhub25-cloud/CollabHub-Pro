@@ -73,6 +73,11 @@ const CSRF_EXEMPT_ROUTES = new Set([
   '/api/auth/logout',
   '/api/health',
   '/api/csrf-token',
+  '/api/auth/me',
+  '/api/auth/verify-email',
+  '/api/auth/resend-verification',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
 ]);
 
 /** Methods that require CSRF protection */
@@ -104,11 +109,11 @@ const DASHBOARD_ROLE_MAP: Record<string, string> = {
 
 const SECURITY_HEADERS: Record<string, string> = {
   'X-DNS-Prefetch-Control': 'on',
-  'X-Frame-Options': 'SAMEORIGIN',
+  'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://generativelanguage.googleapis.com https://livelog.razorpay.com; frame-src 'self' https://accounts.google.com https://api.razorpay.com;",
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.cloudfront.net; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://generativelanguage.googleapis.com https://livelog.razorpay.com; frame-src 'self' https://accounts.google.com https://api.razorpay.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none';",
   'X-Request-Id': '', // Will be set dynamically
 };
 
@@ -185,7 +190,7 @@ function generateRequestId(): string {
 }
 
 // ============================================
-// RATE LIMITING (in-memory; Phase 5 upgrades to Redis)
+// RATE LIMITING (LRU-bounded in-memory)
 // ============================================
 
 interface RateLimitEntry {
@@ -193,33 +198,49 @@ interface RateLimitEntry {
   resetTime: number;
 }
 
+const MAX_ENTRIES = 10000;
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
-// Cleanup expired entries every 60s
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of rateLimitStore.entries()) {
-      if (now > entry.resetTime) {
-        rateLimitStore.delete(key);
-      }
-    }
-  }, 60000);
+function evictOldEntries(): void {
+  if (rateLimitStore.size <= MAX_ENTRIES) return;
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore.entries()) {
+    if (now > entry.resetTime) rateLimitStore.delete(key);
+  }
+  if (rateLimitStore.size > MAX_ENTRIES) {
+    const keysToDelete = Array.from(rateLimitStore.keys()).slice(0, rateLimitStore.size - MAX_ENTRIES);
+    keysToDelete.forEach(k => rateLimitStore.delete(k));
+  }
 }
 
-function checkRateLimit(ip: string, windowMs = 60000, maxRequests = 100): boolean {
+const RATE_LIMITS_TIERS: Record<string, { windowMs: number; maxRequests: number }> = {
+  auth: { windowMs: 60000, maxRequests: 10 },
+  ai: { windowMs: 60000, maxRequests: 5 },
+  mutation: { windowMs: 60000, maxRequests: 30 },
+  default: { windowMs: 60000, maxRequests: 100 },
+};
+
+function getRateLimitTier(pathname: string, method: string): string {
+  if (pathname.startsWith('/api/auth/login') || pathname.startsWith('/api/auth/register')) return 'auth';
+  if (pathname.startsWith('/api/ai/')) return 'ai';
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return 'mutation';
+  return 'default';
+}
+
+function checkRateLimit(ip: string, pathname: string, method: string): boolean {
+  const tier = getRateLimitTier(pathname, method);
+  const { windowMs, maxRequests } = RATE_LIMITS_TIERS[tier];
+  const key = `${ip}:${tier}`;
   const now = Date.now();
-  const entry = rateLimitStore.get(ip);
+  const entry = rateLimitStore.get(key);
 
   if (!entry || now > entry.resetTime) {
-    rateLimitStore.set(ip, { count: 1, resetTime: now + windowMs });
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    evictOldEntries();
     return true;
   }
 
-  if (entry.count >= maxRequests) {
-    return false;
-  }
-
+  if (entry.count >= maxRequests) return false;
   entry.count++;
   return true;
 }
@@ -318,7 +339,7 @@ export async function middleware(request: NextRequest) {
 
   // --- Rate limiting on all API routes ---
   const ip = getClientIp(request);
-  if (!checkRateLimit(ip)) {
+  if (!checkRateLimit(ip, pathname, method)) {
     return NextResponse.json(
       { error: 'Too many requests. Please slow down.', requestId },
       {
@@ -329,18 +350,15 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- CSRF Protection ---
-  // DISABLED: sameSite='lax' httpOnly cookies already prevent CSRF attacks.
-  // The double-submit cookie pattern was causing 403 errors across multiple
-  // components. Re-enable if switching to non-cookie auth.
-  // if (requiresCsrfProtection(method, pathname)) {
-  //   const csrfValidation = validateCsrfToken(request);
-  //   if (!csrfValidation.valid) {
-  //     return NextResponse.json(
-  //       { error: 'CSRF validation failed', details: IS_PRODUCTION ? undefined : csrfValidation.error, requestId },
-  //       { status: 403, headers: { 'X-Request-Id': requestId, ...SECURITY_HEADERS } }
-  //     );
-  //   }
-  // }
+  if (requiresCsrfProtection(method, pathname)) {
+    const csrfValidation = validateCsrfToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json(
+        { error: 'CSRF validation failed', details: IS_PRODUCTION ? undefined : csrfValidation.error, requestId },
+        { status: 403, headers: { 'X-Request-Id': requestId, ...SECURITY_HEADERS } }
+      );
+    }
+  }
 
   // --- Public routes skip auth ---
   if (isPublicRoute(pathname)) {
