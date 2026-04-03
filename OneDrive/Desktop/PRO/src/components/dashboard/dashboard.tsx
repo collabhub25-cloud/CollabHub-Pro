@@ -145,7 +145,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
     // Common tabs across all roles
     if (activeTab === 'search') return <SearchPage />;
     if (activeTab === 'ai-insights') return <AiInsightsPage />;
-    if (activeTab === 'achievements') return <AchievementsPage />;
+    if (activeTab === 'journey') return <AchievementsPage />;
     if (activeTab === 'jobs') return <TalentJobsPage />;
     if (activeTab === 'portfolio') return <PortfolioPage />;
     if (activeTab === 'messages') return <MessagingPage />;
@@ -205,8 +205,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
             onTabChange={setActiveTab}
             activeTab={activeTab}
             counts={{
-              applications: 0, // These would be fetched from API
-              agreements: 0,
+              applications: 0,
               messages: 0,
             }}
           />

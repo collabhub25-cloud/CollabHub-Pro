@@ -394,14 +394,7 @@ export const FavoriteSchema = z.object({
 
 export type FavoriteInput = z.infer<typeof FavoriteSchema>;
 
-/**
- * Agreement Sign Schema
- */
-export const AgreementSignSchema = z.object({
-  agreementId: z.string().min(1, 'Agreement ID is required'),
-});
 
-export type AgreementSignInput = z.infer<typeof AgreementSignSchema>;
 
 /**
  * Milestone ID Schema (for common ID validation)

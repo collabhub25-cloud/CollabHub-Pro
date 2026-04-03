@@ -679,7 +679,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               </div>
               <div className="rounded-md border p-3 bg-muted/50">
                 <p className="text-sm text-muted-foreground">
-                  <strong>How it works:</strong> Message the founder to request a pitch. All payments are handled off-platform between you and the startup. Agreements and terms will be managed here on AlloySphere.
+                  <strong>How it works:</strong> Message the founder to request a pitch. All payments are handled off-platform between you and the startup. Investment terms will be managed here on AlloySphere.
                 </p>
               </div>
               <div className="flex justify-end gap-2">
@@ -1184,7 +1184,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
               </div>
               <div className="rounded-md border p-3 bg-muted/50">
                 <p className="text-sm text-muted-foreground">
-                  <strong>How it works:</strong> Message the founder to request a pitch. All payments are handled off-platform between you and the startup. Agreements and terms will be managed here on AlloySphere.
+                  <strong>How it works:</strong> Message the founder to request a pitch. All payments are handled off-platform between you and the startup. Investment terms will be managed here on AlloySphere.
                 </p>
               </div>
               <div className="flex justify-end gap-2">
@@ -1236,10 +1236,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     );
   }
 
-  // Agreements
-  if (activeTab === 'agreements') {
-    return <AgreementsSection />;
-  }
+
 
   // Profile
   if (activeTab === 'profile') {
@@ -1509,154 +1506,4 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   );
 }
 
-// Agreements Section Component
-function AgreementsSection() {
-  const { user } = useAuthStore();
-  const [agreements, setAgreements] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [signingId, setSigningId] = useState<string | null>(null);
 
-  const fetchAgreements = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/agreements', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAgreements(data.agreements || []);
-      }
-    } catch (error) {
-      console.error('Error fetching agreements:', error);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchAgreements();
-  }, [fetchAgreements]);
-
-  const handleSign = async (agreementId: string) => {
-    setSigningId(agreementId);
-    try {
-      const res = await fetch('/api/agreements/sign', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ agreementId }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success('Agreement signed successfully!');
-        fetchAgreements();
-      } else {
-        toast.error(data.error || 'Failed to sign agreement');
-      }
-    } catch {
-      toast.error('Failed to sign agreement');
-    }
-    setSigningId(null);
-  };
-
-  const getAgreementTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      investment: 'bg-green-500',
-      employment: 'bg-blue-500',
-      partnership: 'bg-purple-500',
-      nda: 'bg-orange-500',
-    };
-    return colors[type.toLowerCase()] || 'bg-gray-500';
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'signed': return 'bg-green-500';
-      case 'pending_signature': return 'bg-yellow-500';
-      case 'draft': return 'bg-gray-500';
-      case 'expired': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Agreements</h1>
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      ) : agreements.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No agreements yet</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Agreements will appear here when you make an investment
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {agreements.map((agreement) => {
-            const isSigned = agreement.signedBy?.some(
-              (s: any) => s.userId === user?._id || (typeof s.userId === 'object' && s.userId?._id === user?._id)
-            );
-
-            return (
-              <Card key={agreement._id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{agreement.type} Agreement</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {agreement.startupId?.name || 'Startup'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <Badge className={getStatusColor(agreement.status)}>
-                          {agreement.status.replace('_', ' ')}
-                        </Badge>
-                        {agreement.signedBy?.length > 0 && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Signed by {agreement.signedBy.length} party(ies)
-                          </p>
-                        )}
-                      </div>
-                      {agreement.status === 'pending_signature' && !isSigned && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleSign(agreement._id)}
-                          disabled={signingId === agreement._id}
-                        >
-                          {signingId === agreement._id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            'Sign'
-                          )}
-                        </Button>
-                      )}
-                      {isSigned && (
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}

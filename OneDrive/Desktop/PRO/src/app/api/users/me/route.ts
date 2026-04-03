@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { User, Verification, Startup, Investor, Alliance, Application, Agreement, Milestone, Notification, Message } from '@/lib/models';
+import { User, Verification, Startup, Investor, Alliance, Application, Milestone, Notification, Message } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 
 // GET /api/users/me - Get current user's full profile
@@ -163,7 +163,6 @@ export async function DELETE(request: NextRequest) {
       Startup.deleteMany({ founderId: userId }),
       Application.deleteMany({ talentId: userId }),
       Alliance.deleteMany({ $or: [{ requesterId: userId }, { receiverId: userId }] }),
-      Agreement.deleteMany({ $or: [{ 'parties.userId': userId }] }),
       Milestone.deleteMany({ assignedTo: userId }),
       Notification.deleteMany({ userId }),
       Verification.deleteMany({ userId }),

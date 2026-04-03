@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { User, TrustScoreLog, Milestone, Application, Agreement } from '@/lib/models';
+import { User, TrustScoreLog, Milestone, Application } from '@/lib/models';
 import { requireAuth, requireAdmin } from '@/lib/security';
 import { AuthResult } from '@/lib/security';
 
@@ -9,13 +9,11 @@ async function calculateTrustScore(userId: string): Promise<number> {
   const [
     completedMilestones,
     totalMilestones,
-    agreementsSigned,
     successfulApplications,
     disputes,
   ] = await Promise.all([
     Milestone.countDocuments({ assignedTo: userId, status: 'completed' }),
     Milestone.countDocuments({ assignedTo: userId }),
-    Agreement.countDocuments({ 'signedBy.userId': userId }),
     Application.countDocuments({ talentId: userId, status: 'accepted' }),
     Application.countDocuments({ talentId: userId, status: 'rejected' }),
   ]);
@@ -29,11 +27,8 @@ async function calculateTrustScore(userId: string): Promise<number> {
     score += Math.round(completionRate * 30);
   }
 
-  // Agreements signed (max +15)
-  score += Math.min(agreementsSigned * 3, 15);
-
-  // Successful applications (max +15)
-  score += Math.min(successfulApplications * 2, 15);
+  // Successful applications (max +25)
+  score += Math.min(successfulApplications * 3, 25);
 
   // Penalties for disputes/rejections
   score -= Math.min(disputes * 5, 20);

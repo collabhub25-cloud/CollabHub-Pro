@@ -33,7 +33,6 @@ export type AuditAction =
   | 'KYC_SUBMITTED'
   | 'KYC_APPROVED'
   | 'KYC_REJECTED'
-  | 'AGREEMENT_SIGNED'
   | 'INVESTMENT_MADE'
   | 'SUBSCRIPTION_CHANGED';
 

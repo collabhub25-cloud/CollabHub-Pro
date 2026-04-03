@@ -237,51 +237,7 @@ export async function sendApplicationNotificationEmail(
     }
 }
 
-// ============================================
-// Agreement Notification Email
-// ============================================
-export async function sendAgreementNotificationEmail(
-    email: string, 
-    recipientName: string, 
-    agreementType: string, 
-    action: 'created' | 'signed' | 'completed'
-) {
-    if (!SMTP_USER || !SMTP_PASS) {
-        console.warn(`[MAILER] DEV MODE - Agreement ${action} email for ${email}`);
-        return;
-    }
 
-    const subjects: Record<string, string> = {
-        created: `New ${agreementType} agreement requires your attention`,
-        signed: `${agreementType} agreement has been signed`,
-        completed: `${agreementType} agreement completed`,
-    };
-
-    const messages: Record<string, string> = {
-        created: `A new <strong>${agreementType}</strong> agreement has been created and requires your review and signature.`,
-        signed: `The <strong>${agreementType}</strong> agreement has been signed. The agreement is now active.`,
-        completed: `The <strong>${agreementType}</strong> agreement has been successfully completed by all parties.`,
-    };
-
-    try {
-        const info = await transporter.sendMail({
-            from: `"AlloySphere" <${FROM_EMAIL}>`,
-            to: email,
-            subject: subjects[action],
-            text: `Agreement ${action}: ${agreementType}`,
-            html: wrapInBrandedTemplate('Agreement Update', `
-                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">Hi ${recipientName},</p>
-                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">${messages[action]}</p>
-                <div style="text-align: center; margin: 24px 0;">
-                  <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E8B57, #0047AB); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Agreement</a>
-                </div>
-            `),
-        });
-        return info.messageId;
-    } catch (error) {
-        console.error('[MAILER] Error sending agreement notification email:', error);
-    }
-}
 
 // ============================================
 // Investment Prompt Email (2-hour timer trigger)

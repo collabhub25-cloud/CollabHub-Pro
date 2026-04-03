@@ -61,7 +61,6 @@ export const RATE_LIMITS = {
   auth_google: { windowMs: 60000, maxRequests: 5, message: 'Too many Google sign-in attempts.' },
   payments: { windowMs: 60000, maxRequests: 5, message: 'Too many payment requests. Please try again later.' },
   ai_assistant: { windowMs: 60000, maxRequests: 10, message: 'AI Assistant rate limit reached. Please slow down.' },
-  agreements: { windowMs: 60000, maxRequests: 10, message: 'Too many agreement operations.' },
   kyc: { windowMs: 3600000, maxRequests: 3, message: 'Too many KYC submission attempts.' },
   api: { windowMs: 60000, maxRequests: 100, message: 'Too many requests. Please slow down.' },
   search: { windowMs: 60000, maxRequests: 30, message: 'Too many search requests.' },

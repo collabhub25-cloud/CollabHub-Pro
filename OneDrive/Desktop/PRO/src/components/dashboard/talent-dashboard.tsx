@@ -51,18 +51,7 @@ interface Milestone {
   disputeReason?: string;
 }
 
-interface Agreement {
-  _id: string;
-  title: string;
-  type: string;
-  status: string;
-  role?: string;
-  equity?: number;
-  signedAt?: string;
-  parties: Array<{ _id: string; name: string; role: string; signedAt?: string }>;
-  createdAt: string;
-  startupId?: { _id: string; name: string };
-}
+
 
 interface Startup {
   _id: string;
@@ -84,7 +73,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
   const { setActiveTab: setGlobalTab } = useUIStore();
   const [applications, setApplications] = useState<Application[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [agreements, setAgreements] = useState<Agreement[]>([]);
+
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
@@ -136,14 +125,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
         setMilestones(data.milestones || []);
       }
 
-      // Fetch agreements
-      const agreementsRes = await fetch('/api/agreements', {
-        credentials: 'include',
-      });
-      if (agreementsRes.ok) {
-        const data = await agreementsRes.json();
-        setAgreements(data.agreements || []);
-      }
+
 
       // Fetch startups for browsing
       const startupsRes = await fetch('/api/startups?all=true&limit=10', {
@@ -229,7 +211,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
     const completedMilestones = milestones.filter(m => m.status === 'completed');
     const pendingApplications = applications.filter(a => a.status === 'pending');
     const acceptedApplications = applications.filter(a => a.status === 'accepted');
-    const activeAgreements = agreements.filter(a => a.status === 'active');
+
 
     // Intelligence Widgets Data
     const totalEarnings = completedMilestones.reduce((sum, m) => sum + (m.amount || 0), 0);
@@ -747,118 +729,8 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
     );
   }
 
-  // Agreements
-  if (activeTab === 'agreements') {
-    const pendingAgreements = agreements.filter(a => a.status === 'pending');
-    const signedAgreements = agreements.filter(a => a.status === 'active' || a.status === 'signed');
 
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Agreements</h1>
-        <Tabs defaultValue="pending">
-          <TabsList>
-            <TabsTrigger value="pending">Pending Signature ({pendingAgreements.length})</TabsTrigger>
-            <TabsTrigger value="signed">Signed ({signedAgreements.length})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="pending" className="space-y-4 mt-4">
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : pendingAgreements.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-8">
-                  <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No pending agreements</p>
-                </CardContent>
-              </Card>
-            ) : (
-              pendingAgreements.map((agreement) => (
-                <Card 
-                  key={agreement._id}
-                  onClick={() => router.push(`/agreements/${agreement._id}`)}
-                  className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-4">
-                        <div className="h-10 w-10 mt-1 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <FileText className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-base">{agreement.title || 'Agreement'}</h3>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {agreement.startupId?.name || 'Unknown Startup'} • {agreement.role || 'Team Member'}
-                          </p>
-                          <div className="flex gap-2 mt-2.5">
-                            {agreement.equity && agreement.equity > 0 ? (
-                               <Badge variant="secondary" className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/20">{agreement.equity}% Equity</Badge>
-                            ) : null}
-                            <Badge variant="outline" className="capitalize text-muted-foreground bg-muted/30">{agreement.type?.replace('_', ' ') || 'Standard'}</Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end justify-between h-full min-h-[60px]">
-                        <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 shadow-none border-yellow-500/20">Pending Signature</Badge>
-                        <p className="text-xs text-muted-foreground mt-3">
-                          {new Date(agreement.createdAt || Date.now()).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-          <TabsContent value="signed" className="space-y-4 mt-4">
-            {signedAgreements.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-8">
-                  <p className="text-muted-foreground">No signed agreements yet</p>
-                </CardContent>
-              </Card>
-            ) : (
-              signedAgreements.map((agreement) => (
-                <Card 
-                  key={agreement._id}
-                  onClick={() => router.push(`/agreements/${agreement._id}`)}
-                  className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-4">
-                        <div className="h-10 w-10 mt-1 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-base">{agreement.title || 'Agreement'}</h3>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {agreement.startupId?.name || 'Unknown Startup'} • {agreement.role || 'Team Member'}
-                          </p>
-                          <div className="flex gap-2 mt-2.5">
-                            {agreement.equity && agreement.equity > 0 ? (
-                               <Badge variant="secondary" className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/20">{agreement.equity}% Equity</Badge>
-                            ) : null}
-                            <Badge variant="outline" className="capitalize text-muted-foreground bg-muted/30">{agreement.type?.replace('_', ' ') || 'Standard'}</Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end justify-between h-full min-h-[60px]">
-                        <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20 shadow-none border-green-500/20">Signed</Badge>
-                        <p className="text-xs text-muted-foreground mt-3">
-                          {new Date(agreement.signedAt || agreement.createdAt || Date.now()).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-    );
-  }
+
 
   // Earnings
   if (activeTab === 'earnings') {

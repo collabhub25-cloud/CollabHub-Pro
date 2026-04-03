@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, checkRateLimit, getRateLimitKey, rateLimitResponse } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
-import { User, Startup, Milestone, FundingRound, Agreement } from '@/lib/models';
+import { User, Startup, Milestone, FundingRound } from '@/lib/models';
 import { callGemini } from '@/lib/ai/gemini';
 
 export const runtime = 'nodejs';
@@ -58,11 +58,10 @@ export async function GET(request: NextRequest) {
 
 async function getFounderAnalytics(userId: string) {
   // Gather real data
-  const [startups, milestones, fundingRounds, agreements] = await Promise.all([
+  const [startups, milestones, fundingRounds] = await Promise.all([
     Startup.find({ founderId: userId }).select('name industry stage team').lean() as any,
     Milestone.find({ createdBy: userId }).select('status amount dueDate').lean() as any,
     FundingRound.find({ createdBy: userId }).select('targetAmount raisedAmount status roundName').lean() as any,
-    Agreement.find({ 'parties.userId': userId }).select('status type').lean() as any,
   ]);
 
   const totalTeam = startups.reduce((sum: number, s: any) => sum + (s.team?.length || 0), 0);
@@ -72,7 +71,6 @@ async function getFounderAnalytics(userId: string) {
   const totalRaised = fundingRounds.reduce((sum: number, r: any) => sum + (r.raisedAmount || 0), 0);
   const totalTarget = fundingRounds.reduce((sum: number, r: any) => sum + (r.targetAmount || 0), 0);
   const fundingProgress = totalTarget > 0 ? Math.round((totalRaised / totalTarget) * 100) : 0;
-  const signedAgreements = agreements.filter((a: any) => a.status === 'signed' || a.status === 'active').length;
 
   // Build data summary for Gemini
   const dataSummary = {
@@ -84,8 +82,6 @@ async function getFounderAnalytics(userId: string) {
     totalRaised,
     totalTarget,
     fundingProgress,
-    signedAgreements,
-    totalAgreements: agreements.length,
     industries: startups.map((s: any) => s.industry).filter(Boolean),
   };
 
@@ -130,9 +126,8 @@ Be data-driven and practical. Max 4 insights, 3 predictions, 3 recommendations.`
 }
 
 async function getTalentAnalytics(userId: string) {
-  const [milestones, agreements, user] = await Promise.all([
+  const [milestones, user] = await Promise.all([
     Milestone.find({ assignedTo: userId }).select('status amount title').lean() as any,
-    Agreement.find({ 'parties.userId': userId }).select('status type').lean() as any,
     User.findById(userId).select('skills verificationLevel').lean() as any,
   ]);
 
@@ -146,7 +141,6 @@ async function getTalentAnalytics(userId: string) {
     completedMilestones,
     activeMilestones,
     totalEarned,
-    signedAgreements: agreements.filter((a: any) => a.status === 'signed' || a.status === 'active').length,
     skillCount: user?.skills?.length || 0,
     verificationLevel: user?.verificationLevel || 0,
     productivityScore,
@@ -192,9 +186,8 @@ Max 3 insights, 3 predictions, 3 recommendations. Be practical and encouraging.`
 }
 
 async function getInvestorAnalytics(userId: string) {
-  const [investments, agreements] = await Promise.all([
+  const [investments] = await Promise.all([
     FundingRound.find({ 'investors.userId': userId }).select('targetAmount raisedAmount status startupId roundName investors').lean() as any,
-    Agreement.find({ 'parties.userId': userId }).select('status type').lean() as any,
   ]);
 
   const totalInvested = investments.reduce((sum: number, inv: any) => {
@@ -207,7 +200,6 @@ async function getInvestorAnalytics(userId: string) {
     totalInvested,
     activeDeals: investments.filter((i: any) => i.status === 'open').length,
     completedDeals: investments.filter((i: any) => i.status === 'closed').length,
-    signedAgreements: agreements.filter((a: any) => a.status === 'signed' || a.status === 'active').length,
   };
 
   const geminiResult = await callGemini({
@@ -255,7 +247,7 @@ function calculateSuccessScore(data: any): number {
   if (data.totalTeamMembers > 2) score += 10;
   if (data.milestoneCompletionRate > 50) score += 15;
   if (data.fundingProgress > 30) score += 15;
-  if (data.signedAgreements > 0) score += 10;
+
   if (data.milestoneCompletionRate > 80) score += 10;
   return Math.min(100, score);
 }

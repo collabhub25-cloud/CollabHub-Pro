@@ -9,7 +9,6 @@ export type PaymentStatus = 'pending' | 'marked_paid' | 'confirmed' | 'disputed'
 export interface IMilestone extends Document {
     startupId: mongoose.Types.ObjectId;
     assignedTo?: mongoose.Types.ObjectId;
-    agreementId?: mongoose.Types.ObjectId;
     title: string;
     description: string;
     amount: number;

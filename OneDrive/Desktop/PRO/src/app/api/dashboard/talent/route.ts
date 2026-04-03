@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, checkRateLimit, getRateLimitKey } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
-import { User, Application, Milestone, Agreement, Notification, Startup } from '@/lib/models';
+import { User, Application, Milestone, Notification, Startup } from '@/lib/models';
 
 export const runtime = 'nodejs';
 
@@ -30,16 +30,14 @@ export async function GET(request: NextRequest) {
     const userId = authResult.user.userId;
 
     // Parallel queries
-    const [applications, agreements, notifications, user] = await Promise.all([
+    const [applications, notifications, user] = await Promise.all([
       Application.find({ talentId: userId }).populate('startupId', 'name logo industry stage').sort({ createdAt: -1 }).lean(),
-      Agreement.find({ 'parties.userId': userId }).sort({ createdAt: -1 }).lean(),
       Notification.find({ userId }).sort({ createdAt: -1 }).limit(5).lean(),
       User.findById(userId).select('skills verificationLevel').lean(),
     ]);
 
     const pendingApps = applications.filter((a: any) => a.status === 'pending');
     const acceptedApps = applications.filter((a: any) => a.status === 'accepted');
-    const pendingAgreements = agreements.filter((a: any) => a.status === 'pending');
 
     let milestoneList: any[] = [];
     let matchingStartups: any[] = [];
@@ -77,7 +75,6 @@ export async function GET(request: NextRequest) {
       milestones: milestoneList,
       matchingStartups,
       startupActivities: activities,
-      agreements,
       stats: {
         totalApplications: applications.length,
         pendingApplications: pendingApps.length,
@@ -87,7 +84,6 @@ export async function GET(request: NextRequest) {
         totalMilestones: milestoneList.length,
         totalEarnings,
         pendingEarnings,
-        pendingAgreements: pendingAgreements.length,
       },
     });
   } catch (error) {

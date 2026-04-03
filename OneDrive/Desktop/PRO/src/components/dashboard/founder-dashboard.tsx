@@ -111,15 +111,7 @@ interface FundingRound {
   createdAt: string;
 }
 
-interface Agreement {
-  _id: string;
-  type: string;
-  status: string;
-  startupId: { _id: string; name: string; industry: string };
-  parties: Array<{ _id: string; name: string; email: string; role: string; avatar?: string }>;
-  createdAt: string;
-  signedBy: Array<{ userId: string; signedAt: string }>;
-}
+
 
 interface Pitch {
   _id: string;
@@ -173,7 +165,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
-  const [agreements, setAgreements] = useState<Agreement[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [showCreateStartup, setShowCreateStartup] = useState(false);
   const [showEditStartup, setShowEditStartup] = useState<Startup | null>(null);
@@ -350,7 +342,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   useEffect(() => {
     const loadData = async () => {
-      if (activeTab === 'dashboard' || activeTab === 'startups' || activeTab === 'applications' || activeTab === 'milestones' || activeTab === 'funding' || activeTab === 'agreements' || activeTab === 'achievements' || activeTab === 'pitch-requests') {
+      if (activeTab === 'dashboard' || activeTab === 'startups' || activeTab === 'applications' || activeTab === 'milestones' || activeTab === 'funding' || activeTab === 'pitch-requests') {
         await fetchData();
         await fetchPitches();
         await fetchConfirmations();
@@ -400,29 +392,13 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     }
   }, []);
 
-  // Fetch agreements
-  const fetchAgreements = useCallback(async () => {
-    try {
-      const res = await fetch('/api/agreements', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAgreements(data.agreements || []);
-      }
-    } catch (error) {
-      console.error('Error fetching agreements:', error);
-    }
-  }, []);
+
 
   useEffect(() => {
     if (activeTab === 'funding') {
       fetchFundingRounds();
     }
-    if (activeTab === 'agreements') {
-      fetchAgreements();
-    }
-  }, [activeTab, fetchFundingRounds, fetchAgreements]);
+  }, [activeTab, fetchFundingRounds]);
 
   const handleCreateStartup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -607,15 +583,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     }
   };
 
-  const getAgreementTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      NDA: 'bg-blue-500',
-      Work: 'bg-green-500',
-      Equity: 'bg-purple-500',
-      SAFE: 'bg-orange-500',
-    };
-    return colors[type] || 'bg-gray-500';
-  };
+
 
   const handleSendPitch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -726,8 +694,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             { label: 'Startups', value: startups.length, icon: '🏢', gradient: 'rgba(0,0,0,0.03)' },
             { label: 'Team Members', value: totalTeamMembers, icon: '👥', gradient: 'rgba(0,0,0,0.03)' },
             { label: 'Active Milestones', value: activeMilestones.length, icon: '🎯', gradient: 'rgba(0,0,0,0.03)' },
-            { label: 'Funding Raised', value: totalRaisedDisplay, icon: '💰', gradient: 'rgba(0,0,0,0.03)' },
-            { label: 'Agreements', value: agreements.length, icon: '📄', gradient: 'rgba(0,0,0,0.03)' },
           ].map((stat) => (
             <div key={stat.label} className="p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] cursor-default" style={{ background: stat.gradient, backdropFilter: 'blur(12px)', border: '1px solid rgba(0,0,0,0.25)' }}>
               <div className="text-2xl mb-2">{stat.icon}</div>
@@ -1625,152 +1591,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     );
   }
 
-  // Agreements
-  if (activeTab === 'agreements') {
-    const pendingAgreements = agreements.filter(a => a.status === 'pending_signature');
-    const signedAgreements = agreements.filter(a => a.status === 'signed');
-
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Agreements</h1>
-        </div>
-
-        <Tabs defaultValue="pending">
-          <TabsList>
-            <TabsTrigger value="pending">Pending ({pendingAgreements.length})</TabsTrigger>
-            <TabsTrigger value="signed">Signed ({signedAgreements.length})</TabsTrigger>
-            <TabsTrigger value="all">All ({agreements.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pending" className="space-y-4 mt-4">
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : pendingAgreements.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No pending agreements</p>
-                </CardContent>
-              </Card>
-            ) : (
-              pendingAgreements.map((agreement) => (
-                <Card key={agreement._id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${getAgreementTypeColor(agreement.type)}`}>
-                          <FileText className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{agreement.type} Agreement</h3>
-                          <p className="text-sm text-muted-foreground">{agreement.startupId?.name}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="text-orange-500 border-orange-500">
-                          Pending Signature
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex -space-x-2">
-                        {agreement.parties.slice(0, 4).map((party) => (
-                          <Avatar key={party._id} className="h-6 w-6 border-2 border-background">
-                            <AvatarFallback className="text-xs">{party.name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                        ))}
-                        {agreement.parties.length > 4 && (
-                          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs">
-                            +{agreement.parties.length - 4}
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-sm text-muted-foreground ml-2">
-                        {agreement.signedBy.length}/{agreement.parties.length} signed
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="signed" className="space-y-4 mt-4">
-            {signedAgreements.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <CheckCircle2 className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No signed agreements yet</p>
-                </CardContent>
-              </Card>
-            ) : (
-              signedAgreements.map((agreement) => (
-                <Card key={agreement._id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${getAgreementTypeColor(agreement.type)}`}>
-                          <FileText className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{agreement.type} Agreement</h3>
-                          <p className="text-sm text-muted-foreground">{agreement.startupId?.name}</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-500">Signed</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="all" className="space-y-4 mt-4">
-            {agreements.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No agreements found</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Agreements are created when you accept talent applications or receive investments
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              agreements.map((agreement) => (
-                <Card key={agreement._id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${getAgreementTypeColor(agreement.type)}`}>
-                          <FileText className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{agreement.type} Agreement</h3>
-                          <p className="text-sm text-muted-foreground">{agreement.startupId?.name}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Created {new Date(agreement.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge variant={agreement.status === 'signed' ? 'default' : 'outline'}>
-                        {agreement.status === 'signed' ? 'Signed' : 'Pending'}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-    );
-  }
-
   // Pitch Requests
   if (activeTab === 'pitch-requests') {
     return (
@@ -1864,161 +1684,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             ))}
           </TabsContent>
         </Tabs>
-      </div>
-    );
-  }
-
-  // Achievements Tab
-  if (activeTab === 'achievements') {
-    const typeIcons: Record<string, any> = {
-      funding: '💰',
-      product: '🚀',
-      growth: '📈',
-      milestone: '🎯',
-    };
-    const typeColors: Record<string, string> = {
-      funding: 'from-green-400/20 to-green-600/10 border-green-200 dark:border-green-800/30',
-      product: 'from-blue-400/20 to-blue-600/10 border-blue-200 dark:border-blue-800/30',
-      growth: 'from-purple-400/20 to-purple-600/10 border-purple-200 dark:border-purple-800/30',
-      milestone: 'from-orange-400/20 to-orange-600/10 border-orange-200 dark:border-orange-800/30',
-    };
-
-    const handleCreateAchievement = async () => {
-      if (!newAchievement.startupId && startups.length > 0) {
-        newAchievement.startupId = startups[0]._id;
-      }
-      if (!newAchievement.startupId || !newAchievement.title || !newAchievement.description) {
-        toast.error('Please fill in all required fields');
-        return;
-      }
-      setAchievementSubmitting(true);
-      try {
-        const res = await fetch('/api/achievements', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newAchievement),
-        });
-        if (res.ok) {
-          toast.success('Achievement posted!');
-          setShowCreateAchievement(false);
-          setNewAchievement({ title: '', description: '', type: 'milestone', visibility: 'public', startupId: '' });
-          fetchAchievements();
-        } else {
-          const data = await res.json();
-          toast.error(data.error || 'Failed to create achievement');
-        }
-      } catch {
-        toast.error('Something went wrong');
-      }
-      setAchievementSubmitting(false);
-    };
-
-    return (
-      <div className="space-y-6 page-enter">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><Trophy className="h-5 w-5" style={{ color: 'var(--sea-green)' }} /> Achievements</h1>
-            <p className="text-sm text-muted-foreground mt-1">Celebrate and share your startup milestones</p>
-          </div>
-          <Button onClick={() => setShowCreateAchievement(true)} size="sm" className="gap-2">
-            <Plus className="h-4 w-4" /> Post Achievement
-          </Button>
-        </div>
-
-        {achievementsLoading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-        ) : achievements.length === 0 ? (
-          <Card className="border-dashed bg-white/5 dark:bg-black/20 backdrop-blur-xl border-white/10">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Trophy className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No achievements yet</h3>
-              <p className="text-muted-foreground text-center text-sm mb-4">Post your first achievement to track and celebrate startup progress</p>
-              <Button onClick={() => setShowCreateAchievement(true)} size="sm" variant="outline">Post Achievement</Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {achievements.map((ach: any) => (
-              <div key={ach._id} className={`p-5 rounded-xl border bg-gradient-to-br ${typeColors[ach.type] || typeColors.milestone} transition-all hover:-translate-y-0.5 hover:shadow-lg`}>
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-2xl">{typeIcons[ach.type] || '🎯'}</span>
-                  <div className="flex items-center gap-2">
-                    {ach.visibility === 'private' && <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
-                    <Badge variant="outline" className="text-[10px] capitalize">{ach.type}</Badge>
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-1">{ach.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{ach.description}</p>
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-black/5 dark:border-white/5">
-                  <span className="text-[10px] text-muted-foreground font-medium">{ach.startupName}</span>
-                  <span className="text-[10px] text-muted-foreground">{new Date(ach.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Create Achievement Dialog */}
-        <Dialog open={showCreateAchievement} onOpenChange={setShowCreateAchievement}>
-          <DialogContent className="sm:max-w-[480px]">
-            <DialogHeader>
-              <DialogTitle>Post Achievement</DialogTitle>
-              <DialogDescription>Share a milestone or accomplishment with your network</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {startups.length > 1 && (
-                <div className="space-y-2">
-                  <Label>Startup</Label>
-                  <Select value={newAchievement.startupId || startups[0]?._id} onValueChange={(v) => setNewAchievement({ ...newAchievement, startupId: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {startups.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label>Title *</Label>
-                <Input value={newAchievement.title} onChange={e => setNewAchievement({ ...newAchievement, title: e.target.value })} placeholder="e.g., Secured $500K in Seed Funding" />
-              </div>
-              <div className="space-y-2">
-                <Label>Description *</Label>
-                <Textarea value={newAchievement.description} onChange={e => setNewAchievement({ ...newAchievement, description: e.target.value })} placeholder="Describe this achievement..." rows={3} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={newAchievement.type} onValueChange={(v) => setNewAchievement({ ...newAchievement, type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="funding">💰 Funding</SelectItem>
-                      <SelectItem value="product">🚀 Product</SelectItem>
-                      <SelectItem value="growth">📈 Growth</SelectItem>
-                      <SelectItem value="milestone">🎯 Milestone</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Visibility</Label>
-                  <Select value={newAchievement.visibility} onValueChange={(v) => setNewAchievement({ ...newAchievement, visibility: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="private">Private</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCreateAchievement(false)}>Cancel</Button>
-              <Button onClick={handleCreateAchievement} disabled={achievementSubmitting}>
-                {achievementSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     );
   }

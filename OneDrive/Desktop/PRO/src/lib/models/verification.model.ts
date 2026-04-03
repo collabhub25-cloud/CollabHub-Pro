@@ -6,7 +6,7 @@ import { UserRole } from './user.model';
 // ============================================
 export type VerificationLevelType = 0 | 1 | 2 | 3 | 4 | 5;
 export type VerificationStatus = 'pending' | 'submitted' | 'under_review' | 'approved' | 'rejected';
-export type VerificationType = 'profile' | 'skill_test' | 'resume' | 'nda';
+export type VerificationType = 'profile' | 'skill_test' | 'resume';
 
 // Role-based verification level definitions
 export const VERIFICATION_LEVELS = {
@@ -14,7 +14,6 @@ export const VERIFICATION_LEVELS = {
         { level: 0, type: 'profile' as const, name: 'Profile Completion', description: 'Complete your profile information' },
         { level: 1, type: 'resume' as const, name: 'Resume Upload', description: 'Upload your resume' },
         { level: 2, type: 'skill_test' as const, name: 'Skill Test Passed', description: 'Pass a skill assessment test' },
-        { level: 3, type: 'nda' as const, name: 'NDA Signed', description: 'Sign the Non-Disclosure Agreement' },
     ],
     founder: [
         { level: 0, type: 'profile' as const, name: 'Profile Completion', description: 'Complete your profile information' },
@@ -44,8 +43,7 @@ export interface IVerification extends Document {
     testPassed?: boolean;
     resumeUrl?: string;
     resumeFileName?: string;
-    ndaSignedAt?: Date;
-    ndaSignatureHash?: string;
+
     notes?: string;                 // Admin notes
     verifiedBy?: mongoose.Types.ObjectId;
     verifiedAt?: Date;
@@ -61,7 +59,7 @@ const VerificationSchema = new Schema<IVerification>(
     {
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         role: { type: String, enum: ['founder', 'talent', 'investor', 'admin'], required: true },
-        type: { type: String, enum: ['profile', 'skill_test', 'resume', 'nda'], required: true },
+        type: { type: String, enum: ['profile', 'skill_test', 'resume'], required: true },
         level: { type: Number, enum: [0, 1, 2, 3, 4, 5], required: true },
         status: { type: String, enum: ['pending', 'submitted', 'under_review', 'approved', 'rejected'], default: 'pending' },
         userEmail: { type: String },
@@ -77,8 +75,7 @@ const VerificationSchema = new Schema<IVerification>(
         testPassed: { type: Boolean },
         resumeUrl: { type: String },
         resumeFileName: { type: String },
-        ndaSignedAt: { type: Date },
-        ndaSignatureHash: { type: String },
+
         notes: { type: String, maxlength: 1000 },
         verifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
         verifiedAt: { type: Date },

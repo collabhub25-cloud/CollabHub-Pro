@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, checkRateLimit, getRateLimitKey } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
-import { User, Startup, Application, Milestone, FundingRound, Agreement, Notification } from '@/lib/models';
+import { User, Startup, Application, Milestone, FundingRound, Notification } from '@/lib/models';
 
 export const runtime = 'nodejs';
 

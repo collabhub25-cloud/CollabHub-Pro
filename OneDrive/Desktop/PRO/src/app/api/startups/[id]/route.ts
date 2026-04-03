@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
-import { Startup, User, FundingRound, Agreement, TeamMember } from '@/lib/models';
+import { Startup, User, FundingRound, TeamMember } from '@/lib/models';
 
 export async function GET(
     request: NextRequest,
@@ -29,7 +29,7 @@ export async function GET(
             .sort({ createdAt: -1 })
             .lean();
 
-        const agreementCount = await Agreement.countDocuments({ startupId: id });
+
 
         // Fetch enriched team member data
         const teamMembers = await TeamMember.find({ startupId: id })
@@ -41,7 +41,6 @@ export async function GET(
             success: true,
             startup,
             fundingRounds,
-            agreementCount,
             teamMembers,
         });
     } catch (error) {
