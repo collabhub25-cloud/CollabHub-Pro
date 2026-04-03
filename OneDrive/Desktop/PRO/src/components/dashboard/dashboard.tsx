@@ -14,37 +14,36 @@ import {
   UserCheck, DollarSign, AlertTriangle, CheckCircle2,
   Search, Shield, CreditCard as SubscriptionIcon, MessageSquare,
   User, Handshake, Sparkles, ShieldCheck, ChevronDown,
-  ChevronsRight, Bell, HelpCircle
+  ChevronsRight, Bell, HelpCircle, Moon, Sun
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Image from "next/image";
-import { FounderDashboardNew } from './founder-dashboard-new';
-import { TalentDashboardNew } from './talent-dashboard-new';
-import { InvestorDashboardNew } from './investor-dashboard-new';
-import { FounderDashboard } from './founder-dashboard';
-import { TalentDashboard } from './talent-dashboard';
-import { InvestorDashboard } from './investor-dashboard';
-import { AdminDashboard } from './admin-dashboard';
+import dynamic from 'next/dynamic';
 import { DashboardSidebar } from './sidebar';
 import { Logo } from '@/components/ui/logo';
-
-
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
-import { VerificationProgress } from '@/components/verification/verification-progress';
-import { SearchPage } from '@/components/search/search-page';
-import { ProfilePage } from '@/components/profile/profile-page';
-import { MessagingPage } from '@/components/messaging/messaging-page';
-import { SettingsPage } from '@/components/settings/settings-page';
 import { CreateStartupModal } from '@/components/startups/create-startup-modal';
 import { CreateMilestoneModal } from '@/components/milestones/create-milestone-modal';
-import { AlliancePage } from '@/components/alliances/alliance-page';
 import { AccessDenied } from '@/components/common/access-denied';
 import { PageSkeleton, ErrorBoundary } from '@/components/common/loading-error-handlers';
-import { AiInsightsPage } from '@/components/ai/ai-insights-page';
-import { AchievementsPage } from '@/components/achievements/achievements-page';
-import { ManageJobs } from '@/components/jobs/manage-jobs';
-import { TalentJobsPage } from '@/components/jobs/talent-jobs-page';
-import { PortfolioPage } from '@/components/investor/portfolio-page';
+
+const FounderDashboardNew = dynamic(() => import('./founder-dashboard-new').then(m => ({ default: m.FounderDashboardNew })), { loading: () => <PageSkeleton /> });
+const TalentDashboardNew = dynamic(() => import('./talent-dashboard-new').then(m => ({ default: m.TalentDashboardNew })), { loading: () => <PageSkeleton /> });
+const InvestorDashboardNew = dynamic(() => import('./investor-dashboard-new').then(m => ({ default: m.InvestorDashboardNew })), { loading: () => <PageSkeleton /> });
+const FounderDashboard = dynamic(() => import('./founder-dashboard').then(m => ({ default: m.FounderDashboard })), { loading: () => <PageSkeleton /> });
+const TalentDashboard = dynamic(() => import('./talent-dashboard').then(m => ({ default: m.TalentDashboard })), { loading: () => <PageSkeleton /> });
+const InvestorDashboard = dynamic(() => import('./investor-dashboard').then(m => ({ default: m.InvestorDashboard })), { loading: () => <PageSkeleton /> });
+const AdminDashboard = dynamic(() => import('./admin-dashboard').then(m => ({ default: m.AdminDashboard })), { loading: () => <PageSkeleton /> });
+const SearchPage = dynamic(() => import('@/components/search/search-page').then(m => ({ default: m.SearchPage })), { loading: () => <PageSkeleton /> });
+const ProfilePage = dynamic(() => import('@/components/profile/profile-page').then(m => ({ default: m.ProfilePage })), { loading: () => <PageSkeleton /> });
+const MessagingPage = dynamic(() => import('@/components/messaging/messaging-page').then(m => ({ default: m.MessagingPage })), { loading: () => <PageSkeleton /> });
+const SettingsPage = dynamic(() => import('@/components/settings/settings-page').then(m => ({ default: m.SettingsPage })), { loading: () => <PageSkeleton /> });
+const AlliancePage = dynamic(() => import('@/components/alliances/alliance-page').then(m => ({ default: m.AlliancePage })), { loading: () => <PageSkeleton /> });
+const AiInsightsPage = dynamic(() => import('@/components/ai/ai-insights-page').then(m => ({ default: m.AiInsightsPage })), { loading: () => <PageSkeleton /> });
+const AchievementsPage = dynamic(() => import('@/components/achievements/achievements-page').then(m => ({ default: m.AchievementsPage })), { loading: () => <PageSkeleton /> });
+const ManageJobs = dynamic(() => import('@/components/jobs/manage-jobs').then(m => ({ default: m.ManageJobs })), { loading: () => <PageSkeleton /> });
+const TalentJobsPage = dynamic(() => import('@/components/jobs/talent-jobs-page').then(m => ({ default: m.TalentJobsPage })), { loading: () => <PageSkeleton /> });
+const PortfolioPage = dynamic(() => import('@/components/investor/portfolio-page').then(m => ({ default: m.PortfolioPage })), { loading: () => <PageSkeleton /> });
 import { SubscriptionBadge } from './shared-components';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
@@ -229,7 +228,16 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+                </button>
 
                 {/* Notifications */}
                 <NotificationDropdown />

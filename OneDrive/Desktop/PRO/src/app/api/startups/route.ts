@@ -4,6 +4,7 @@ import { Startup, User, Subscription, TeamMember } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { validateInput, CreateStartupSchema, StartupUpdateSchema } from '@/lib/validation/schemas';
 import { checkPlanLimit, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
+import { sanitizeObject } from '@/lib/security/sanitize';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('startups');
@@ -162,7 +163,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = sanitizeObject(rawBody);
 
     // Zod validation
     const validation = validateInput(CreateStartupSchema, body);

@@ -101,7 +101,7 @@ export const CSRF_CONFIG = {
 export const SECURITY_HEADERS = {
   'X-DNS-Prefetch-Control': 'on',
   'X-XSS-Protection': '1; mode=block',
-  'X-Frame-Options': 'SAMEORIGIN',
+  'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
@@ -119,7 +119,6 @@ export const CSP_DIRECTIVES = {
   'script-src': [
     "'self'",
     "'unsafe-inline'",
-    "'unsafe-eval'",
     'https://accounts.google.com',
     'https://checkout.razorpay.com',
   ],
@@ -131,6 +130,7 @@ export const CSP_DIRECTIVES = {
     'blob:',
     'https://lh3.googleusercontent.com',
     'https://avatars.githubusercontent.com',
+    'https://*.cloudfront.net',
   ],
   'connect-src': [
     "'self'",
@@ -145,6 +145,7 @@ export const CSP_DIRECTIVES = {
   'frame-ancestors': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
+  'object-src': ["'none'"],
 } as const;
 
 export function buildCSP(): string {

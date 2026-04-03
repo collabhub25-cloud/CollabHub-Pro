@@ -59,7 +59,7 @@ export interface PlanLimitDisplayProps {
 // STAT CARD COMPONENT
 // ============================================
 
-export function StatCard({
+export const StatCard = React.memo(function StatCard({
   title,
   value,
   description,
@@ -128,10 +128,7 @@ export function StatCard({
   }
 
   return cardContent;
-}
-
-// ============================================
-// STAT CARD SKELETON
+});
 // ============================================
 
 export function StatCardSkeleton() {
@@ -425,7 +422,7 @@ export function formatNumber(value: number): string {
 // DASHBOARD-SPECIFIC SHARED COMPONENTS
 // ============================================
 
-export function QuickActionCard({ icon: Icon, label, description, onClick }: {
+export const QuickActionCard = React.memo(function QuickActionCard({ icon: Icon, label, description, onClick }: {
   icon: any; label: string; description: string; onClick: () => void;
 }) {
   return (
@@ -442,9 +439,9 @@ export function QuickActionCard({ icon: Icon, label, description, onClick }: {
       </CardContent>
     </Card>
   );
-}
+});
 
-export function StatsCard({ icon: Icon, iconColor, label, value, subtext, trend, trendPositive, progress, onClick }: {
+export const StatsCard = React.memo(function StatsCard({ icon: Icon, iconColor, label, value, subtext, trend, trendPositive, progress, onClick }: {
   icon: any; iconColor: string; label: string; value: string | number; subtext: string;
   trend?: string; trendPositive?: boolean; progress?: number; onClick: () => void;
 }) {
@@ -471,7 +468,7 @@ export function StatsCard({ icon: Icon, iconColor, label, value, subtext, trend,
       </CardContent>
     </Card>
   );
-}
+});
 
 export function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; label: string }> = {

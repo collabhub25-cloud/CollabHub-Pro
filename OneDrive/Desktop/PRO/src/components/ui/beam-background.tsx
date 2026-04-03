@@ -39,9 +39,10 @@ export const BeamBackground = () => {
     const noiseRef = useRef<HTMLCanvasElement>(null);
     const beamsRef = useRef<Beam[]>([]);
     const animationFrameRef = useRef<number>(0);
+    const noiseGenerated = useRef(false);
   
     const LAYERS = 3;
-    const BEAMS_PER_LAYER = 8;
+    const BEAMS_PER_LAYER = 4;
   
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -67,6 +68,7 @@ export const BeamBackground = () => {
         nCtx.setTransform(1, 0, 0, 1, 0, 0);
         nCtx.scale(dpr, dpr);
   
+        noiseGenerated.current = false;
         beamsRef.current = [];
         for (let layer = 1; layer <= LAYERS; layer++) {
           for (let i = 0; i < BEAMS_PER_LAYER; i++) {
@@ -91,17 +93,29 @@ export const BeamBackground = () => {
       };
   
       const drawBeam = (beam: Beam) => {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        const opacityMultiplier = isDarkMode ? 1.5 : 1;
+
         ctx.save();
         ctx.translate(beam.x, beam.y);
         ctx.rotate((beam.angle * Math.PI) / 180);
   
-        const pulsingOpacity = Math.min(1, beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.4));
+        const pulsingOpacity = Math.min(1, beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.4)) * opacityMultiplier;
         const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
-        gradient.addColorStop(0, `rgba(46,139,87,0)`); // Sea Green
-        gradient.addColorStop(0.2, `rgba(46,139,87,${pulsingOpacity * 0.3})`);
-        gradient.addColorStop(0.5, `rgba(0,71,171,${pulsingOpacity * 0.6})`); // Cobalt Blue
-        gradient.addColorStop(0.8, `rgba(0,71,171,${pulsingOpacity * 0.3})`);
-        gradient.addColorStop(1, `rgba(0,71,171,0)`);
+
+        if (isDarkMode) {
+          gradient.addColorStop(0, `rgba(250,250,250,0)`);
+          gradient.addColorStop(0.2, `rgba(250,250,250,${pulsingOpacity * 0.2})`);
+          gradient.addColorStop(0.5, `rgba(161,161,170,${pulsingOpacity * 0.4})`);
+          gradient.addColorStop(0.8, `rgba(161,161,170,${pulsingOpacity * 0.2})`);
+          gradient.addColorStop(1, `rgba(161,161,170,0)`);
+        } else {
+          gradient.addColorStop(0, `rgba(46,139,87,0)`);
+          gradient.addColorStop(0.2, `rgba(46,139,87,${pulsingOpacity * 0.3})`);
+          gradient.addColorStop(0.5, `rgba(0,71,171,${pulsingOpacity * 0.6})`);
+          gradient.addColorStop(0.8, `rgba(0,71,171,${pulsingOpacity * 0.3})`);
+          gradient.addColorStop(1, `rgba(0,71,171,0)`);
+        }
   
         ctx.fillStyle = gradient;
         ctx.filter = `blur(${2 + beam.layer * 2}px)`;
@@ -111,10 +125,17 @@ export const BeamBackground = () => {
   
       const animate = () => {
         if (!canvas || !ctx) return;
+
+        const isDarkMode = document.documentElement.classList.contains('dark');
   
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, "#ffffff");
-        gradient.addColorStop(1, "#f8fafc");
+        if (isDarkMode) {
+          gradient.addColorStop(0, "#09090B");
+          gradient.addColorStop(1, "#0C0C0E");
+        } else {
+          gradient.addColorStop(0, "#ffffff");
+          gradient.addColorStop(1, "#f8fafc");
+        }
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
   
@@ -128,7 +149,10 @@ export const BeamBackground = () => {
           drawBeam(beam);
         });
   
-        generateNoise();
+        if (!noiseGenerated.current) {
+          generateNoise();
+          noiseGenerated.current = true;
+        }
         animationFrameRef.current = requestAnimationFrame(animate);
       };
       animate();

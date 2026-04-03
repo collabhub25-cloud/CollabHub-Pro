@@ -56,94 +56,16 @@ export function TalentDashboardNew() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      const [applicationsRes, notificationsRes] = await Promise.all([
-        apiFetch('/api/applications'),
-        apiFetch('/api/notifications?limit=5'),
-      ]);
-
-      const applicationsData = applicationsRes.ok ? await applicationsRes.json() : { applications: [] };
-      const notifData = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
-
-      const applications = Array.isArray(applicationsData) ? applicationsData : applicationsData.applications || [];
-      const notifications = notifData.notifications || [];
-
-      const pendingApps = applications.filter((a: any) => a.status === 'pending');
-      const acceptedApps = applications.filter((a: any) => a.status === 'accepted');
-      const rejectedApps = applications.filter((a: any) => a.status === 'rejected');
-
-      let milestoneList: any[] = [];
-      let startupActivities: any[] = [];
-      let matchingStartups: any[] = [];
-
-      // If hired by a startup, fetch its activities and milestones
-      if (acceptedApps.length > 0) {
-        const startupId = acceptedApps[0].startupId?._id;
-        if (startupId) {
-          try {
-            const mRes = await apiFetch(`/api/milestones?startupId=${startupId}`);
-            if (mRes.ok) {
-              const mData = await mRes.json();
-              milestoneList = mData.milestones || [];
-            }
-          } catch (e) {}
-        }
-        
-        // Use real notifications as startup activities
-        startupActivities = notifications.slice(0, 4).map((n: any) => ({
-          id: n._id,
-          title: n.title || 'Activity',
-          date: n.createdAt,
-        }));
-      } else {
-        // Not hired, use AI matching for startups
-        try {
-          const matchRes = await apiFetch('/api/ai/match', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'talent-startup' }),
-          });
-          if (matchRes.ok) {
-            const matchData = await matchRes.json();
-            matchingStartups = matchData.matches || [];
-          }
-          // Fallback to basic search if AI matching fails
-          if (matchingStartups.length === 0) {
-            const userSkills = user?.skills?.join(',') || '';
-            const skillsParam = userSkills ? `&skills=${encodeURIComponent(userSkills)}` : '';
-            const sRes = await apiFetch(`/api/search/startups?limit=5${skillsParam}`);
-            if (sRes.ok) {
-              const sData = await sRes.json();
-              matchingStartups = sData.startups || [];
-            }
-          }
-        } catch (e) {}
-      }
-
-      // Calculate real earnings from completed milestones
-      const totalEarnings = milestoneList
-        .filter((m: any) => m.status === 'completed')
-        .reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
-      const pendingEarnings = milestoneList
-        .filter((m: any) => m.status === 'completed' && m.paymentStatus !== 'paid')
-        .reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
+      const res = await apiFetch('/api/dashboard/talent');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const dashData = await res.json();
 
       setData({
-        applications,
-        milestones: milestoneList,
-        matchingStartups,
-        startupActivities,
-        stats: {
-          totalApplications: applications.length,
-          pendingApplications: pendingApps.length,
-          acceptedApplications: acceptedApps.length,
-          rejectedApplications: rejectedApps.length,
-          activeMilestones: milestoneList.filter((m: any) => m.status === 'in_progress').length,
-          completedMilestones: milestoneList.filter((m: any) => m.status === 'completed').length,
-          totalMilestones: milestoneList.length,
-          totalEarnings,
-          pendingEarnings,
-        },
+        applications: dashData.applications || [],
+        milestones: dashData.milestones || [],
+        matchingStartups: dashData.matchingStartups || [],
+        startupActivities: dashData.startupActivities || [],
+        stats: dashData.stats,
       });
     } catch (error) {
       toast.error('Failed to load dashboard data');

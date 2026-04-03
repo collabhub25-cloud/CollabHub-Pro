@@ -3,6 +3,7 @@ import { requireAuth, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_L
 import { connectDB } from '@/lib/mongodb';
 import { Message, Conversation, User } from '@/lib/models';
 import { uploadDocument, generateSecureDownloadUrl } from '@/lib/storage';
+import { sanitizeObject, sanitizeString } from '@/lib/security/sanitize';
 
 export async function POST(request: NextRequest) {
     try {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
         if (contentType.includes('multipart/form-data')) {
             const formData = await request.formData();
             receiverId = formData.get('receiverId') as string;
-            content = formData.get('content') as string;
+            content = sanitizeString((formData.get('content') as string) || '');
             conversationId = formData.get('conversationId') as string;
 
             const file = formData.get('attachment') as File | null;
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
                 attachments.push({ url: uploadUrl, type: file.type, name: file.name });
             }
         } else {
-            const body = await request.json();
+            const rawBody = await request.json();
+            const body = sanitizeObject(rawBody);
             receiverId = body.receiverId;
             content = body.content;
             conversationId = body.conversationId;
