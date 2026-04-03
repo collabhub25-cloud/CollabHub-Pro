@@ -29,6 +29,7 @@ import {
     AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
+import { apiFetch, apiPatch, apiPost, apiDelete } from '@/lib/api-client';
 
 export function SettingsPage() {
     const { user, updateUser, logout } = useAuthStore();
@@ -37,11 +38,7 @@ export function SettingsPage() {
     const [startups, setStartups] = useState<any[]>([]);
     const [startupsLoading, setStartupsLoading] = useState(false);
 
-    // Helper to read CSRF token from cookie
-    const getCsrfToken = () => {
-        const match = document.cookie.match(/(?:^|; )_csrf_token=([^;]*)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    };
+
 
     // Profile settings state
     const [profile, setProfile] = useState({
@@ -65,7 +62,7 @@ export function SettingsPage() {
             const fetchStartups = async () => {
                 setStartupsLoading(true);
                 try {
-                    const res = await fetch('/api/startups', { credentials: 'include' });
+                    const res = await apiFetch('/api/startups');
                     if (res.ok) {
                         const data = await res.json();
                         setStartups(data.startups || []);
@@ -85,18 +82,10 @@ export function SettingsPage() {
         setLoading(true);
         try {
             const skillsArray = profile.skills.split(',').map(s => s.trim()).filter(s => s);
-            const res = await fetch('/api/users/me', {
-                method: 'PATCH',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-csrf-token': getCsrfToken(),
-                },
-                body: JSON.stringify({
+            const res = await apiPatch('/api/users/me', {
                     name: profile.name,
                     bio: profile.bio,
                     skills: skillsArray
-                })
             });
 
             if (!res.ok) throw new Error('Failed to update profile');
@@ -119,11 +108,7 @@ export function SettingsPage() {
 
     const handleLogoutAll = async () => {
         try {
-            const res = await fetch('/api/auth/logout-all', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'x-csrf-token': getCsrfToken() },
-            });
+            const res = await apiPost('/api/auth/logout-all', {});
             if (!res.ok) throw new Error('Failed to logout');
             toast.success('Logged out of all sessions');
             logout();
@@ -134,11 +119,7 @@ export function SettingsPage() {
 
     const handleDeleteAccount = async () => {
         try {
-            const res = await fetch('/api/users/me', {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: { 'x-csrf-token': getCsrfToken() },
-            });
+            const res = await apiDelete('/api/users/me');
             if (!res.ok) throw new Error('Failed to delete account');
             logout();
         } catch (err) {

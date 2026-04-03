@@ -96,9 +96,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
     setIsRefreshing(true);
     try {
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include',
-      });
+      const response = await apiFetch('/api/auth/me');
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);

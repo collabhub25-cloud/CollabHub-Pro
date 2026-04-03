@@ -52,10 +52,8 @@ export function AllianceButton({
 
     try {
       // Fetch alliance status
-      const statusRes = await fetch(
-        `/api/alliances/status?userId=${targetId}`, {
-        credentials: 'include'
-      }
+      const statusRes = await apiFetch(
+        `/api/alliances/status?userId=${targetId}`
       );
 
       if (statusRes.ok) {
@@ -66,10 +64,8 @@ export function AllianceButton({
 
       // Fetch mutual count if needed
       if (showMutualCount) {
-        const mutualRes = await fetch(
-          `/api/alliances/mutual?userId=${targetId}`, {
-          credentials: 'include',
-        }
+        const mutualRes = await apiFetch(
+          `/api/alliances/mutual?userId=${targetId}`
         );
 
         if (mutualRes.ok) {

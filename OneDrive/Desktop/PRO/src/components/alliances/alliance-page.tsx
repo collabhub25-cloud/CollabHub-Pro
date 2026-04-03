@@ -15,7 +15,7 @@ import {
   Building2, Briefcase, TrendingUp, ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiPost, apiDelete } from '@/lib/api-client';
 
 interface Alliance {
   _id: string;
@@ -74,11 +74,7 @@ export function AlliancePage() {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/alliances?type=${type}`, {
-        credentials: 'include'
-      }
-      );
+      const res = await apiFetch(`/api/alliances?type=${type}`);
 
       if (res.ok) {
         const data = await res.json();
@@ -108,12 +104,7 @@ export function AlliancePage() {
   const acceptRequest = async (allianceId: string) => {
     setActionLoading(allianceId);
     try {
-      const res = await fetch('/api/alliances/accept', {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ allianceId }),
-      });
+      const res = await apiPost('/api/alliances/accept', { allianceId });
 
       const data = await res.json();
 
@@ -133,12 +124,7 @@ export function AlliancePage() {
   const rejectRequest = async (allianceId: string) => {
     setActionLoading(allianceId);
     try {
-      const res = await fetch('/api/alliances/reject', {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ allianceId }),
-      });
+      const res = await apiPost('/api/alliances/reject', { allianceId });
 
       const data = await res.json();
 
@@ -160,10 +146,7 @@ export function AlliancePage() {
 
     setActionLoading(allianceId);
     try {
-      const res = await fetch(`/api/alliances?id=${allianceId}`, {
-        credentials: 'include',
-        method: 'DELETE',
-      });
+      const res = await apiDelete(`/api/alliances?id=${allianceId}`);
 
       const data = await res.json();
 

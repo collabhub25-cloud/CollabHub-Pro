@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { apiFetch } from '@/lib/api-client';
 
 interface Insight {
   title: string;
@@ -44,9 +45,7 @@ export function AIAnalyticsPanel({ role }: AIAnalyticsPanelProps) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/ai/analytics', {
-        credentials: 'include',
-      });
+      const res = await apiFetch('/api/ai/analytics');
       const data = await res.json();
       if (res.ok) {
         setAnalytics(data.analytics);

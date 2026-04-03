@@ -132,9 +132,7 @@ export function SearchPage() {
       if (filters.fundingStage.length) params.set('fundingStage', filters.fundingStage.join(','));
 
 
-      const response = await fetch(`/api/search/${activeTab}?${params.toString()}`, {
-        credentials: 'include',
-      });
+      const response = await apiFetch(`/api/search/${activeTab}?${params.toString()}`);
 
       if (response.ok) {
         const data = await response.json();

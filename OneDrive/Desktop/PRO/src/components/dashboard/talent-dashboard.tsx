@@ -22,7 +22,7 @@ import {
   Edit, Save, X, Settings, Bell, Shield, Trash2, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiPatch } from '@/lib/api-client';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
 import { FloatingTooltip } from '@/components/ui/floating-tooltip';
 import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
@@ -108,18 +108,14 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
     setLoading(true);
     try {
       // Fetch applications
-      const appsRes = await fetch('/api/applications', {
-        credentials: 'include',
-      });
+      const appsRes = await apiFetch('/api/applications');
       if (appsRes.ok) {
         const data = await appsRes.json();
         setApplications(data.applications || []);
       }
 
       // Fetch milestones
-      const milestonesRes = await fetch('/api/milestones?assigned=true', {
-        credentials: 'include',
-      });
+      const milestonesRes = await apiFetch('/api/milestones?assigned=true');
       if (milestonesRes.ok) {
         const data = await milestonesRes.json();
         setMilestones(data.milestones || []);
@@ -128,9 +124,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
 
       // Fetch startups for browsing
-      const startupsRes = await fetch('/api/startups?all=true&limit=10', {
-        credentials: 'include',
-      });
+      const startupsRes = await apiFetch('/api/startups?all=true&limit=10');
       if (startupsRes.ok) {
         const data = await startupsRes.json();
         setStartups(data.startups || []);
@@ -152,13 +146,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
     setSaving(true);
     try {
-      const res = await fetch('/api/auth/me', {
-        credentials: 'include',
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const res = await apiPatch('/api/auth/me', {
           bio: profile.bio,
           skills: profile.skills,
           githubUrl: profile.githubUrl || undefined,
@@ -166,7 +154,6 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
           portfolioUrl: profile.portfolioUrl || undefined,
           location: profile.location || undefined,
           experience: profile.experience || undefined,
-        }),
       });
 
       if (res.ok) {
@@ -857,7 +844,7 @@ function TalentProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch('/api/startups?member=true', { credentials: 'include' });
+        const res = await apiFetch('/api/startups?member=true');
         if (res.ok) {
           const data = await res.json();
           setProjects(data.startups || []);

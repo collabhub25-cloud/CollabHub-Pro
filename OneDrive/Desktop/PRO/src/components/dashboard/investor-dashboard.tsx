@@ -44,7 +44,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiPost, apiPatch } from '@/lib/api-client';
 import { formatDistanceToNow } from 'date-fns';
 
 interface FundingRound {
@@ -196,9 +196,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
     try {
       // Fetch funding rounds
-      const roundsRes = await fetch('/api/funding/create-round?status=open', {
-        credentials: 'include',
-      });
+      const roundsRes = await apiFetch('/api/funding/create-round?status=open');
       if (roundsRes.ok) {
         const data = await roundsRes.json();
         setFundingRounds(Array.isArray(data.rounds) ? data.rounds.filter(r => r && r.startupId) : []);
@@ -207,9 +205,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       }
 
       // Fetch user investments
-      const investmentsRes = await fetch('/api/funding/invest', {
-        credentials: 'include',
-      });
+      const investmentsRes = await apiFetch('/api/funding/invest');
       if (investmentsRes.ok) {
         const data = await investmentsRes.json();
         setInvestments(Array.isArray(data.investments) ? data.investments.filter(i => i && i.startupId && i.fundingRoundId) : []);
@@ -218,9 +214,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       }
 
       // Fetch pitches (investor's own requests)
-      const pitchesRes = await fetch('/api/pitches?investor=true', {
-        credentials: 'include',
-      });
+      const pitchesRes = await apiFetch('/api/pitches?investor=true');
       if (pitchesRes.ok) {
         const data = await pitchesRes.json();
         setPitches(Array.isArray(data.pitches) ? data.pitches : []);
@@ -229,18 +223,14 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
       }
 
       // Fetch favorites
-      const favoritesRes = await fetch('/api/favorites', {
-        credentials: 'include',
-      });
+      const favoritesRes = await apiFetch('/api/favorites');
       if (favoritesRes.ok) {
         const data = await favoritesRes.json();
         setFavorites(data.favoriteIds || []);
       }
 
       // Fetch startups for deal flow
-      const startupsRes = await fetch('/api/search/startups?limit=20', {
-        credentials: 'include',
-      });
+      const startupsRes = await apiFetch('/api/search/startups?limit=20');
       if (startupsRes.ok) {
         const data = await startupsRes.json();
         setStartups(Array.isArray(data.startups) ? data.startups.filter(s => s && s.name) : []);
@@ -260,7 +250,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   const fetchPitches = useCallback(async () => {
     setPitchLoading(true);
     try {
-      const res = await fetch('/api/pitches?investor=true', { credentials: 'include' });
+      const res = await apiFetch('/api/pitches?investor=true');
       if (res.ok) {
         const data = await res.json();
         setPitches(data.pitches || []);
@@ -274,7 +264,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   const fetchConfirmations = useCallback(async () => {
     setConfirmationLoading(true);
     try {
-      const res = await fetch('/api/investment-confirmation', { credentials: 'include' });
+      const res = await apiFetch('/api/investment-confirmation');
       if (res.ok) {
         const data = await res.json();
         setConfirmations(data.confirmations || []);
@@ -305,14 +295,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
   // Handle favorite toggle
   const toggleFavorite = async (startupId: string) => {
     try {
-      const res = await fetch('/api/favorites', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ startupId }),
-      });
+      const res = await apiPost('/api/favorites', { startupId });
 
       if (res.ok) {
         const data = await res.json();
@@ -335,16 +318,9 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/pitches', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const res = await apiPost('/api/pitches', {
           startupId: selectedStartup._id,
           message: accessMessage,
-        }),
       });
 
       const data = await res.json();
@@ -369,14 +345,10 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
     if (!showConfirmModal) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/investment-confirmation/investor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await apiPost('/api/investment-confirmation/investor', {
           confirmationId: showConfirmModal._id,
           investorAmount: Number(confirmTerms.amount),
           investorEquity: Number(confirmTerms.equity)
-        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -415,20 +387,13 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
     setSaving(true);
     try {
-      const res = await fetch('/api/auth/me', {
-        credentials: 'include',
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const res = await apiPatch('/api/auth/me', {
           bio: profile.bio,
           location: profile.location,
           investmentThesis: profile.investmentThesis,
           preferredIndustries: profile.preferredIndustries,
           stagePreference: profile.stagePreference,
           ticketSize: { min: profile.ticketSizeMin, max: profile.ticketSizeMax },
-        }),
       });
 
       if (res.ok) {

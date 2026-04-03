@@ -99,9 +99,8 @@ export function AchievementsPage() {
       fd.append('description', formData.description.trim());
       fd.append('image', imageFile);
 
-      const res = await fetch('/api/achievements/create', {
+      const res = await apiFetch('/api/achievements/create', {
         method: 'POST',
-        credentials: 'include',
         body: fd,
       });
 

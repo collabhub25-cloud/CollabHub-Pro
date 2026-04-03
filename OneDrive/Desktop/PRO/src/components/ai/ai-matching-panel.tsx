@@ -5,6 +5,7 @@ import { Sparkles, Loader2, TrendingUp, ArrowRight, RefreshCw, Zap, Users, Build
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { apiPost } from '@/lib/api-client';
 
 interface Match {
   id: string;
@@ -41,12 +42,7 @@ export function AIMatchingPanel({ type, onConnect }: AIMatchingPanelProps) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/ai/match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ type }),
-      });
+      const res = await apiPost('/api/ai/match', { type });
       const data = await res.json();
       if (res.ok) {
         setMatches(data.matches || []);

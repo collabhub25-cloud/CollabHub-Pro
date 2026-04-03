@@ -1,0 +1,4 @@
+﻿OneDrive/Desktop/PRO/src/app/globals.css
+OneDrive/Desktop/PRO/src/components/settings/settings-page.tsx
+OneDrive/Desktop/PRO/src/components/ui/beam-background.tsx
+OneDrive/Desktop/PRO/src/lib/models.ts

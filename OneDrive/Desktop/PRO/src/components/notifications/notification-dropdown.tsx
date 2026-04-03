@@ -15,7 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore, useUIStore } from '@/store';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiPatch } from '@/lib/api-client';
 
 interface Notification {
   _id: string;
@@ -89,9 +89,7 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
     
     setLoading(true);
     try {
-      const response = await fetch('/api/notifications?limit=20', {
-          credentials: 'include',
-      });
+      const response = await apiFetch('/api/notifications?limit=20');
       
       if (response.ok) {
         const data = await response.json();
@@ -151,14 +149,7 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await fetch('/api/notifications/read', {
-          credentials: 'include',
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notificationIds: [notificationId] }),
-      });
+      const response = await apiPatch('/api/notifications/read', { notificationIds: [notificationId] });
 
       if (response.ok) {
         const data = await response.json();
@@ -175,14 +166,7 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      const response = await fetch('/api/notifications/read', {
-          credentials: 'include',
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ markAll: true }),
-      });
+      const response = await apiPatch('/api/notifications/read', { markAll: true });
 
       if (response.ok) {
         setUnreadCount(0);

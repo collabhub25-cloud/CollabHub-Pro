@@ -1,0 +1,223 @@
+﻿Γ£à Connected to MongoDB Atlas
+≡ƒî▒ Starting 1000-User Demo Data Seed...
+
+≡ƒöä Verifying existing users...
+node.exe : 
+(node:14076) 
+[MONGOOSE] Warning: 
+mongoose: Duplicate 
+schema index on 
+{"email":1} for model 
+"User". This is often 
+due to declaring an 
+index using both 
+"index: true" and 
+"schema.index()". 
+Please remove the 
+duplicate index 
+definition.
+At C:\Program Files\nod
+ejs\npx.ps1:29 char:3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ((node:14076)    
+ [M...dex definitio    
+n.:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+(Use `node 
+--trace-warnings ...` 
+to show where the 
+warning was created)
+(node:14076) 
+[MONGOOSE] Warning: 
+mongoose: Duplicate 
+schema index on 
+{"userId":1} for model 
+"Investor". This is 
+often due to declaring 
+an index using both 
+"index: true" and 
+"schema.index()". 
+Please remove the 
+duplicate index 
+definition.
+   Γ£à Fully verified all existing users.
+
+≡ƒæñ Generating 1000 new random users...
+   Γ£à Inserted 1000 custom users.
+
+≡ƒöÆ Establishing verifications for new users...
+   Γ£à Verifications generated.
+
+≡ƒÅó Creating exactly 1 startup for each founder...
+   Γ£à Startups synchronized. Total globally: 1008
+
+≡ƒÆ╝ Building investor portfolios...
+Γ¥î Seed failed: 
+ValidationError: 
+Investor validation 
+failed: 
+stagePreference.0: 
+`validation` is not a 
+valid enum value for 
+path 
+`stagePreference.0`., 
+stagePreference.1: 
+`mvp` is not a valid 
+enum value for path 
+`stagePreference.1`.
+    at 
+Document.invalidate (C:
+\Users\murar\AlloySpher
+e\OneDrive\Desktop\PRO\
+node_modules\mongoose\l
+ib\document.js:3405:32)
+    at validatePath (C:
+\Users\murar\AlloySpher
+e\OneDrive\Desktop\PRO\
+node_modules\mongoose\l
+ib\document.js:3177:13)
+    at process.processT
+icksAndRejections (node
+:internal/process/task_
+queues:105:5)
+    at async 
+Promise.all (index 7)
+    at async 
+model.$__validate (C:\U
+sers\murar\AlloySphere\
+OneDrive\Desktop\PRO\no
+de_modules\mongoose\lib
+\document.js:3118:3)
+    at async 
+model.validate (C:\User
+s\murar\AlloySphere\One
+Drive\Desktop\PRO\node_
+modules\mongoose\lib\do
+cument.js:2687:5)
+    at async 
+Function.castInsertOne 
+(C:\Users\murar\AlloySp
+here\OneDrive\Desktop\P
+RO\node_modules\mongoos
+e\lib\helpers\model\cas
+tBulkWrite.js:102:3) {
+  errors: {
+    
+'stagePreference.0': 
+ValidatorError: 
+`validation` is not a 
+valid enum value for 
+path 
+`stagePreference.0`.
+        at SchemaString
+.doValidate (C:\Users\m
+urar\AlloySphere\OneDri
+ve\Desktop\PRO\node_mod
+ules\mongoose\lib\schem
+aType.js:1425:13)
+        at 
+validatePath (C:\Users\
+murar\AlloySphere\OneDr
+ive\Desktop\PRO\node_mo
+dules\mongoose\lib\docu
+ment.js:3169:24)
+        at 
+model.$__validate (C:\U
+sers\murar\AlloySphere\
+OneDrive\Desktop\PRO\no
+de_modules\mongoose\lib
+\document.js:3115:21)
+        at process.proc
+essTicksAndRejections (
+node:internal/process/t
+ask_queues:105:5)
+        at async 
+model.validate (C:\User
+s\murar\AlloySphere\One
+Drive\Desktop\PRO\node_
+modules\mongoose\lib\do
+cument.js:2687:5)
+        at async 
+Function.castInsertOne 
+(C:\Users\murar\AlloySp
+here\OneDrive\Desktop\P
+RO\node_modules\mongoos
+e\lib\helpers\model\cas
+tBulkWrite.js:102:3) {
+      properties: 
+[Object],
+      kind: 'enum',
+      path: 
+'stagePreference.0',
+      value: 
+'validation',
+      reason: 
+undefined,
+      [Symbol(mongoose#
+validatorError)]: true
+    },
+    
+'stagePreference.1': 
+ValidatorError: `mvp` 
+is not a valid enum 
+value for path 
+`stagePreference.1`.
+        at SchemaString
+.doValidate (C:\Users\m
+urar\AlloySphere\OneDri
+ve\Desktop\PRO\node_mod
+ules\mongoose\lib\schem
+aType.js:1425:13)
+        at 
+validatePath (C:\Users\
+murar\AlloySphere\OneDr
+ive\Desktop\PRO\node_mo
+dules\mongoose\lib\docu
+ment.js:3169:24)
+        at 
+model.$__validate (C:\U
+sers\murar\AlloySphere\
+OneDrive\Desktop\PRO\no
+de_modules\mongoose\lib
+\document.js:3115:21)
+        at process.proc
+essTicksAndRejections (
+node:internal/process/t
+ask_queues:105:5)
+        at async 
+model.validate (C:\User
+s\murar\AlloySphere\One
+Drive\Desktop\PRO\node_
+modules\mongoose\lib\do
+cument.js:2687:5)
+        at async 
+Function.castInsertOne 
+(C:\Users\murar\AlloySp
+here\OneDrive\Desktop\P
+RO\node_modules\mongoos
+e\lib\helpers\model\cas
+tBulkWrite.js:102:3) {
+      properties: 
+[Object],
+      kind: 'enum',
+      path: 
+'stagePreference.1',
+      value: 'mvp',
+      reason: 
+undefined,
+      [Symbol(mongoose#
+validatorError)]: true
+    }
+  },
+  _message: 'Investor 
+validation failed'
+}

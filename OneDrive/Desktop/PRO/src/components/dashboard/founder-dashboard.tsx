@@ -52,7 +52,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { CreateMilestoneModal } from '@/components/milestones/create-milestone-modal';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiPut, apiPost, apiPatch } from '@/lib/api-client';
 import { safeLocalStorage, STORAGE_KEYS } from '@/lib/client-utils';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
@@ -263,9 +263,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     setLoading(true);
     try {
       // Fetch startups
-      const startupsRes = await fetch('/api/startups', {
-        credentials: 'include',
-      });
+      const startupsRes = await apiFetch('/api/startups');
       if (startupsRes.ok) {
         const data = await startupsRes.json();
         setStartups(data.startups || []);
@@ -273,18 +271,14 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       }
 
       // Fetch applications
-      const appsRes = await fetch('/api/applications/received', {
-        credentials: 'include',
-      });
+      const appsRes = await apiFetch('/api/applications/received');
       if (appsRes.ok) {
         const data = await appsRes.json();
         setApplications(data.applications || []);
       }
 
       // Fetch milestones
-      const milestonesRes = await fetch('/api/milestones', {
-        credentials: 'include',
-      });
+      const milestonesRes = await apiFetch('/api/milestones');
       if (milestonesRes.ok) {
         const data = await milestonesRes.json();
         setMilestones(data.milestones || []);
@@ -298,7 +292,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
     // Fetch real activity feed from notifications
     try {
-      const notifRes = await fetch('/api/notifications?limit=6', { credentials: 'include' });
+      const notifRes = await apiFetch('/api/notifications?limit=6');
       if (notifRes.ok) {
         const notifData = await notifRes.json();
         setNotifications(notifData.notifications || []);
@@ -309,7 +303,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const fetchPitches = useCallback(async () => {
     setPitchLoading(true);
     try {
-      const res = await fetch('/api/pitches', { credentials: 'include' });
+      const res = await apiFetch('/api/pitches');
       if (res.ok) {
         const data = await res.json();
         setPitches(data.pitches || []);
@@ -323,7 +317,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const fetchConfirmations = useCallback(async () => {
     setConfirmationLoading(true);
     try {
-      const res = await fetch('/api/investment-confirmation', { credentials: 'include' });
+      const res = await apiFetch('/api/investment-confirmation');
       if (res.ok) {
         const data = await res.json();
         setConfirmations(data.confirmations || []);
@@ -352,7 +346,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     try {
       const allAchievements: any[] = [];
       for (const s of startups) {
-        const res = await fetch(`/api/achievements?startupId=${s._id}`, { credentials: 'include' });
+        const res = await apiFetch(`/api/achievements?startupId=${s._id}`);
         if (res.ok) {
           const data = await res.json();
           allAchievements.push(...(data.achievements || []).map((a: any) => ({ ...a, startupName: s.name })));
@@ -373,9 +367,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   // Fetch funding rounds
   const fetchFundingRounds = useCallback(async () => {
     try {
-      const res = await fetch('/api/funding/create-round?status=open', {
-        credentials: 'include',
-      });
+      const res = await apiFetch('/api/funding/create-round?status=open');
       if (res.ok) {
         const data = await res.json();
         setFundingRounds(data.rounds || []);
@@ -503,14 +495,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   const handleUpdateApplication = async (id: string, status: string) => {
     try {
-      const res = await fetch('/api/applications', {
-        credentials: 'include',
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id, status }),
-      });
+      const res = await apiPut('/api/applications', { id, status });
 
       if (res.ok) {
         toast.success(`Application ${status}`);
@@ -534,13 +519,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/funding/create-round', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const res = await apiPost('/api/funding/create-round', {
           startupId: newFundingRound.startupId,
           roundName: newFundingRound.roundName,
           targetAmount: Number(newFundingRound.targetAmount),
@@ -548,7 +527,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
           valuation: Number(newFundingRound.valuation),
           minInvestment: Number(newFundingRound.minInvestment),
           closesAt: newFundingRound.closesAt || undefined,
-        }),
       });
 
       const data = await res.json();
@@ -582,15 +560,11 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     if (!showSendPitchModal) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/pitches', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await apiPatch('/api/pitches', {
           id: showSendPitchModal._id,
           action: 'send_pitch',
           pitchDocumentUrl: sendPitchData.pitchDocumentUrl,
           message: sendPitchData.message
-        }),
       });
       if (res.ok) {
         toast.success('Pitch sent successfully!');
@@ -611,11 +585,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const handleRejectPitch = async (pitchId: string) => {
     setSubmitting(true);
     try {
-      const res = await fetch('/api/pitches', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: pitchId, action: 'reject' }),
-      });
+      const res = await apiPatch('/api/pitches', { id: pitchId, action: 'reject' });
       if (res.ok) {
         toast.success('Pitch request rejected');
         fetchPitches();
@@ -635,14 +605,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     if (!showConfirmModal) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/investment-confirmation/founder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await apiPost('/api/investment-confirmation/founder', {
           confirmationId: showConfirmModal._id,
           founderAmount: Number(confirmTerms.amount),
           founderEquity: Number(confirmTerms.equity)
-        }),
       });
       const data = await res.json();
       if (res.ok) {

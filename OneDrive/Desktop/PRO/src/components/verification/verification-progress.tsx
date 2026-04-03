@@ -117,9 +117,7 @@ export function VerificationProgress() {
   const fetchVerificationStatus = useCallback(async () => {
 
     try {
-      const response = await fetch('/api/verification', {
-        credentials: 'include',
-      });
+      const response = await apiFetch('/api/verification');
 
       if (response.ok) {
         const data = await response.json();
@@ -147,12 +145,8 @@ export function VerificationProgress() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/verification', {
-        credentials: 'include',
+      const response = await apiFetch('/api/verification', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ type, ...data }),
       });
 
@@ -193,16 +187,12 @@ export function VerificationProgress() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/verification/upload-resume', {
-        credentials: 'include',
+      const response = await apiFetch('/api/verification/upload-resume', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           fileUrl: resumeUrl,
           fileName: resumeFileName,
-          fileSize: 0, // Will be validated on actual upload
+          fileSize: 0,
           mimeType: resumeFileName.endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         }),
       });
@@ -232,12 +222,8 @@ export function VerificationProgress() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/verification/sign-nda', {
-        credentials: 'include',
+      const response = await apiFetch('/api/verification/sign-nda', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ signature: ndaSignature }),
       });
 
