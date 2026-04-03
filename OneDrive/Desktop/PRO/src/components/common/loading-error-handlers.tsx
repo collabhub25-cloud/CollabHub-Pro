@@ -120,7 +120,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
   }
 
   render() {
@@ -326,7 +325,6 @@ export function RetryButton({ onRetry, loading = false, label = 'Try Again' }: R
 
 export function useGlobalErrorHandler() {
   const handleFetchError = useCallback((error: unknown, customMessage?: string) => {
-    console.error('Fetch error:', error);
     
     const apiError = handleAPIError(error, false);
     

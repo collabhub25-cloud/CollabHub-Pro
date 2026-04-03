@@ -136,7 +136,6 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
         setStartups(data.startups || []);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
     }
     setLoading(false);
   }, []);
@@ -864,7 +863,6 @@ function TalentProjects() {
           setProjects(data.startups || []);
         }
       } catch (err) {
-        console.error('Projects fetch error:', err);
       } finally {
         setLoading(false);
       }

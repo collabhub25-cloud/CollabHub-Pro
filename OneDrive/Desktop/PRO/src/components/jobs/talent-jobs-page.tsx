@@ -52,7 +52,6 @@ export function TalentJobsPage() {
           setApplications(data.applications || []);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }

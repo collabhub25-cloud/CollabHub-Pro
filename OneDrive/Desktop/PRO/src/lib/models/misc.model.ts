@@ -127,3 +127,6 @@ const UserTestResultSchema = new Schema<IUserTestResult>({
     takenAt: { type: Date, default: Date.now },
 });
 export const UserTestResult = mongoose.models.UserTestResult || mongoose.model<IUserTestResult>('UserTestResult', UserTestResultSchema);
+
+// ALLIANCE EXPORTS (Placeholder to maintain types across the app)
+export type AllianceStatus = 'pending' | 'accepted' | 'rejected';

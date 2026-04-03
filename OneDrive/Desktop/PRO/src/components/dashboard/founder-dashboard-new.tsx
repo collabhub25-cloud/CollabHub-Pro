@@ -52,50 +52,11 @@ export function FounderDashboardNew() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      const res = await apiFetch('/api/dashboard/founder');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const dashData = await res.json();
 
-      const [startupsRes, notificationsRes] = await Promise.all([
-        apiFetch('/api/startups'),
-        apiFetch('/api/notifications?limit=10'),
-      ]);
-
-      const startupsData = startupsRes.ok ? await startupsRes.json() : { startups: [] };
-      const notifData = notificationsRes.ok ? await notificationsRes.json() : { notifications: [] };
-
-      const startups = startupsData.startups || startupsData || [];
-      const startup = Array.isArray(startups) ? startups[0] : startups;
-      const notifications = notifData.notifications || [];
-
-      let appList: any[] = [];
-      let milestonesList: any[] = [];
-      let pitchesList: any[] = [];
-      let achievementsList: any[] = [];
-
-      if (startup?._id) {
-        const [applicationsRes, milestonesRes, pitchesRes, achievementsRes] = await Promise.all([
-          apiFetch(`/api/applications/received?startupId=${startup._id}`),
-          apiFetch(`/api/milestones?startupId=${startup._id}`),
-          apiFetch(`/api/pitches?startupId=${startup._id}`),
-          apiFetch(`/api/achievements?startupId=${startup._id}`),
-        ]);
-
-        const applications = applicationsRes.ok ? await applicationsRes.json() : [];
-        const milestonesData = milestonesRes.ok ? await milestonesRes.json() : { milestones: [] };
-        const pitchesData = pitchesRes.ok ? await pitchesRes.json() : { pitches: [] };
-        const achievementsData = achievementsRes.ok ? await achievementsRes.json() : { achievements: [] };
-
-        appList = Array.isArray(applications) ? applications : applications.applications || [];
-        milestonesList = milestonesData.milestones || [];
-        pitchesList = pitchesData.pitches || [];
-        achievementsList = achievementsData.achievements || [];
-      }
-
-      const pendingApps = appList.filter((a: any) => a.status === 'pending');
-      const pendingMilestones = milestonesList.filter((m: any) => m.status !== 'completed' && m.status !== 'cancelled');
-      const pendingPitchRequests = pitchesList.filter((p: any) => p.pitchStatus === 'requested');
-      const totalTeam = Array.isArray(startups) ? startups.reduce((sum: number, s: any) => sum + (s.team?.length || 0), 0) : 0;
-
-      // Build real activity feed from notifications
-      const realActivities = notifications.slice(0, 6).map((notif: any) => {
+      const activities = (dashData.activities || []).map((notif: any) => {
         let icon = Bell;
         let color = 'text-blue-500';
         let bg = 'bg-blue-500/10';
@@ -103,36 +64,19 @@ export function FounderDashboardNew() {
         else if (notif.type?.includes('milestone')) { icon = Target; color = 'text-emerald-500'; bg = 'bg-emerald-500/10'; }
         else if (notif.type?.includes('pitch')) { icon = Presentation; color = 'text-purple-500'; bg = 'bg-purple-500/10'; }
         else if (notif.type?.includes('alliance')) { icon = Users; color = 'text-orange-500'; bg = 'bg-orange-500/10'; }
-        return {
-          id: notif._id,
-          type: notif.type,
-          title: notif.title || 'Notification',
-          description: notif.message || '',
-          date: notif.createdAt,
-          icon,
-          color,
-          bg,
-        };
+        return { ...notif, icon, color, bg };
       });
 
       setData({
-        startup,
-        applications: appList,
-        activities: realActivities,
-        milestones: milestonesList,
-        pitches: pitchesList,
-        achievements: achievementsList,
-        stats: {
-          pendingApplications: pendingApps.length,
-          pendingMilestones: pendingMilestones.length,
-          pendingPitchRequests: pendingPitchRequests.length,
-          totalAchievements: achievementsList.length,
-          totalTeam,
-          startupsCount: Array.isArray(startups) ? startups.length : 1,
-        },
+        startup: dashData.startup,
+        applications: dashData.applications || [],
+        activities,
+        milestones: dashData.milestones || [],
+        pitches: dashData.pitches || [],
+        achievements: dashData.achievements || [],
+        stats: dashData.stats,
       });
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -219,16 +163,16 @@ export function FounderDashboardNew() {
           <CardContent className="pt-4">
             <div className="space-y-3">
               {pendingPitchRequests.slice(0, 3).map((pitch: any) => (
-                <div key={pitch._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50">
-                  <div className="flex items-center gap-3">
+                <div key={pitch._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 gap-2 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                       <AvatarImage src={pitch.investorId?.avatar} />
                       <AvatarFallback className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-foreground font-semibold">
                         {getInitials(pitch.investorId?.name || 'I')}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold text-sm leading-none mb-1">{pitch.investorId?.name || 'Investor'}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm leading-none mb-1 truncate">{pitch.investorId?.name || 'Investor'}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <span className="truncate max-w-[140px]">{pitch.startupId?.name || 'Startup'}</span>
                         <span>•</span>
@@ -236,11 +180,11 @@ export function FounderDashboardNew() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 text-[10px]">
                       Level {pitch.investorId?.verificationLevel || 0}
                     </Badge>
-                    <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setActiveTab('pitch-requests')}>
+                    <Button size="sm" variant="outline" className="hidden sm:inline-flex opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setActiveTab('pitch-requests')}>
                       Respond
                     </Button>
                   </div>
@@ -278,16 +222,16 @@ export function FounderDashboardNew() {
             {pendingApps.length > 0 ? (
               <div className="space-y-4">
                 {pendingApps.slice(0, 4).map((app: any) => (
-                  <div key={app._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 cursor-pointer">
-                    <div className="flex items-center gap-3">
+                  <div key={app._id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 cursor-pointer gap-2 overflow-hidden">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Avatar className="h-10 w-10 border-2 border-background shadow-sm group-hover:border-primary/20 transition-colors">
                         <AvatarImage src={app.talentId?.avatar} />
                         <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-foreground font-semibold">
                           {getInitials(app.talentId?.name || 'U')}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-semibold text-sm leading-none mb-1">{app.talentId?.name || 'Unknown'}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm leading-none mb-1 truncate">{app.talentId?.name || 'Unknown'}</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <span className="truncate max-w-[120px]">{app.roleTitle || 'Role'}</span>
                           <span>•</span>
@@ -295,7 +239,7 @@ export function FounderDashboardNew() {
                         </p>
                       </div>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
                         <ArrowRight className="h-4 w-4" />
                       </Button>
@@ -341,21 +285,21 @@ export function FounderDashboardNew() {
             {pendingMilestones.length > 0 ? (
               <div className="space-y-3">
                 {pendingMilestones.slice(0, 4).map((milestone: any) => (
-                  <div key={milestone._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50">
-                    <div className="flex items-center gap-3">
+                  <div key={milestone._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 gap-2 overflow-hidden">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${
                         milestone.status === 'in_progress' ? 'bg-blue-500/10 text-blue-500' : 'bg-orange-500/10 text-orange-500'
                       }`}>
                         {milestone.status === 'in_progress' ? <Clock className="h-4 w-4" /> : <Target className="h-4 w-4" />}
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold leading-tight">{milestone.title}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold leading-tight truncate">{milestone.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {milestone.startupId?.name || 'Startup'} • Due {milestone.dueDate ? formatDistanceToNow(new Date(milestone.dueDate), { addSuffix: true }) : 'N/A'}
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px] capitalize">
+                    <Badge variant="outline" className="text-[10px] capitalize shrink-0">
                       {(milestone.status || 'pending').replace('_', ' ')}
                     </Badge>
                   </div>

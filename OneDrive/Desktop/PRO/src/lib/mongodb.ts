@@ -5,7 +5,9 @@ import mongoose from 'mongoose';
 const getMongoUri = () => {
   const uri = process.env.MONGODB_URI || process.env.DATABASE_URL;
   if (!uri) {
-    console.error('⚠️ MONGODB_URI not set - check your .env.local file');
+    if (process.env.NODE_ENV === 'development') {
+      console.error('⚠️ MONGODB_URI not set - check your .env.local file');
+    }
     return '__MONGO_URI_NOT_SET__';
   }
   return uri;
@@ -56,13 +58,12 @@ export async function connectDB() {
 
     cached.promise = mongoose.connect(mongoUri, opts)
       .then((mongoose) => {
-        console.log('✅ MongoDB Atlas connected successfully');
-        console.log(`   Database: ${mongoose.connection.name}`);
-        console.log(`   Host: ${mongoose.connection.host}`);
         return mongoose;
       })
       .catch((error) => {
-        console.error('❌ MongoDB connection error:', error.message);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('MongoDB connection error:', error.message);
+        }
         cached.promise = null;
         throw error;
       });
@@ -83,7 +84,6 @@ export async function disconnectDB() {
     await cached.conn.disconnect();
     cached.conn = null;
     cached.promise = null;
-    console.log('MongoDB disconnected');
   }
 }
 

@@ -85,14 +85,11 @@ export function AlliancePage() {
         setAlliances(data.alliances || []);
         setCounts(data.counts || { accepted: 0, received: 0, sent: 0 });
       } else if (res.status === 401) {
-        console.error('Authentication expired for alliances');
         toast.error('Session expired. Please log in again.');
       } else {
-        console.error('Failed to fetch alliances:', res.status);
         toast.error('Failed to load alliances');
       }
     } catch (error) {
-      console.error('Error fetching alliances:', error);
       toast.error('Failed to load alliances');
     } finally {
       setLoading(false);

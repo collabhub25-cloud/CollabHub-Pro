@@ -143,7 +143,7 @@ export function SearchPage() {
         setPage(pageNum);
       }
     } catch (error) {
-      console.error('Error searching:', error);
+      // error handled silently
     } finally {
       setLoading(false);
     }

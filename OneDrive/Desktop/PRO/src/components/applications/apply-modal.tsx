@@ -104,7 +104,6 @@ export function ApplyModal({ startup, open, onOpenChange, onSuccess }: ApplyModa
         toast.error(data.error || 'Failed to submit application');
       }
     } catch (error) {
-      console.error('Error submitting application:', error);
       toast.error('Failed to submit application');
     } finally {
       setSubmitting(false);

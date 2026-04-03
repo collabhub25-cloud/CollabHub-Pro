@@ -1,3 +1,0 @@
-src/app/api/messages/create/route.ts(42,34): error TS2345: Argument of type '{ url: string; type: string; name: string; }' is not assignable to parameter of type 'never'.
-src/app/api/payments/tracking/mark-paid/route.ts(63,13): error TS2322: Type 'string' is not assignable to type 'undefined'.
-src/app/api/verification/status/route.ts(57,25): error TS2322: Type 'string' is not assignable to type 'null'.

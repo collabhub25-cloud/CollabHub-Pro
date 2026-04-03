@@ -16,7 +16,6 @@ const SENTRY_RELEASE = process.env.npm_package_version || '1.0.0';
 // Only initialize Sentry if DSN is configured
 export function initializeSentry() {
   if (!SENTRY_DSN) {
-    console.log('⚠️ Sentry DSN not configured, error monitoring disabled');
     return false;
   }
 
@@ -78,8 +77,6 @@ export function initializeSentry() {
       },
     },
   });
-
-  console.log('✅ Sentry initialized');
   return true;
 }
 
@@ -102,7 +99,9 @@ export interface ErrorContext {
  */
 export function captureError(error: Error | unknown, context?: ErrorContext): string {
   if (!SENTRY_DSN) {
-    console.error('Error:', error, context);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error:', error, context);
+    }
     return '';
   }
 
@@ -130,7 +129,6 @@ export function captureMessage(
   context?: ErrorContext
 ): string {
   if (!SENTRY_DSN) {
-    console.log(`[${level.toUpperCase()}] ${message}`, context);
     return '';
   }
 
@@ -237,7 +235,9 @@ export function withErrorTracking<T>(
 export function setupGlobalErrorHandlers() {
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    }
     captureError(reason instanceof Error ? reason : new Error(String(reason)), {
       type: 'unhandledRejection',
     });
@@ -245,7 +245,9 @@ export function setupGlobalErrorHandlers() {
 
   // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Uncaught Exception:', error);
+    }
     captureError(error, {
       type: 'uncaughtException',
     });

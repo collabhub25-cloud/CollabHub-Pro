@@ -62,7 +62,6 @@ export function AllianceButton({
         const data = await statusRes.json();
         setStatus(data);
       } else {
-        console.error('Failed to fetch alliance status:', statusRes.status);
       }
 
       // Fetch mutual count if needed
@@ -79,7 +78,6 @@ export function AllianceButton({
         }
       }
     } catch (error) {
-      console.error('Error fetching alliance status:', error);
     } finally {
       setLoading(false);
     }
@@ -97,11 +95,9 @@ export function AllianceButton({
 
     setActionLoading(true);
     try {
-      console.log('Sending alliance request to:', targetUserId);
       const res = await apiPost('/api/alliances', { receiverId: targetUserId });
 
       const data = await res.json();
-      console.log('Alliance request response:', res.status, data);
 
       if (res.ok) {
         toast.success('Alliance request sent!');
@@ -109,10 +105,8 @@ export function AllianceButton({
         onStatusChange?.('pending_sent');
       } else {
         toast.error(data.error || 'Failed to send request');
-        console.error('Alliance request failed:', data);
       }
     } catch (error) {
-      console.error('Error sending alliance request:', error);
       toast.error('Failed to send alliance request');
     } finally {
       setActionLoading(false);

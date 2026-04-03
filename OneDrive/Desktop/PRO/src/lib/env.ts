@@ -57,7 +57,6 @@ export function validateEnv(): { valid: boolean; errors: string[]; warnings: str
     };
   }
 
-  console.log('\n🔒 Validating environment variables...\n');
 
   for (const envVar of ENV_SCHEMA) {
     const value = process.env[envVar.name];
@@ -70,10 +69,8 @@ export function validateEnv(): { valid: boolean; errors: string[]; warnings: str
       }
     } else if (envVar.sensitive) {
       // Log that it's set (but don't log the value)
-      console.log(`  ✅ ${envVar.name}: [SET - HIDDEN]`);
     } else {
       // Log non-sensitive values
-      console.log(`  ✅ ${envVar.name}: ${value}`);
     }
   }
 
@@ -101,20 +98,13 @@ export function validateEnv(): { valid: boolean; errors: string[]; warnings: str
   validated = true;
 
   if (validationWarnings.length > 0) {
-    console.log('\n⚠️  Warnings:');
-    validationWarnings.forEach((warning) => console.log(`     - ${warning}`));
   }
 
   if (validationErrors.length > 0) {
-    console.log('\n❌ Errors:');
-    validationErrors.forEach((error) => console.log(`     - ${error}`));
     if (process.env.NODE_ENV === 'production') {
-      console.log('\n🛑 Application cannot start with missing required environment variables.\n');
     } else {
-      console.log('\n⚠️  Using development fallbacks. Configure proper secrets for production.\n');
     }
   } else {
-    console.log('\n✅ Environment validation passed.\n');
   }
 
   return {
