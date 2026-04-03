@@ -248,7 +248,6 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
         setStartups([]);
       }
     } catch (error) {
-      console.error('Error fetching investor data:', error);
       setFundingRounds([]);
       setInvestments([]);
       setPitches([]);
@@ -267,7 +266,6 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
         setPitches(data.pitches || []);
       }
     } catch (err) {
-      console.error('Error fetching pitches:', err);
     } finally {
       setPitchLoading(false);
     }
@@ -282,7 +280,6 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
         setConfirmations(data.confirmations || []);
       }
     } catch (err) {
-      console.error('Error fetching confirmations:', err);
     } finally {
       setConfirmationLoading(false);
     }

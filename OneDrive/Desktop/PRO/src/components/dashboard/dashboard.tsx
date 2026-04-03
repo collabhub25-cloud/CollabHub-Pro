@@ -105,10 +105,8 @@ export function Dashboard({ onLogout }: DashboardProps) {
         setUser(data.user);
       } else if (response.status === 401) {
         // Session expired - handled by auth state
-        console.warn('Session may have expired');
       }
     } catch (error) {
-      console.error('Error refreshing user:', error);
     } finally {
       setIsRefreshing(false);
     }

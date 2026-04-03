@@ -69,7 +69,7 @@ export function SettingsPage() {
                         setStartups(data.startups || []);
                     }
                 } catch (err) {
-                    console.error('Error fetching startups:', err);
+                    // error handled silently
                 } finally {
                     setStartupsLoading(false);
                 }

@@ -42,7 +42,7 @@ async function ensureCsrfToken(): Promise<string | null> {
       return data.csrfToken;
     }
   } catch {
-    console.warn('Failed to fetch CSRF token');
+    // CSRF fetch failed silently
   }
   return null;
 }

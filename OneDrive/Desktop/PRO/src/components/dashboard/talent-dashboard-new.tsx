@@ -146,7 +146,6 @@ export function TalentDashboardNew() {
         },
       });
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);

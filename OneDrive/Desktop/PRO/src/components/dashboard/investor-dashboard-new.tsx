@@ -82,7 +82,6 @@ export function InvestorDashboardNew() {
         },
       });
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }

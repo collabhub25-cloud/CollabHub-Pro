@@ -24,7 +24,6 @@ export function PortfolioPage() {
           setData(portfolioData);
         }
       } catch (error) {
-        console.error('Error fetching portfolio:', error);
       } finally {
         setLoading(false);
       }

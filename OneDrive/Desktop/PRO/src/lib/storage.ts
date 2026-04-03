@@ -29,7 +29,13 @@ export async function uploadDocument(
     contentType: string
 ): Promise<string> {
     if (config.useMock) {
-        console.warn(`[STORAGE MAP] Mock upload: Document saved to virtual path: s3://${config.bucket}/${destinationPath}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[STORAGE MAP] Mock upload: Document saved to virtual path: s3://${config.bucket}/${destinationPath}`);
+          }
+
+        }
         return `mock-s3-url://${destinationPath}`;
     }
 
@@ -43,7 +49,13 @@ export async function generatePresignedUploadUrl(
     expiresInMinutes = 15
 ): Promise<string> {
     if (config.useMock) {
-        console.warn(`[STORAGE MAP] Mock presigned upload request for: ${destinationPath}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[STORAGE MAP] Mock presigned upload request for: ${destinationPath}`);
+          }
+
+        }
         return `mock-presigned-upload-url://${destinationPath}?expires=${expiresInMinutes}m`;
     }
 
@@ -59,7 +71,13 @@ export async function generateSecureDownloadUrl(
     const cleanPath = filePath.replace('mock-s3-url://', '');
 
     if (config.useMock) {
-        console.warn(`[STORAGE MAP] Mock secure download request for: ${cleanPath}`);
+        if (process.env.NODE_ENV === 'development') {
+
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[STORAGE MAP] Mock secure download request for: ${cleanPath}`);
+          }
+
+        }
         return `mock-secure-download-url://${cleanPath}?expires=${expiresInMinutes}m`;
     }
 

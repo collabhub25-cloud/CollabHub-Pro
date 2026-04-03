@@ -180,7 +180,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         ? `/api/users/profile/${profileId}`
         : '/api/users/me';
 
-      console.log('Fetching profile from:', endpoint);
       const response = await fetch(endpoint, {
         credentials: 'include',
         headers: {
@@ -188,11 +187,9 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         },
       });
 
-      console.log('Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Profile data received:', data);
         const profileData = data.profile || data.user;
         setProfile(profileData);
 
@@ -210,11 +207,9 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         });
       } else {
         const errorText = await response.text();
-        console.error('Failed to load profile:', response.status, errorText);
         toast.error('Failed to load profile');
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
     } finally {
       setLoading(false);
@@ -277,7 +272,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         toast.error(error.error || 'Failed to update profile');
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
     } finally {
       setSaving(false);
@@ -876,7 +870,6 @@ function InvestmentProfileSection({ userId }: { userId: string }) {
           setData(null);
         }
       } catch (err) {
-        console.error('Investment fetch error:', err);
         setData(null);
       } finally {
         setLoading(false);

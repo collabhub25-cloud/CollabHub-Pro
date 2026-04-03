@@ -96,7 +96,6 @@ export default function ProfilePage() {
                                     }
                                 }
                             } catch (e) {
-                                console.error('Error fetching access request:', e);
                             }
                         }
                     }
