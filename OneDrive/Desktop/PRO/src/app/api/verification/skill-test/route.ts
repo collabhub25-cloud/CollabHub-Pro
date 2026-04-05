@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { User, Verification, Notification, SkillTest, UserTestResult } from '@/lib/models';
+import { User, Verification, Notification } from '@/lib/models';
+import { SkillTest, UserTestAttempt } from '@/lib/models/skill-test.model';
 import { extractTokenFromCookies, verifyAccessToken } from '@/lib/auth';
 import { canTakeSkillTest, getLevelForType } from '@/lib/verification-service';
 
@@ -34,21 +35,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get available skill tests
-    const skillTests = await SkillTest.find({}).select('-questions.correctAnswer').lean();
+    // Get available skill tests (strip correct answers)
+    const skillTests = await SkillTest.find({ isActive: true })
+      .select('title skill description difficulty durationMinutes totalPoints passingScore attemptCount averageScore')
+      .lean();
 
-    // Get user's test results
-    const testResults = await UserTestResult.find({ userId: decoded.userId }).lean();
+    // Get user's completed test attempts
+    const testAttempts = await UserTestAttempt.find({
+      userId: decoded.userId,
+      status: { $in: ['completed', 'timed_out'] },
+    })
+      .sort({ percentage: -1 })
+      .lean();
 
     // Map test results to tests
-    const testsWithResults = skillTests.map((test) => {
-      const result = testResults.find((r) => r.testId.toString() === test._id.toString());
+    const testsWithResults = skillTests.map((test: any) => {
+      const bestAttempt = testAttempts.find(
+        (a: any) => a.testId.toString() === test._id.toString()
+      );
       return {
         ...test,
-        hasAttempted: !!result,
-        score: result?.score,
-        passed: result?.passed,
-        completedAt: result?.completedAt,
+        hasAttempted: !!bestAttempt,
+        score: bestAttempt?.percentage,
+        passed: bestAttempt?.passed,
+        completedAt: bestAttempt?.completedAt,
       };
     });
 
@@ -74,7 +84,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/verification/skill-test - Submit skill test result (Talent only)
+// POST /api/verification/skill-test - Submit skill test result for verification (Talent only)
 export async function POST(request: NextRequest) {
   try {
     const token = extractTokenFromCookies(request);
@@ -105,11 +115,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { testId, answers } = body;
+    const { testId, attemptId } = body;
 
-    if (!testId || !answers || !Array.isArray(answers)) {
+    if (!testId) {
       return NextResponse.json(
-        { error: 'Test ID and answers are required' },
+        { error: 'Test ID is required' },
         { status: 400 }
       );
     }
@@ -120,26 +130,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
-    // Calculate score
-    let correctAnswers = 0;
-    test.questions.forEach((q, i) => {
-      if (answers[i] === q.correctAnswer) {
-        correctAnswers++;
-      }
-    });
-
-    const score = Math.round((correctAnswers / test.questions.length) * 100);
-    const passed = score >= test.passingScore;
-
-    // Save test result
-    await UserTestResult.create({
+    // Get the user's best completed attempt for this test
+    const bestAttempt = await UserTestAttempt.findOne({
       userId: decoded.userId,
       testId,
-      score,
-      passed,
-      answers,
-      completedAt: new Date(),
-    });
+      status: { $in: ['completed', 'timed_out'] },
+    })
+      .sort({ percentage: -1 })
+      .lean();
+
+    if (!bestAttempt) {
+      return NextResponse.json(
+        { error: 'No completed attempt found. Please take the test first.' },
+        { status: 400 }
+      );
+    }
+
+    const score = bestAttempt.percentage;
+    const passed = bestAttempt.passed;
 
     // Get the level for skill_test verification
     const level = getLevelForType(userRole, 'skill_test');
@@ -152,16 +160,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (verification) {
-      verification.testScore = score;
-      verification.testPassed = passed;
-      verification.status = passed ? 'approved' : 'submitted';
-      await verification.save();
+      // Only update if the new score is better
+      if (score > (verification.testScore || 0)) {
+        verification.testScore = score;
+        verification.testPassed = passed;
+        verification.status = passed ? 'approved' : 'submitted';
+        await verification.save();
+      }
     } else {
       verification = await Verification.create({
         userId: decoded.userId,
         role: userRole,
         type: 'skill_test',
-        level: level || 1,
+        level: level || 2,
         status: passed ? 'approved' : 'submitted',
         testScore: score,
         testPassed: passed,
@@ -170,21 +181,18 @@ export async function POST(request: NextRequest) {
 
     // If passed, update user's verification level
     if (passed) {
-      // Update user verification level if this level is higher
       const currentLevel = user.verificationLevel || 0;
-      if ((level || 1) > currentLevel) {
+      if ((level || 2) > currentLevel) {
         user.verificationLevel = level;
         await user.save();
       }
-
-
 
       // Create notification
       await Notification.create({
         userId: decoded.userId,
         type: 'verification_update',
         title: 'Skill Test Passed!',
-        message: `Congratulations! You passed the ${test.name} test with a score of ${score}%.`,
+        message: `Congratulations! You passed the ${test.title} test with a score of ${score}%.`,
         metadata: { testId, score, passed },
       });
     } else {
@@ -193,7 +201,7 @@ export async function POST(request: NextRequest) {
         userId: decoded.userId,
         type: 'verification_update',
         title: 'Skill Test Result',
-        message: `You scored ${score}% on ${test.name}. You need ${test.passingScore}% to pass. Please try again.`,
+        message: `You scored ${score}% on ${test.title}. You need ${test.passingScore}% to pass. Please try again.`,
         metadata: { testId, score, passed },
       });
     }

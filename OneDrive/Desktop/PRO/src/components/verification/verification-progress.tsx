@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   CheckCircle2, Circle, Clock, Upload, ExternalLink,
   FileText, AlertCircle, ChevronRight, Loader2, FileCheck,
-  PenTool, Award
+  PenTool, Award, BookOpen, Zap
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
+import { SkillTestPlayer } from '@/components/skill-tests/skill-test-player';
 
 interface VerificationLevel {
   level: number;
@@ -52,6 +53,17 @@ interface VerificationStatus {
   isComplete: boolean;
   kycStatus: string;
   verifications: VerificationLevel[];
+}
+
+interface SkillTestItem {
+  _id: string;
+  title: string;
+  skill: string;
+  description: string;
+  difficulty: string;
+  durationMinutes: number;
+  totalPoints: number;
+  passingScore: number;
 }
 
 const statusIcons = {
@@ -88,6 +100,11 @@ export function VerificationProgress() {
   const [selectedLevel, setSelectedLevel] = useState<VerificationLevel | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<string>('');
+
+  // Skill test states
+  const [availableTests, setAvailableTests] = useState<SkillTestItem[]>([]);
+  const [loadingTests, setLoadingTests] = useState(false);
+  const [activeTestId, setActiveTestId] = useState<string | null>(null);
 
   // Gamification states
   const [prevLevel, setPrevLevel] = useState<number>(-1);
@@ -243,15 +260,57 @@ export function VerificationProgress() {
     }
   };
 
+  // ============================================
+  // SKILL TEST HANDLERS
+  // ============================================
+
+  const fetchAvailableTests = async () => {
+    setLoadingTests(true);
+    try {
+      const res = await apiFetch('/api/skill-tests');
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableTests(data.tests || []);
+      } else {
+        toast.error('Failed to load skill tests');
+      }
+    } catch {
+      toast.error('Failed to load skill tests');
+    } finally {
+      setLoadingTests(false);
+    }
+  };
+
   const handleSkillTestStart = () => {
-    // Navigate to skill test page or open skill test dialog
-    toast.info('Skill test feature coming soon!');
+    // Fetch available tests and show them in the dialog
+    fetchAvailableTests();
+  };
+
+  const handleStartSpecificTest = (testId: string) => {
+    setDialogOpen(false);
+    setActiveTestId(testId);
+  };
+
+  const handleTestComplete = async () => {
+    setActiveTestId(null);
+    toast.success('Test completed! Refreshing verification status...');
+    // Refresh verification status to pick up the new score
+    await fetchVerificationStatus();
+  };
+
+  const handleTestCancel = () => {
+    setActiveTestId(null);
   };
 
   const openDialog = (level: VerificationLevel, type: string) => {
     setSelectedLevel(level);
     setDialogType(type);
     setDialogOpen(true);
+
+    // Pre-fetch tests when opening skill_test dialog
+    if (type === 'skill_test') {
+      fetchAvailableTests();
+    }
   };
 
   const closeDialog = () => {
@@ -262,7 +321,24 @@ export function VerificationProgress() {
     setResumeUrl('');
     setResumeFileName('');
     setNdaSignature('');
+    setAvailableTests([]);
   };
+
+  // If user is taking a test, show the full-screen test player
+  if (activeTestId) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={handleTestCancel} className="mb-2">
+          ← Back to Verification
+        </Button>
+        <SkillTestPlayer
+          testId={activeTestId}
+          onComplete={handleTestComplete}
+          onCancel={handleTestCancel}
+        />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -458,7 +534,7 @@ export function VerificationProgress() {
 
       {/* Action Dialog */}
       <Dialog open={dialogOpen} onOpenChange={closeDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{selectedLevel?.name}</DialogTitle>
             <DialogDescription>
@@ -549,17 +625,77 @@ export function VerificationProgress() {
             </div>
           )}
 
-          {/* Skill Test */}
+          {/* Skill Test — Real Implementation */}
           {dialogType === 'skill_test' && (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Complete a skill assessment test to verify your abilities.
-                You need to score at least 70% to pass.
-              </p>
-              <Button className="w-full" onClick={handleSkillTestStart}>
-                <FileText className="h-4 w-4 mr-2" />
-                Start Skill Test
-              </Button>
+              {selectedLevel?.testPassed ? (
+                // Already passed
+                <div className="text-center py-4">
+                  <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg">Skill Test Passed!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    You scored {selectedLevel.testScore}%. This verification level is complete.
+                  </p>
+                </div>
+              ) : loadingTests ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading available tests...</span>
+                </div>
+              ) : availableTests.length === 0 ? (
+                <div className="text-center py-6">
+                  <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-sm font-medium">No tests available yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Skill tests will be available soon. Check back later.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Select a skill test below. You need to score at least 70% to pass and complete this verification level.
+                  </p>
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {availableTests.map((test) => {
+                      const diffColors: Record<string, string> = {
+                        beginner: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+                        intermediate: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+                        advanced: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+                      };
+                      return (
+                        <div
+                          key={test._id}
+                          className="p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-all cursor-pointer group"
+                          onClick={() => handleStartSpecificTest(test._id)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-sm">{test.title}</h4>
+                                <Badge variant="outline" className={`text-[10px] ${diffColors[test.difficulty] || ''}`}>
+                                  {test.difficulty}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{test.description}</p>
+                              <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                                <span>{test.durationMinutes} min</span>
+                                <span>•</span>
+                                <span>{test.totalPoints} pts</span>
+                                <span>•</span>
+                                <span>Pass: {test.passingScore}%</span>
+                              </div>
+                            </div>
+                            <Button size="sm" className="opacity-70 group-hover:opacity-100 transition-opacity gap-1 ml-3 shrink-0">
+                              <Zap className="h-3.5 w-3.5" />
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           )}
 

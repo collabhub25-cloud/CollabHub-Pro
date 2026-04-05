@@ -62,7 +62,9 @@ export async function GET(request: NextRequest) {
     const activity = activityRes.map((n: any) => ({
       id: n._id,
       title: n.title || 'Activity',
+      description: n.message || '',
       date: n.createdAt,
+      timestamp: n.createdAt,
     }));
 
     return NextResponse.json({

@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Search, DollarSign, Building2, TrendingUp, Handshake, ChevronRight,
-  Loader2, Bell, PieChart, BarChart3, Eye, MessageSquare, Star, MapPin, Activity, Sparkles
+  Loader2, Bell, PieChart, BarChart3, Eye, MessageSquare, Star, MapPin, Activity, Sparkles, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -18,6 +19,7 @@ import { getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { formatCurrencyShort, QuickActionCard, StatsCard } from '@/components/dashboard/shared-components';
+
 interface InvestorDashboardData {
   portfolio: any[];
   dealflow: any[];
@@ -36,6 +38,7 @@ export function InvestorDashboardNew() {
   const { user } = useAuthStore();
   const { setActiveTab } = useUIStore();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [data, setData] = useState<InvestorDashboardData | null>(null);
   const [dealflowFilter, setDealflowFilter] = useState('all');
 
@@ -49,8 +52,9 @@ export function InvestorDashboardNew() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(false);
       const res = await apiFetch('/api/dashboard/investor');
-      if (!res.ok) throw new Error('Failed to fetch');
+      if (!res.ok) throw new Error(`API returned ${res.status}`);
       const dashData = await res.json();
 
       setData({
@@ -59,9 +63,16 @@ export function InvestorDashboardNew() {
         pitches: dashData.pitches || [],
         alliances: dashData.alliances || [],
         activity: dashData.activity || [],
-        stats: dashData.stats,
+        stats: dashData.stats || {
+          totalInvested: 0,
+          portfolioCount: 0,
+          dealflowCount: 0,
+          avgTicketSize: 0,
+        },
       });
-    } catch (error) {
+    } catch (err) {
+      console.error('Investor Dashboard Error:', err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -88,14 +99,7 @@ export function InvestorDashboardNew() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
+  // ALL HOOKS MUST BE ABOVE ANY CONDITIONAL RETURNS
   const filteredDeals = useMemo(() => {
     return data?.dealflow?.filter((deal: any) => {
       if (dealflowFilter === 'all') return true;
@@ -109,12 +113,61 @@ export function InvestorDashboardNew() {
     }) || [];
   }, [data?.dealflow, data?.alliances, dealflowFilter]);
 
-  const stats = data?.stats || {
+  const stats = useMemo(() => data?.stats || {
     totalInvested: 0,
     portfolioCount: 0,
     dealflowCount: 0,
     avgTicketSize: 0,
-  };
+  }, [data?.stats]);
+
+  // --- Loading State ---
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Skeleton className="lg:col-span-2 h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  // --- Error State ---
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Card className="max-w-md w-full bg-card/50 backdrop-blur border-border/50">
+          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+            <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+              <AlertTriangle className="h-7 w-7 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Unable to load dashboard</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              We couldn't fetch your dashboard data. This could be a temporary issue.
+            </p>
+            <Button onClick={fetchDashboardData} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -334,15 +387,22 @@ export function InvestorDashboardNew() {
                 const activities = data?.activity || [];
                 return activities.length > 0 ? (
                 <div className="space-y-3">
-                  {activities.slice(0, 4).map((act: any, i: number) => (
+                  {activities.slice(0, 4).map((act: any, i: number) => {
+                    const actDate = act.timestamp || act.date || act.createdAt;
+                    return (
                     <div key={i} className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors text-xs border border-border/40">
                       <div className="flex justify-between items-start">
                         <span className="font-semibold text-primary">{act.title}</span>
-                        <span className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(act.timestamp), { addSuffix: true })}</span>
+                        {actDate && (
+                          <span className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(actDate), { addSuffix: true })}</span>
+                        )}
                       </div>
-                      <span className="truncate flex-1 text-muted-foreground">{act.description}</span>
+                      {act.description && (
+                        <span className="truncate flex-1 text-muted-foreground">{act.description}</span>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-6">

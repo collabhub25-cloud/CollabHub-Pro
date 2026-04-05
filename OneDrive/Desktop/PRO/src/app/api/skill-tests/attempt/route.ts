@@ -162,17 +162,65 @@ export async function PUT(req: NextRequest) {
     });
 
     // Update user's skill test scores
-    await User.findByIdAndUpdate(userId, {
-      $push: {
-        skillTestScores: {
-          skill: test.skill,
-          score: percentage,
-          percentile,
-          testId: test._id,
-          completedAt: new Date(),
+    const userDoc = await User.findById(userId).select('role verificationLevel');
+    if (userDoc) {
+      await User.findByIdAndUpdate(userId, {
+        $push: {
+          skillTestScores: {
+            skill: test.skill,
+            score: percentage,
+            percentile,
+            testId: test._id,
+            completedAt: new Date(),
+          },
         },
-      },
-    });
+      });
+
+      // Auto-update verification for talent users
+      if (userDoc.role === 'talent' && passed) {
+        const { Verification, Notification } = await import('@/lib/models');
+        
+        let verification = await Verification.findOne({
+          userId,
+          type: 'skill_test',
+          role: 'talent',
+        });
+
+        if (verification) {
+          if (percentage > (verification.testScore || 0)) {
+            verification.testScore = percentage;
+            verification.testPassed = true;
+            verification.status = 'approved';
+            await verification.save();
+          }
+        } else {
+          await Verification.create({
+            userId,
+            role: 'talent',
+            type: 'skill_test',
+            level: 2,
+            status: 'approved',
+            testScore: percentage,
+            testPassed: true,
+          });
+        }
+
+        // Update user verification level
+        const currentLevel = userDoc.verificationLevel || 0;
+        if (2 > currentLevel) {
+          await User.findByIdAndUpdate(userId, { verificationLevel: 2 });
+        }
+
+        // Notify
+        await Notification.create({
+          userId,
+          type: 'verification_update',
+          title: 'Skill Test Passed!',
+          message: `Congratulations! You passed the ${test.title} test with ${percentage}%.`,
+          metadata: { testId: test._id, score: percentage, passed: true },
+        });
+      }
+    }
 
     return NextResponse.json({
       attempt: {
