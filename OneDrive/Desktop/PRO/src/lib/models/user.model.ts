@@ -34,6 +34,13 @@ export interface IUser extends Document {
     resetPasswordOtpExpires?: Date;
     resetPasswordOtpAttempts?: number;
     lastActive?: Date;
+    skillTestScores?: {
+        skill: string;
+        score: number;
+        percentile: number;
+        testId: mongoose.Types.ObjectId;
+        completedAt: Date;
+    }[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -66,6 +73,13 @@ const UserSchema = new Schema<IUser>(
         resetPasswordOtpExpires: { type: Date },
         resetPasswordOtpAttempts: { type: Number, default: 0 },
         lastActive: { type: Date },
+        skillTestScores: [{
+            skill: { type: String },
+            score: { type: Number },
+            percentile: { type: Number },
+            testId: { type: Schema.Types.ObjectId, ref: 'SkillTest' },
+            completedAt: { type: Date },
+        }],
     },
     { timestamps: true }
 );

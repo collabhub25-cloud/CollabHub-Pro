@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, checkRateLimit, getRateLimitKey } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
 import { User, Startup, Application, Milestone, Notification, Pitch } from '@/lib/models';
+import { Job } from '@/lib/models/job.model';
 import Achievement from '@/lib/models/achievement.model';
 
 export const runtime = 'nodejs';
@@ -32,27 +33,33 @@ export async function GET(request: NextRequest) {
     ]);
 
     const startup = startups[0] || null;
+    const startupIds = startups.map((s: any) => s._id);
     let applications: any[] = [];
     let milestonesList: any[] = [];
     let pitchesList: any[] = [];
     let achievementsList: any[] = [];
+    let activeJobsCount = 0;
 
-    if (startup?._id) {
-      [applications, milestonesList, pitchesList, achievementsList] = await Promise.all([
-        Application.find({ startupId: startup._id })
+    if (startupIds.length > 0) {
+      [applications, milestonesList, pitchesList, achievementsList, activeJobsCount] = await Promise.all([
+        Application.find({ startupId: { $in: startupIds } })
           .populate('talentId', 'name email avatar skills verificationLevel bio location')
           .sort({ createdAt: -1 }).limit(10).lean(),
-        Milestone.find({ startupId: startup._id }).lean(),
-        Pitch.find({ startupId: startup._id })
+        Milestone.find({ startupId: { $in: startupIds } }).lean(),
+        Pitch.find({ startupId: { $in: startupIds } })
           .populate('investorId', 'name avatar email verificationLevel')
           .lean(),
-        Achievement.find({ startupId: startup._id }).sort({ createdAt: -1 }).lean(),
+        Achievement.find({ startupId: { $in: startupIds } }).sort({ createdAt: -1 }).lean(),
+        Job.countDocuments({ startupId: { $in: startupIds }, isActive: true }),
       ]);
     }
 
     const pendingApps = applications.filter((a: any) => a.status === 'pending');
     const pendingMilestones = milestonesList.filter((m: any) => m.status !== 'completed' && m.status !== 'cancelled');
     const pendingPitchRequests = pitchesList.filter((p: any) => p.pitchStatus === 'requested');
+    const totalPitchesReceived = pitchesList.length;
+    const pitchesSent = pitchesList.filter((p: any) => p.pitchStatus === 'sent').length;
+    const pitchesInvested = pitchesList.filter((p: any) => p.pitchStatus === 'invested').length;
     const totalTeam = startups.reduce((sum: number, s: any) => sum + (s.team?.length || 0), 0);
 
     const activities = notifications.slice(0, 6).map((notif: any) => ({
@@ -77,6 +84,10 @@ export async function GET(request: NextRequest) {
         totalAchievements: achievementsList.length,
         totalTeam,
         startupsCount: startups.length,
+        activeJobs: activeJobsCount,
+        totalPitchesReceived,
+        pitchesSent,
+        pitchesInvested,
       },
     });
   } catch (error) {

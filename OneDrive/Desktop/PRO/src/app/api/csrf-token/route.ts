@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set(CSRF_COOKIE_NAME, token, {
     httpOnly: false,
     secure: IS_PRODUCTION,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
     maxAge: CSRF_TOKEN_MAX_AGE,
   });

@@ -44,6 +44,7 @@ const AchievementsPage = dynamic(() => import('@/components/achievements/achieve
 const ManageJobs = dynamic(() => import('@/components/jobs/manage-jobs').then(m => ({ default: m.ManageJobs })), { loading: () => <PageSkeleton /> });
 const TalentJobsPage = dynamic(() => import('@/components/jobs/talent-jobs-page').then(m => ({ default: m.TalentJobsPage })), { loading: () => <PageSkeleton /> });
 const PortfolioPage = dynamic(() => import('@/components/investor/portfolio-page').then(m => ({ default: m.PortfolioPage })), { loading: () => <PageSkeleton /> });
+const SkillTestDashboard = dynamic(() => import('@/components/skill-tests/skill-test-dashboard').then(m => ({ default: m.SkillTestDashboard })), { loading: () => <PageSkeleton /> });
 import { SubscriptionBadge } from './shared-components';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
@@ -143,6 +144,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
     if (activeTab === 'journey') return <AchievementsPage />;
     if (activeTab === 'jobs') return <TalentJobsPage />;
     if (activeTab === 'portfolio') return <PortfolioPage />;
+    if (activeTab === 'skill-tests') return <SkillTestDashboard />;
     if (activeTab === 'messages') return <MessagingPage />;
     if (activeTab === 'manage-jobs') return <ManageJobs />;
     if (activeTab === 'profile') return <ProfilePage profileId={viewProfileId} />;

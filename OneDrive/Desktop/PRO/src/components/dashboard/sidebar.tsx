@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Search, Building2, Users, Target, FileText,
   CreditCard, TrendingUp, MessageSquare, Shield, Settings,
   LogOut, ChevronLeft, Briefcase, Handshake, DollarSign,
-  AlertTriangle, BarChart3, Wallet, Trophy, Sparkles, Presentation, Activity
+  AlertTriangle, BarChart3, Wallet, Trophy, Sparkles, Presentation, Activity, BookOpen
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -64,6 +64,7 @@ const getNavigation = (role: string) => {
       ],
       workspace: [
         { id: 'applications', label: 'My Applications', icon: Briefcase, countKey: 'applications' },
+        { id: 'skill-tests', label: 'Skill Tests', icon: BookOpen },
         { id: 'achievements', label: 'Achievements', icon: Trophy },
       ],
       finance: [],

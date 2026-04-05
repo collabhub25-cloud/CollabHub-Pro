@@ -5,6 +5,8 @@ import {
   sendApplicationNotificationEmail,
   sendInvestmentPromptEmail,
   sendInvestmentResultEmail,
+  sendJobPostedEmail,
+  sendAccountActivityEmail,
 } from '@/lib/mailer';
 import nodemailer from 'nodemailer';
 
@@ -178,7 +180,7 @@ async function sendWithRetry(
 // EMAIL TRIGGER FUNCTIONS
 // ============================================
 
-type NotificationCategory = 'jobs' | 'messages' | 'pitches' | 'investments' | 'alliances' | 'applications' | 'milestones';
+type NotificationCategory = 'jobs' | 'messages' | 'pitches' | 'investments' | 'alliances' | 'applications' | 'milestones' | 'account';
 
 /**
  * Main dispatcher: triggers email for a notification event.
@@ -205,6 +207,8 @@ export async function triggerNotificationEmail(
     alliance_accepted: 'alliances',
     alliance_rejected: 'alliances',
     funding_update: 'investments',
+    job_posted: 'jobs',
+    account_activity: 'account',
   };
 
   const category = categoryMap[type];

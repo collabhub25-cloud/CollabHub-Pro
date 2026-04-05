@@ -86,47 +86,7 @@ if (mongoose.models.AccessRequest) {
 }
 export const AccessRequest = mongoose.models.AccessRequest || mongoose.model<IAccessRequest>('AccessRequest', AccessRequestSchema);
 
-// ============================================
-// SKILL TEST SCHEMA
-// ============================================
-export interface ISkillTest extends Document {
-    title: string;
-    questions: {
-        question: string;
-        options: string[];
-        correctIndex: number;
-    }[];
-    passingScore: number;
-    createdAt: Date;
-}
-
-const SkillTestSchema = new Schema<ISkillTest>({
-    title: { type: String, required: true },
-    questions: [{
-        question: { type: String, required: true },
-        options: [{ type: String }],
-        correctIndex: { type: Number, required: true },
-    }],
-    passingScore: { type: Number, default: 70 },
-});
-export const SkillTest = mongoose.models.SkillTest || mongoose.model<ISkillTest>('SkillTest', SkillTestSchema);
-
-export interface IUserTestResult extends Document {
-    userId: mongoose.Types.ObjectId;
-    testId: mongoose.Types.ObjectId;
-    score: number;
-    passed: boolean;
-    takenAt: Date;
-}
-
-const UserTestResultSchema = new Schema<IUserTestResult>({
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    testId: { type: Schema.Types.ObjectId, ref: 'SkillTest', required: true },
-    score: { type: Number, required: true },
-    passed: { type: Boolean, required: true },
-    takenAt: { type: Date, default: Date.now },
-});
-export const UserTestResult = mongoose.models.UserTestResult || mongoose.model<IUserTestResult>('UserTestResult', UserTestResultSchema);
+// NOTE: SkillTest + UserTestResult schemas have been moved to skill-test.model.ts for richer structure
 
 // ALLIANCE EXPORTS (Placeholder to maintain types across the app)
 export type AllianceStatus = 'pending' | 'accepted' | 'rejected';

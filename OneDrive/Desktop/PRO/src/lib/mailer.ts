@@ -46,11 +46,7 @@ function wrapInBrandedTemplate(title: string, bodyHtml: string): string {
 export async function sendVerificationEmail(email: string, otp: string) {
     if (!SMTP_USER || !SMTP_PASS) {
         if (process.env.NODE_ENV === 'development') {
-
-          if (process.env.NODE_ENV === 'development') {
             console.warn(`[MAILER] DEV MODE - Verification OTP for ${email}: ${otp}`);
-          }
-
         }
         return;
     }
@@ -72,11 +68,7 @@ export async function sendVerificationEmail(email: string, otp: string) {
         return info.messageId;
     } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-
-          if (process.env.NODE_ENV === 'development') {
             console.error('[MAILER] Error sending verification email:', error);
-          }
-
         }
         throw error;
     }
@@ -88,11 +80,7 @@ export async function sendVerificationEmail(email: string, otp: string) {
 export async function sendPasswordResetEmail(email: string, otp: string) {
     if (!SMTP_USER || !SMTP_PASS) {
         if (process.env.NODE_ENV === 'development') {
-
-          if (process.env.NODE_ENV === 'development') {
             console.warn(`[MAILER] DEV MODE - Password Reset OTP for ${email}: ${otp}`);
-          }
-
         }
         return;
     }
@@ -426,11 +414,96 @@ export async function sendInvestmentResultEmail(
         return info.messageId;
     } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-
-          if (process.env.NODE_ENV === 'development') {
             console.error('[MAILER] Error sending investment result email:', error);
-          }
+        }
+    }
+}
 
+// ============================================
+// Job Posted Notification Email
+// ============================================
+export async function sendJobPostedEmail(
+    email: string,
+    recipientName: string,
+    jobTitle: string,
+    startupName: string,
+    jobId: string
+) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Job posted email to ${email}: ${jobTitle} at ${startupName}`);
+        }
+        return;
+    }
+
+    try {
+        const dashboardUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`;
+        const info = await transporter.sendMail({
+            from: `"AlloySphere" <${FROM_EMAIL}>`,
+            to: email,
+            subject: `New opportunity: ${jobTitle} at ${startupName}`,
+            text: `Hi ${recipientName}, a new job matching your skills has been posted: ${jobTitle} at ${startupName}.`,
+            html: wrapInBrandedTemplate('New Opportunity Match', `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 16px 0;">Hi ${recipientName},</p>
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">A new role that matches your skills has been posted on AlloySphere:</p>
+                <div style="background: linear-gradient(135deg, rgba(0,71,171,0.06), rgba(46,139,87,0.06)); padding: 20px; border-radius: 10px; margin: 24px 0; border: 1px solid rgba(0,71,171,0.12);">
+                  <h3 style="color: #0047AB; margin: 0 0 6px 0; font-size: 16px;">${jobTitle}</h3>
+                  <p style="color: #6b7280; margin: 0; font-size: 13px;">at <strong>${startupName}</strong></p>
+                </div>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${dashboardUrl}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #0047AB, #2E8B57); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Opportunity</a>
+                </div>
+                <p style="color: #9ca3af; font-size: 12px; margin: 0;">This notification was sent based on your skill profile. You can manage your preferences in Settings.</p>
+            `),
+        });
+        return info.messageId;
+    } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending job posted email:', error);
+        }
+    }
+}
+
+// ============================================
+// Account Activity Alert Email
+// ============================================
+export async function sendAccountActivityEmail(
+    email: string,
+    recipientName: string,
+    activityType: string,
+    details: string
+) {
+    if (!SMTP_USER || !SMTP_PASS) {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn(`[MAILER] DEV MODE - Account activity email to ${email}: ${activityType}`);
+        }
+        return;
+    }
+
+    try {
+        const dashboardUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`;
+        const info = await transporter.sendMail({
+            from: `"AlloySphere Security" <${FROM_EMAIL}>`,
+            to: email,
+            subject: `Security Alert: ${activityType}`,
+            text: `Hi ${recipientName}, we detected activity on your AlloySphere account: ${activityType}. ${details}`,
+            html: wrapInBrandedTemplate('Account Activity Alert', `
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 16px 0;">Hi ${recipientName},</p>
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">We detected the following activity on your AlloySphere account:</p>
+                <div style="background: #fef3c7; padding: 20px; border-radius: 10px; margin: 24px 0; border: 1px solid #fbbf24;">
+                  <p style="color: #92400e; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">🔐 ${activityType}</p>
+                  <p style="color: #78716c; font-size: 13px; margin: 0;">${details}</p>
+                </div>
+                <p style="color: #4a4a4a; line-height: 1.6; margin: 0 0 20px 0;">If this wasn't you, please secure your account immediately by changing your password.</p>
+                <div style="text-align: center; margin: 24px 0;">
+                  <a href="${dashboardUrl}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Secure My Account</a>
+                </div>
+            `),
+        });
+        return info.messageId;
+    } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+            console.error('[MAILER] Error sending account activity email:', error);
         }
     }
 }

@@ -133,7 +133,7 @@ function setCsrfCookie(response: NextResponse, token: string): void {
   response.cookies.set(CSRF_COOKIE_NAME, token, {
     httpOnly: false, // Must be readable by JS to send in header
     secure: IS_PRODUCTION,
-    sameSite: 'strict',
+    sameSite: 'lax', // Must be lax (not strict) to survive cross-site navigation (Google OAuth, external links)
     path: '/',
     maxAge: CSRF_TOKEN_MAX_AGE,
   });
@@ -284,6 +284,32 @@ function getDashboardRole(pathname: string): string | null {
 }
 
 // ============================================
+// HELPERS — Apply security headers + CSRF cookie to any response
+// ============================================
+
+function applySecurityHeaders(res: NextResponse, requestId: string): void {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (key !== 'X-Request-Id') {
+      res.headers.set(key, value);
+    }
+  }
+  res.headers.set('X-Request-Id', requestId);
+}
+
+/**
+ * Ensure CSRF cookie exists on the response.
+ * If the request didn't have a CSRF cookie, generate one and set it.
+ * This MUST be called on every final response to ensure the cookie is not lost.
+ */
+function ensureCsrfCookie(request: NextRequest, res: NextResponse): void {
+  const existingToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
+  if (!existingToken) {
+    const csrfToken = generateCsrfToken();
+    setCsrfCookie(res, csrfToken);
+  }
+}
+
+// ============================================
 // MAIN MIDDLEWARE
 // ============================================
 
@@ -294,23 +320,11 @@ export async function middleware(request: NextRequest) {
   // Generate request ID for tracing
   const requestId = generateRequestId();
 
-  // --- Security headers on all responses ---
-  const response = NextResponse.next();
-  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
-    if (key !== 'X-Request-Id') {
-      response.headers.set(key, value);
-    }
-  }
-  response.headers.set('X-Request-Id', requestId);
-
-  // --- Ensure CSRF token cookie exists for browser clients ---
-  if (!request.cookies.get(CSRF_COOKIE_NAME)?.value) {
-    const csrfToken = generateCsrfToken();
-    setCsrfCookie(response, csrfToken);
-  }
-
   // --- Static / public pages pass through ---
   if (!isApiRoute(pathname) && !pathname.startsWith('/dashboard')) {
+    const response = NextResponse.next();
+    applySecurityHeaders(response, requestId);
+    ensureCsrfCookie(request, response);
     return response;
   }
 
@@ -327,13 +341,15 @@ export async function middleware(request: NextRequest) {
       const requiredRole = getDashboardRole(pathname);
 
       if (requiredRole && decoded.role !== requiredRole) {
-        // Redirect to their correct dashboard
         return NextResponse.redirect(new URL(`/dashboard/${decoded.role}`, request.url));
       }
     } catch {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
+    const response = NextResponse.next();
+    applySecurityHeaders(response, requestId);
+    ensureCsrfCookie(request, response);
     return response;
   }
 
@@ -353,6 +369,10 @@ export async function middleware(request: NextRequest) {
   if (requiresCsrfProtection(method, pathname)) {
     const csrfValidation = validateCsrfToken(request);
     if (!csrfValidation.valid) {
+      // Structured CSRF failure logging
+      console.warn(
+        `[CSRF] Validation failed | reason=${csrfValidation.error} | path=${pathname} | method=${method} | ip=${ip} | requestId=${requestId}`
+      );
       return NextResponse.json(
         { error: 'CSRF validation failed', details: IS_PRODUCTION ? undefined : csrfValidation.error, requestId },
         { status: 403, headers: { 'X-Request-Id': requestId, ...SECURITY_HEADERS } }
@@ -362,11 +382,17 @@ export async function middleware(request: NextRequest) {
 
   // --- Public routes skip auth ---
   if (isPublicRoute(pathname)) {
+    const response = NextResponse.next();
+    applySecurityHeaders(response, requestId);
+    ensureCsrfCookie(request, response);
     return response;
   }
 
   // --- GET /api/startups is public (browse without login) ---
   if (pathname === '/api/startups' && method === 'GET') {
+    const response = NextResponse.next();
+    applySecurityHeaders(response, requestId);
+    ensureCsrfCookie(request, response);
     return response;
   }
 
@@ -384,7 +410,6 @@ export async function middleware(request: NextRequest) {
     try {
       decoded = jwt.verify(accessToken, EFFECTIVE_JWT_SECRET) as unknown as typeof decoded;
     } catch {
-      // Access token invalid/expired — try refresh
       decoded = null;
       needsTokenRefresh = true;
     }
@@ -398,7 +423,6 @@ export async function middleware(request: NextRequest) {
       const EFFECTIVE_REFRESH_SECRET = (process.env.JWT_REFRESH_SECRET) || EFFECTIVE_JWT_SECRET + '-refresh';
       const refreshDecoded = jwt.verify(refreshToken, EFFECTIVE_REFRESH_SECRET) as { userId: string; email: string; role: string };
 
-      // Generate a new access token
       decoded = {
         userId: refreshDecoded.userId,
         email: refreshDecoded.email,
@@ -413,7 +437,6 @@ export async function middleware(request: NextRequest) {
 
       needsTokenRefresh = true;
     } catch {
-      // Refresh token also invalid — user must re-login
       decoded = null;
     }
   }
@@ -441,10 +464,12 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-request-id', requestId);
 
   const nextResponse = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
+    request: { headers: requestHeaders },
   });
+
+  // Apply security headers and CSRF cookie to the FINAL response
+  applySecurityHeaders(nextResponse, requestId);
+  ensureCsrfCookie(request, nextResponse);
 
   // If we refreshed the token, set the new access token cookie on the response
   if (needsTokenRefresh && accessToken) {
@@ -453,7 +478,7 @@ export async function middleware(request: NextRequest) {
       secure: IS_PRODUCTION,
       sameSite: 'lax',
       path: '/',
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: 15 * 60,
     });
   }
 

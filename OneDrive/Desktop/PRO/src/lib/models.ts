@@ -19,6 +19,7 @@ export * from './models/pitch.model';
 export * from './models/investment-confirmation.model';
 export * from './models/journey-post.model';
 export * from './models/email-preferences.model';
+export * from './models/skill-test.model';
 import mongoose, { Schema, Document } from 'mongoose';
 import { triggerNotificationEmail } from './email-service';
 // ============================================

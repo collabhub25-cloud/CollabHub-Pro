@@ -33,6 +33,10 @@ interface DashboardData {
     totalAchievements: number;
     totalTeam: number;
     startupsCount: number;
+    activeJobs: number;
+    totalPitchesReceived: number;
+    pitchesSent: number;
+    pitchesInvested: number;
   };
 }
 
@@ -119,12 +123,14 @@ export function FounderDashboardNew() {
       </div>
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
           { label: 'Startups', value: data?.stats.startupsCount || 0, icon: Building2, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
           { label: 'Team Members', value: data?.stats.totalTeam || 0, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-          { label: 'Pending Apps', value: data?.stats.pendingApplications || 0, icon: UserPlus, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
-          { label: 'Pitch Requests', value: data?.stats.pendingPitchRequests || 0, icon: Presentation, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+          { label: 'Active Jobs', value: data?.stats.activeJobs || 0, icon: Briefcase, color: 'text-indigo-500', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
+          { label: 'Total Pitches', value: data?.stats.totalPitchesReceived || 0, icon: Presentation, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+          { label: 'Pitches Sent', value: data?.stats.pitchesSent || 0, icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+          { label: 'Invested', value: data?.stats.pitchesInvested || 0, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-600/10', border: 'border-emerald-600/20' },
         ].map((stat) => (
           <div key={stat.label} className={`p-4 rounded-xl bg-background/40 backdrop-blur-xl border ${stat.border} shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5`}>
             <div className="flex items-center gap-2 mb-2">
@@ -196,7 +202,7 @@ export function FounderDashboardNew() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Pending Applications */}
+        {/* Recent Applications */}
         <Card className="bg-background/40 backdrop-blur-xl border-border/40 shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -204,9 +210,9 @@ export function FounderDashboardNew() {
                 <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
                   <Users className="h-4 w-4 text-blue-500" />
                 </div>
-                <CardTitle className="text-base font-semibold">Pending Applications</CardTitle>
+                <CardTitle className="text-base font-semibold">Recent Applications</CardTitle>
                 {pendingApps.length > 0 && (
-                  <Badge variant="default" className="text-xs bg-blue-600">{pendingApps.length}</Badge>
+                  <Badge variant="default" className="text-xs bg-blue-600">{pendingApps.length} new</Badge>
                 )}
               </div>
               <Badge
@@ -267,7 +273,7 @@ export function FounderDashboardNew() {
                 <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <Target className="h-4 w-4 text-emerald-500" />
                 </div>
-                <CardTitle className="text-base font-semibold">Pending Milestones</CardTitle>
+                <CardTitle className="text-base font-semibold">Active Milestones</CardTitle>
                 {pendingMilestones.length > 0 && (
                   <Badge variant="default" className="text-xs bg-emerald-600">{pendingMilestones.length}</Badge>
                 )}

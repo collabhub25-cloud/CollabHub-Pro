@@ -20,6 +20,15 @@ const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 
+// Proactively ensure CSRF token exists on module load (prevents first-POST failures)
+if (typeof window !== 'undefined') {
+  const token = getCsrfToken();
+  if (!token) {
+    // Fire-and-forget: fetch CSRF token in background so it's ready for first mutation
+    fetch('/api/csrf-token', { method: 'GET', credentials: 'include' }).catch(() => {});
+  }
+}
+
 /**
  * Get CSRF token from cookie
  */
