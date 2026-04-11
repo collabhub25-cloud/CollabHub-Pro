@@ -51,6 +51,12 @@ export interface IStartup extends Document {
     AlloySphereVerifiedAt?: Date;
     AlloySphereVerifiedBy?: mongoose.Types.ObjectId;
     verificationNotes?: string;
+
+    // Monetization fields
+    isBoosted: boolean;
+    boostExpiresAt?: Date;
+    profilePaymentId?: mongoose.Types.ObjectId;
+
     createdAt: Date;
     updatedAt: Date;
 }
@@ -81,6 +87,11 @@ const StartupSchema = new Schema<IStartup>(
         AlloySphereVerifiedAt: { type: Date },
         AlloySphereVerifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
         verificationNotes: { type: String, maxlength: 2000 },
+
+        // Monetization
+        isBoosted: { type: Boolean, default: false },
+        boostExpiresAt: { type: Date },
+        profilePaymentId: { type: Schema.Types.ObjectId, ref: 'Payment' },
     },
     { timestamps: true }
 );

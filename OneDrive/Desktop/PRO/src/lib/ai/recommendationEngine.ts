@@ -286,6 +286,14 @@ export async function getRecommendedStartups(investorId: string): Promise<Recomm
       score += 5;
     }
 
+    // Subscription boost (~12% weight, capped)
+    // Boosted startups get visibility uplift, but organic signals dominate
+    if (startup.isBoosted && startup.boostExpiresAt && new Date(startup.boostExpiresAt) > new Date()) {
+      const boostPoints = 12;
+      score += boostPoints;
+      reasons.push('Boosted startup');
+    }
+
     if (reasons.length === 0) {
       reasons.push('Active startup on the platform');
     }
@@ -302,13 +310,17 @@ export async function getRecommendedStartups(investorId: string): Promise<Recomm
       subtitle: `${startup.industry} · ${startup.stage}`,
       score: Math.min(score, 100),
       explanation,
-      tags: reasons.slice(0, 3),
+      tags: [
+        ...(startup.isBoosted ? ['⚡ Boosted'] : []),
+        ...reasons.filter(r => r !== 'Boosted startup').slice(0, 2),
+      ],
       metadata: {
         industry: startup.industry,
         stage: startup.stage,
         fundingStage: startup.fundingStage,
         teamSize,
         founderName: startup.founderId?.name,
+        isBoosted: !!startup.isBoosted,
       },
     };
   });

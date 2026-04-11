@@ -20,6 +20,11 @@ export * from './models/investment-confirmation.model';
 export * from './models/journey-post.model';
 export * from './models/email-preferences.model';
 export * from './models/skill-test.model';
+export * from './models/payment.model';
+export * from './models/subscription.model';
+export * from './models/mentor-session.model';
+export * from './models/funding-deal.model';
+
 import mongoose, { Schema, Document } from 'mongoose';
 import { triggerNotificationEmail } from './email-service';
 // ============================================
@@ -84,99 +89,6 @@ const DisputeSchema = new Schema<IDispute>(
 export const Dispute = mongoose.models.Dispute || mongoose.model<IDispute>('Dispute', DisputeSchema);
 
 // ============================================
-// PAYMENT SCHEMA
-// ============================================
-export type PaymentType = 'milestone' | 'investment' | 'subscription' | 'commission';
-export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
-
-export interface IPayment extends Document {
-  type: PaymentType;
-  amount: number;
-  currency: string;
-  status: PaymentStatus;
-  fromUserId: mongoose.Types.ObjectId;
-  toUserId?: mongoose.Types.ObjectId;
-  startupId?: mongoose.Types.ObjectId;
-  milestoneId?: mongoose.Types.ObjectId;
-  platformFee: number;
-  metadata?: Record<string, unknown>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const PaymentSchema = new Schema<IPayment>(
-  {
-    type: { type: String, enum: ['milestone', 'investment', 'subscription', 'commission'], required: true },
-    amount: { type: Number, required: true },
-    currency: { type: String, default: 'INR' },
-    status: { type: String, enum: ['pending', 'processing', 'completed', 'failed', 'refunded'], default: 'pending' },
-    fromUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    toUserId: { type: Schema.Types.ObjectId, ref: 'User' },
-    startupId: { type: Schema.Types.ObjectId, ref: 'Startup' },
-    milestoneId: { type: Schema.Types.ObjectId, ref: 'Milestone' },
-    platformFee: { type: Number, default: 0 },
-    metadata: { type: Schema.Types.Mixed },
-  },
-  { timestamps: true }
-);
-
-export const Payment = mongoose.models.Payment || mongoose.model<IPayment>('Payment', PaymentSchema);
-
-// ============================================
-// SUBSCRIPTION SCHEMA
-// ============================================
-export type PlanType = 'free_founder' | 'pro_founder' | 'scale_founder' | 'enterprise_founder' | 'free' | 'pro' | 'scale' | 'premium';
-export type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing';
-
-export interface ISubscription extends Document {
-  userId: mongoose.Types.ObjectId;
-  role: string;
-  plan: PlanType;
-  status: SubscriptionStatus;
-  currentPeriodStart?: Date;
-  currentPeriodEnd?: Date;
-  cancelAtPeriodEnd: boolean;
-  features: {
-    maxProjects: number;
-    maxTeamMembers: number;
-    profileBoost: boolean;
-    advancedAnalytics: boolean;
-    earlyDealAccess: boolean;
-    prioritySupport: boolean;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const ALL_PLANS = ['free_founder', 'pro_founder', 'scale_founder', 'enterprise_founder', 'free', 'pro', 'scale', 'premium'];
-
-const SubscriptionSchema = new Schema<ISubscription>(
-  {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    role: { type: String, enum: ['founder', 'talent', 'investor', 'admin'], required: true },
-    plan: { type: String, enum: ALL_PLANS, default: 'free_founder' },
-    status: { type: String, enum: ['active', 'past_due', 'canceled', 'incomplete', 'trialing'], default: 'active' },
-    currentPeriodStart: { type: Date },
-    currentPeriodEnd: { type: Date },
-    cancelAtPeriodEnd: { type: Boolean, default: false },
-    features: {
-      maxProjects: { type: Number, default: 1 },
-      maxTeamMembers: { type: Number, default: 5 },
-      profileBoost: { type: Boolean, default: false },
-      advancedAnalytics: { type: Boolean, default: false },
-      earlyDealAccess: { type: Boolean, default: false },
-      prioritySupport: { type: Boolean, default: false },
-    },
-  },
-  { timestamps: true }
-);
-
-SubscriptionSchema.index({ userId: 1 });
-SubscriptionSchema.index({ status: 1 });
-
-export const Subscription = mongoose.models.Subscription || mongoose.model<ISubscription>('Subscription', SubscriptionSchema);
-
-// ============================================
 // NOTIFICATION SCHEMA
 // ============================================
 export type NotificationType =
@@ -186,10 +98,13 @@ export type NotificationType =
   | 'milestone_created'
   | 'milestone_completed'
   | 'payment_success'
+  | 'payment_failed'
   | 'funding_update'
   | 'trust_score_change'
   | 'verification_update'
   | 'subscription_update'
+  | 'subscription_renewed'
+  | 'subscription_cancelled'
   | 'alliance_request'
   | 'alliance_accepted'
   | 'alliance_rejected'
@@ -198,7 +113,10 @@ export type NotificationType =
   | 'pitch_sent'
   | 'investment_entry_prompt'
   | 'investment_matched'
-  | 'investment_mismatched';
+  | 'investment_mismatched'
+  | 'mentor_session_booked'
+  | 'mentor_session_reminder'
+  | 'commission_invoice';
 
 export interface INotification extends Document {
   userId: mongoose.Types.ObjectId;

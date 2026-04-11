@@ -42,6 +42,24 @@ const ENV_SCHEMA: EnvVar[] = [
     sensitive: false,
     description: 'Node environment',
   },
+  {
+    name: 'RAZORPAY_KEY_ID',
+    required: true,
+    sensitive: false,
+    description: 'Razorpay API Key ID',
+  },
+  {
+    name: 'RAZORPAY_KEY_SECRET',
+    required: true,
+    sensitive: true,
+    description: 'Razorpay API Key Secret',
+  },
+  {
+    name: 'RAZORPAY_WEBHOOK_SECRET',
+    required: false,
+    sensitive: true,
+    description: 'Razorpay Webhook Secret for signature verification',
+  },
 ];
 
 let validated = false;

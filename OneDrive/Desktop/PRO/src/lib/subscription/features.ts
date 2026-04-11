@@ -38,6 +38,8 @@ export interface PlanFeatures {
   canCreateStartups: boolean;
   canApplyToJobs: boolean;
   canAccessDealFlow: boolean;
+  mentorAccess: boolean;
+  aiReports: boolean;
 }
 
 /**
@@ -57,6 +59,8 @@ export const FOUNDER_PLAN_FEATURES: Record<FounderPlanType, PlanFeatures> = {
     canCreateStartups: true,
     canApplyToJobs: true,
     canAccessDealFlow: false,
+    mentorAccess: false,
+    aiReports: false,
   },
   pro_founder: {
     maxProjects: 5,
@@ -71,6 +75,8 @@ export const FOUNDER_PLAN_FEATURES: Record<FounderPlanType, PlanFeatures> = {
     canCreateStartups: true,
     canApplyToJobs: true,
     canAccessDealFlow: true,
+    mentorAccess: true,
+    aiReports: true,
   },
   scale_founder: {
     maxProjects: 20,
@@ -85,6 +91,8 @@ export const FOUNDER_PLAN_FEATURES: Record<FounderPlanType, PlanFeatures> = {
     canCreateStartups: true,
     canApplyToJobs: true,
     canAccessDealFlow: true,
+    mentorAccess: true,
+    aiReports: true,
   },
   enterprise_founder: {
     maxProjects: -1, // Unlimited
@@ -99,6 +107,8 @@ export const FOUNDER_PLAN_FEATURES: Record<FounderPlanType, PlanFeatures> = {
     canCreateStartups: true,
     canApplyToJobs: true,
     canAccessDealFlow: true,
+    mentorAccess: true,
+    aiReports: true,
   },
 };
 
@@ -117,9 +127,9 @@ export const PLAN_FEATURES = FOUNDER_PLAN_FEATURES;
 // PLAN PRICING (Founder Only)
 // ============================================
 
-export const PLAN_PRICES: Record<FounderPlanType, { monthly: number; yearly: number }> = {
-  free_founder: { monthly: 0, yearly: 0 },
-  pro_founder: { monthly: 2499, yearly: 23988 },
+export const PLAN_PRICES: Record<FounderPlanType, { monthly: number; yearly: number; oneTime?: number }> = {
+  free_founder: { monthly: 0, yearly: 0, oneTime: 499 }, // ₹499 one-time profile fee
+  pro_founder: { monthly: 1999, yearly: 19188 }, // ₹1,999/month Startup Boost
   scale_founder: { monthly: 8499, yearly: 81588 },
   enterprise_founder: { monthly: 24999, yearly: 239988 },
 };

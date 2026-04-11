@@ -51,6 +51,7 @@ const PUBLIC_ROUTES = new Set([
   '/api/auth/google/callback',
   '/api/health',
   '/api/csrf-token',
+  '/api/webhooks/razorpay',
 ]);
 
 /** Route prefixes that are public */
@@ -78,6 +79,7 @@ const CSRF_EXEMPT_ROUTES = new Set([
   '/api/auth/resend-verification',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/webhooks/razorpay',
 ]);
 
 /** Methods that require CSRF protection */
@@ -94,6 +96,7 @@ const PUBLIC_PAGES = new Set([
   '/signup/investor',
   '/signup/talent',
   '/forgot-password',
+  '/pricing',
 ]);
 
 /** Dashboard role mapping */

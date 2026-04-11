@@ -49,6 +49,7 @@ const getNavigation = (role: string) => {
       ],
       finance: [
         { id: 'payments', label: 'Funding', icon: CreditCard },
+        { id: 'upgrade', label: 'Upgrade Plan', icon: Sparkles, externalRoute: '/pricing' },
       ],
       communication: [
         { id: 'messages', label: 'Messages', icon: MessageSquare, countKey: 'messages' },
