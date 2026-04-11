@@ -38,7 +38,7 @@ const getNavigation = (role: string) => {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'search', label: 'Discover', icon: Search },
-        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles, externalRoute: '/founder/ai-insights' },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
       ],
       workspace: [
         { id: 'startups', label: 'My Startup', icon: Building2 },
@@ -61,7 +61,7 @@ const getNavigation = (role: string) => {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'jobs', label: 'Find Jobs', icon: Briefcase },
         { id: 'search', label: 'Discover', icon: Search },
-        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles, externalRoute: '/talent/ai-insights' },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
       ],
       workspace: [
         { id: 'applications', label: 'My Applications', icon: Briefcase, countKey: 'applications' },
@@ -78,7 +78,7 @@ const getNavigation = (role: string) => {
       overview: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'search', label: 'Discover', icon: Search },
-        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles, externalRoute: '/investor/ai-insights' },
+        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
       ],
       workspace: [
         { id: 'dealflow', label: 'Deal Flow', icon: DollarSign },

@@ -106,11 +106,25 @@ export function MessagingPage() {
     }
   }, []);
 
-  // Initialize WebSocket
+  // Initialize WebSocket (only if server is configured)
   useEffect(() => {
+    // Only attempt WebSocket if explicitly configured
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
 
-    const socketInstance = io('/?XTransformPort=3003', {
+    // Polling fallback for messages (always active, works on Vercel)
+    const pollingInterval = setInterval(() => {
+      fetchConversations();
+    }, 5000);
+
+    if (!wsUrl) {
+      // No WebSocket server — just use HTTP polling
+      return () => clearInterval(pollingInterval);
+    }
+
+    const socketInstance = io(wsUrl, {
       transports: ['websocket', 'polling'],
+      reconnectionAttempts: 3,
+      timeout: 5000,
     });
 
     socketInstance.on('connect', () => {
@@ -118,6 +132,10 @@ export function MessagingPage() {
     });
 
     socketInstance.on('disconnect', () => {
+      setConnected(false);
+    });
+
+    socketInstance.on('connect_error', () => {
       setConnected(false);
     });
 
@@ -158,19 +176,11 @@ export function MessagingPage() {
       setUnreadTotal(data.count);
     });
 
-    // Polling fallback for messages since WebSockets might drop on Vercel
-    const pollingInterval = setInterval(() => {
-      fetchConversations();
-    }, 5000);
-
-    // Also attach the interval to the cleanup
-    (socketInstance as any)._pollingInterval = pollingInterval;
-
     setSocket(socketInstance);
 
     return () => {
       socketInstance.disconnect();
-      if ((socketInstance as any)._pollingInterval) clearInterval((socketInstance as any)._pollingInterval);
+      clearInterval(pollingInterval);
     };
   }, [selectedConversation?._id, fetchConversations]);
 

@@ -103,11 +103,25 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
     }
   }, []);
 
-  // Initialize WebSocket connection
+  // Initialize WebSocket connection (only if server is configured)
   useEffect(() => {
+    // Fetch notifications via HTTP (always works)
+    fetchNotifications();
 
-    const socketInstance = io('/?XTransformPort=3003', {
+    // Only attempt WebSocket if explicitly configured
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+    if (!wsUrl) {
+      // No WebSocket server configured — use HTTP polling fallback
+      const pollInterval = setInterval(() => {
+        fetchNotifications();
+      }, 30000); // Poll every 30 seconds
+      return () => clearInterval(pollInterval);
+    }
+
+    const socketInstance = io(wsUrl, {
       transports: ['websocket', 'polling'],
+      reconnectionAttempts: 3,
+      timeout: 5000,
     });
 
     socketInstance.on('connect', () => {
@@ -115,6 +129,11 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
     });
 
     socketInstance.on('disconnect', () => {
+      setConnected(false);
+    });
+
+    socketInstance.on('connect_error', () => {
+      // Silently fail — HTTP polling is the fallback
       setConnected(false);
     });
 
@@ -137,9 +156,6 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
     });
 
     setSocket(socketInstance);
-
-    // Fetch initial data
-    fetchNotifications();
 
     return () => {
       socketInstance.disconnect();
