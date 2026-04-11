@@ -78,13 +78,19 @@ export async function POST(request: NextRequest) {
         status: 'completed',
       });
       if (existingPayment) {
-        return NextResponse.json({ error: 'Profile creation fee already paid' }, { status: 409 });
+        return NextResponse.json({
+          error: 'Profile creation fee already paid. You can create your startup now!',
+          code: 'ALREADY_PAID',
+        }, { status: 409 });
       }
 
       // Check if founder is grandfathered (has existing startup)
       const existingStartup = await Startup.findOne({ founderId: payload.userId });
       if (existingStartup) {
-        return NextResponse.json({ error: 'You already have a startup profile' }, { status: 409 });
+        return NextResponse.json({
+          error: 'You already have a startup profile — no payment needed!',
+          code: 'GRANDFATHERED',
+        }, { status: 409 });
       }
 
       amount = FOUNDER_PROFILE_FEE;
@@ -97,16 +103,21 @@ export async function POST(request: NextRequest) {
       amount = STARTUP_BOOST_MONTHLY;
     }
 
-    // Generate idempotency key (prevents duplicate orders within 10 min window)
-    const idempotencyKey = `${payload.userId}:${purpose}:${Math.floor(Date.now() / 600000)}`;
+    // Generate idempotency key with random suffix to avoid collisions
+    // The 10-min window groups requests, but we use a unique receipt per actual order
+    const windowKey = `${payload.userId}:${purpose}:${Math.floor(Date.now() / 600000)}`;
 
-    // Check for existing pending order with same idempotency key
+    // Check for existing pending order within the same window
     const existingOrder = await Payment.findOne({
-      idempotencyKey,
+      fromUserId: payload.userId,
+      purpose,
       status: 'pending',
+      createdAt: { $gte: new Date(Date.now() - 600000) }, // last 10 minutes
     });
+
     if (existingOrder && existingOrder.razorpayOrderId) {
       // Return existing order instead of creating duplicate
+      log.info(`Returning existing pending order: ${existingOrder.razorpayOrderId}`);
       return NextResponse.json({
         success: true,
         orderId: existingOrder.razorpayOrderId,
@@ -117,19 +128,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create Razorpay order
-    const receipt = `${purpose}_${payload.userId}_${Date.now()}`;
-    const order = await createOrder({
-      amount,
-      receipt,
-      notes: {
-        userId: payload.userId,
-        purpose,
-        ...(metadata || {}),
-      },
-    });
+    // Create Razorpay order with unique receipt
+    const receipt = `${purpose}_${payload.userId.slice(-6)}_${Date.now()}`;
+    let order;
+    try {
+      order = await createOrder({
+        amount,
+        receipt,
+        notes: {
+          userId: payload.userId,
+          purpose,
+          ...(metadata || {}),
+        },
+      });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown Razorpay error';
+      log.error(`Razorpay order creation failed: ${errorMsg}`, err as Record<string, unknown>);
+      return NextResponse.json({
+        error: 'Payment gateway temporarily unavailable. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? errorMsg : undefined,
+      }, { status: 502 });
+    }
 
-    // Create payment record
+    // Create payment record with unique idempotency key
+    const idempotencyKey = `${payload.userId}:${purpose}:${order.id}`;
+
     const paymentRecord = await Payment.create({
       type: purpose === 'boost_subscription' ? 'subscription' : 'one_time',
       purpose,
@@ -142,7 +165,7 @@ export async function POST(request: NextRequest) {
       metadata: metadata || {},
     });
 
-    log.info(`Order created: ${order.id} for ${purpose}, user=${payload.userId}`);
+    log.info(`Order created: ${order.id} for ${purpose}, user=${payload.userId}, amount=₹${amount / 100}`);
 
     return NextResponse.json({
       success: true,
@@ -152,8 +175,19 @@ export async function POST(request: NextRequest) {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       paymentRecordId: paymentRecord._id.toString(),
     });
-  } catch (error) {
-    log.error('Create order error', error);
-    return NextResponse.json({ error: 'Failed to create payment order' }, { status: 500 });
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    log.error(`Create order error: ${errMsg}`, error as Record<string, unknown>);
+
+    // Handle MongoDB duplicate key error (idempotency)
+    if (errMsg.includes('E11000') || errMsg.includes('duplicate key')) {
+      return NextResponse.json({
+        error: 'A payment is already being processed. Please wait a moment and try again.',
+      }, { status: 409 });
+    }
+
+    return NextResponse.json({
+      error: 'Failed to create payment order. Please try again.',
+    }, { status: 500 });
   }
 }

@@ -134,6 +134,8 @@ export default function PricingPage() {
       return;
     }
 
+    // Prevent double-clicks
+    if (loading) return;
     setLoading(purpose);
 
     try {
@@ -144,13 +146,27 @@ export default function PricingPage() {
       });
 
       const data = await res.json();
+
       if (!res.ok) {
-        toast.error(data.error || 'Failed to create payment');
+        // Handle 409 gracefully — user already paid or has startup
+        if (res.status === 409) {
+          if (data.code === 'GRANDFATHERED') {
+            toast.success('You already have a startup — no payment needed!');
+            router.push('/dashboard/founder');
+          } else if (data.code === 'ALREADY_PAID') {
+            toast.success('Already paid! You can create your startup now.');
+            router.push('/dashboard/founder');
+          } else {
+            toast.info(data.error || 'Payment already in progress');
+          }
+        } else {
+          toast.error(data.error || 'Failed to create payment');
+        }
         setLoading(null);
         return;
       }
 
-      // Open Razorpay Checkout
+      // Open Razorpay Checkout — DON'T clear loading until dismissed
       openCheckout({
         orderId: data.orderId,
         amount: data.amount,
@@ -162,6 +178,7 @@ export default function PricingPage() {
         onSuccess: async (response: RazorpaySuccessResponse) => {
           setPaymentStatus('processing');
           setPaymentMeta({ amount: data.amount, purpose });
+          setLoading(null);
 
           // Verify payment server-side
           try {
@@ -183,20 +200,20 @@ export default function PricingPage() {
             }
           } catch {
             setPaymentStatus('failure');
-            setPaymentMeta(prev => ({ ...prev, error: 'Verification failed. Contact support.' }));
+            setPaymentMeta(prev => ({ ...prev, error: 'Verification failed. Contact support if amount was deducted.' }));
           }
         },
         onFailure: (error: any) => {
+          setLoading(null);
           setPaymentStatus('failure');
-          setPaymentMeta({ amount: data.amount, purpose, error: error?.description || 'Payment failed' });
+          setPaymentMeta({ amount: data.amount, purpose, error: error?.description || 'Payment failed. Please try again.' });
         },
         onDismiss: () => {
           setLoading(null);
         },
       });
     } catch (error) {
-      toast.error('Something went wrong');
-    } finally {
+      toast.error('Network error. Please check your connection and try again.');
       setLoading(null);
     }
   };

@@ -105,22 +105,33 @@ export function verifyPaymentSignature(
     return false;
   }
 
-  const body = `${orderId}|${paymentId}`;
-  const expectedSignature = crypto
-    .createHmac('sha256', RAZORPAY_KEY_SECRET)
-    .update(body)
-    .digest('hex');
+  try {
+    const body = `${orderId}|${paymentId}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest('hex');
 
-  const isValid = crypto.timingSafeEqual(
-    Buffer.from(signature, 'hex'),
-    Buffer.from(expectedSignature, 'hex')
-  );
+    // timingSafeEqual requires equal length buffers
+    const sigBuffer = Buffer.from(signature, 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
 
-  if (!isValid) {
-    log.warn(`Signature verification FAILED for order=${orderId}, payment=${paymentId}`);
+    if (sigBuffer.length !== expectedBuffer.length) {
+      log.warn(`Signature length mismatch for order=${orderId}: got ${sigBuffer.length}, expected ${expectedBuffer.length}`);
+      return false;
+    }
+
+    const isValid = crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+
+    if (!isValid) {
+      log.warn(`Signature verification FAILED for order=${orderId}, payment=${paymentId}`);
+    }
+
+    return isValid;
+  } catch (error) {
+    log.error('Signature verification error', error as Record<string, unknown>);
+    return false;
   }
-
-  return isValid;
 }
 
 // ============================================
