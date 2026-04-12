@@ -20,9 +20,12 @@ import { toast } from 'sonner';
 import { apiPost } from '@/lib/api-client';
 import { apiFetch } from '@/lib/api-fetch';
 import { useRazorpayCheckout, type RazorpaySuccessResponse } from '@/components/payments/razorpay-checkout';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 
 interface CreateStartupModalProps {
   onSuccess?: () => void;
+  disabled?: boolean;
+  useHoverButton?: boolean;
 }
 
 const stages = [
@@ -47,7 +50,7 @@ const industries = [
   'Real Estate', 'Food & Beverage', 'Travel', 'Entertainment', 'Manufacturing', 'Other'
 ];
 
-export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
+export function CreateStartupModal({ onSuccess, disabled, useHoverButton }: CreateStartupModalProps) {
   const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -219,10 +222,16 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Startup
-        </Button>
+        {useHoverButton ? (
+          <div>
+            <InteractiveHoverButton text="Create Startup" disabled={disabled} className="w-40" />
+          </div>
+        ) : (
+          <Button disabled={disabled}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Startup
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>

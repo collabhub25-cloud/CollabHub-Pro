@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { CreateMilestoneModal } from '@/components/milestones/create-milestone-modal';
+import { CreateStartupModal } from '@/components/startups/create-startup-modal';
 import { apiFetch, apiPut, apiPost, apiPatch } from '@/lib/api-client';
 import { safeLocalStorage, STORAGE_KEYS } from '@/lib/client-utils';
 import { MilestonePaymentModal } from '@/components/milestones/milestone-payment-modal';
@@ -168,7 +169,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
 
   const [loading, setLoading] = useState(false);
-  const [showCreateStartup, setShowCreateStartup] = useState(false);
   const [showEditStartup, setShowEditStartup] = useState<Startup | null>(null);
   const [showDeleteStartup, setShowDeleteStartup] = useState<Startup | null>(null);
   const [showCreateFundingRound, setShowCreateFundingRound] = useState(false);
@@ -228,15 +228,6 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const prevMonthTeam = useMemo(() => dynamicChartData.length >= 2 ? dynamicChartData[dynamicChartData.length - 2]?.customers || 0 : 0, [dynamicChartData]);
   const teamGrowth = useMemo(() => totalTeamMembers - prevMonthTeam, [totalTeamMembers, prevMonthTeam]);
 
-  // Form states
-  const [newStartup, setNewStartup] = useState({
-    name: '',
-    vision: '',
-    description: '',
-    stage: 'idea',
-    industry: '',
-    fundingStage: 'pre-seed',
-  });
 
   const [editStartup, setEditStartup] = useState({
     name: '',
@@ -388,45 +379,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     }
   }, [activeTab, fetchFundingRounds]);
 
-  const handleCreateStartup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const res = await apiFetch('/api/startups', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newStartup),
-      });
 
-      const data = await res.json();
-      if (res.ok) {
-        toast.success('Startup created successfully!');
-        setShowCreateStartup(false);
-        fetchData();
-        setNewStartup({
-          name: '',
-          vision: '',
-          description: '',
-          stage: 'idea',
-          industry: '',
-          fundingStage: 'pre-seed',
-        });
-      } else {
-        if (data.details && Array.isArray(data.details) && data.details.length > 0) {
-          const firstError = typeof data.details[0] === 'string' ? data.details[0] : data.details[0].message;
-          toast.error(firstError || data.error || 'Validation failed');
-        } else {
-          toast.error(data.error || 'Failed to create startup');
-        }
-      }
-    } catch {
-      toast.error('Something went wrong');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleEditStartup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -873,99 +826,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
           </div>
         </div>
 
-        {/* Create Startup Dialog */}
-        <Dialog open={showCreateStartup} onOpenChange={setShowCreateStartup}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Create New Startup</DialogTitle>
-              <DialogDescription>
-                Fill in the details to create your startup profile
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateStartup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Startup Name *</Label>
-                <Input
-                  id="name"
-                  value={newStartup.name}
-                  onChange={(e) => setNewStartup({ ...newStartup, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vision">Vision *</Label>
-                <Input
-                  id="vision"
-                  value={newStartup.vision}
-                  onChange={(e) => setNewStartup({ ...newStartup, vision: e.target.value })}
-                  placeholder="One-line vision statement"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={newStartup.description}
-                  onChange={(e) => setNewStartup({ ...newStartup, description: e.target.value })}
-                  placeholder="Describe your startup..."
-                  rows={3}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Stage *</Label>
-                  <Select value={newStartup.stage} onValueChange={(v) => setNewStartup({ ...newStartup, stage: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="idea">Idea</SelectItem>
-                      <SelectItem value="validation">Validation</SelectItem>
-                      <SelectItem value="mvp">MVP</SelectItem>
-                      <SelectItem value="growth">Growth</SelectItem>
-                      <SelectItem value="scaling">Scaling</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Funding Stage *</Label>
-                  <Select value={newStartup.fundingStage} onValueChange={(v) => setNewStartup({ ...newStartup, fundingStage: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pre-seed">Pre-Seed</SelectItem>
-                      <SelectItem value="seed">Seed</SelectItem>
-                      <SelectItem value="series-a">Series A</SelectItem>
-                      <SelectItem value="series-b">Series B</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Industry *</Label>
-                <Select value={newStartup.industry} onValueChange={(v) => setNewStartup({ ...newStartup, industry: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['Technology', 'Healthcare', 'Finance', 'E-commerce', 'Education', 'Real Estate', 'Food & Beverage', 'Travel', 'Entertainment', 'Manufacturing', 'Other'].map((ind) => (
-                      <SelectItem key={ind} value={ind}>{ind}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShowCreateStartup(false)}>
-                  Cancel
-                </Button>
-                <InteractiveHoverButton type="submit" disabled={submitting} text={submitting ? 'Creating...' : 'Create Startup'} className="w-40" />
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+
       </div>
     );
   }
@@ -979,9 +840,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div>
-                    <InteractiveHoverButton text="Create Startup" onClick={() => setShowCreateStartup(true)} disabled={(user?.verificationLevel || 0) < 1} className="w-40" />
-                  </div>
+                    <CreateStartupModal onSuccess={fetchData} disabled={(user?.verificationLevel || 0) < 1} useHoverButton />
                 </TooltipTrigger>
                 {(user?.verificationLevel || 0) < 1 && (
                   <TooltipContent>
@@ -1005,7 +864,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
               <p className="text-muted-foreground text-center mb-4">
                 Create your first startup to start building your team
               </p>
-              <InteractiveHoverButton text="Create Startup" onClick={() => setShowCreateStartup(true)} disabled={(user?.verificationLevel || 0) < 1} className="w-40" />
+              <CreateStartupModal onSuccess={fetchData} disabled={(user?.verificationLevel || 0) < 1} useHoverButton />
             </CardContent>
           </Card>
         ) : (
@@ -1060,99 +919,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
           </div>
         )}
 
-        {/* Create Startup Dialog */}
-        <Dialog open={showCreateStartup} onOpenChange={setShowCreateStartup}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Create New Startup</DialogTitle>
-              <DialogDescription>
-                Fill in the details to create your startup profile
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateStartup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name2">Startup Name *</Label>
-                <Input
-                  id="name2"
-                  value={newStartup.name}
-                  onChange={(e) => setNewStartup({ ...newStartup, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vision2">Vision *</Label>
-                <Input
-                  id="vision2"
-                  value={newStartup.vision}
-                  onChange={(e) => setNewStartup({ ...newStartup, vision: e.target.value })}
-                  placeholder="One-line vision statement"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description2">Description *</Label>
-                <Textarea
-                  id="description2"
-                  value={newStartup.description}
-                  onChange={(e) => setNewStartup({ ...newStartup, description: e.target.value })}
-                  placeholder="Describe your startup..."
-                  rows={3}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Stage *</Label>
-                  <Select value={newStartup.stage} onValueChange={(v) => setNewStartup({ ...newStartup, stage: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="idea">Idea</SelectItem>
-                      <SelectItem value="validation">Validation</SelectItem>
-                      <SelectItem value="mvp">MVP</SelectItem>
-                      <SelectItem value="growth">Growth</SelectItem>
-                      <SelectItem value="scaling">Scaling</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Funding Stage *</Label>
-                  <Select value={newStartup.fundingStage} onValueChange={(v) => setNewStartup({ ...newStartup, fundingStage: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pre-seed">Pre-Seed</SelectItem>
-                      <SelectItem value="seed">Seed</SelectItem>
-                      <SelectItem value="series-a">Series A</SelectItem>
-                      <SelectItem value="series-b">Series B</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Industry *</Label>
-                <Select value={newStartup.industry} onValueChange={(v) => setNewStartup({ ...newStartup, industry: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['Technology', 'Healthcare', 'Finance', 'E-commerce', 'Education', 'Real Estate', 'Food & Beverage', 'Travel', 'Entertainment', 'Manufacturing', 'Other'].map((ind) => (
-                      <SelectItem key={ind} value={ind}>{ind}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShowCreateStartup(false)}>
-                  Cancel
-                </Button>
-                <InteractiveHoverButton type="submit" disabled={submitting} text={submitting ? 'Creating...' : 'Create Startup'} className="w-40" />
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+
 
         {/* Edit Startup Dialog */}
         <Dialog open={!!showEditStartup} onOpenChange={() => setShowEditStartup(null)}>
