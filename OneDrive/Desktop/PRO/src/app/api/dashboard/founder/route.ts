@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       await connectDB();
 
       const [startups, notifications] = await Promise.all([
-        Startup.find({ founderId: userId }).populate('team', 'name email avatar skills').lean(),
+        Startup.find({ founderId: userId, isActive: true }).populate('team', 'name email avatar skills').lean(),
         Notification.find({ userId }).sort({ createdAt: -1 }).limit(10).lean(),
       ]);
 

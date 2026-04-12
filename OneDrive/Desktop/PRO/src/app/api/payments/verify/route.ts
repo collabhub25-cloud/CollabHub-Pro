@@ -126,7 +126,7 @@ async function handlePaymentSideEffects(
 
     case 'boost_subscription': {
       // Activate boost on user's startup
-      const startup = await Startup.findOne({ founderId: userId });
+      const startup = await Startup.findOne({ founderId: userId, isActive: true });
       if (startup) {
         const boostEnd = new Date();
         boostEnd.setDate(boostEnd.getDate() + 30); // 30-day boost

@@ -122,7 +122,7 @@ async function handlePaymentCaptured(payload: any) {
       break;
     }
     case 'boost_subscription': {
-      const startup = await Startup.findOne({ founderId: userId });
+      const startup = await Startup.findOne({ founderId: userId, isActive: true });
       if (startup) {
         const boostEnd = new Date();
         boostEnd.setDate(boostEnd.getDate() + 30);
@@ -203,7 +203,7 @@ async function handleSubscriptionCharged(payload: any) {
 
   // Re-activate boost on startup
   const userId = subscription.userId.toString();
-  const startup = await Startup.findOne({ founderId: userId });
+  const startup = await Startup.findOne({ founderId: userId, isActive: true });
   if (startup) {
     startup.isBoosted = true;
     startup.boostExpiresAt = periodEnd;
@@ -265,7 +265,7 @@ async function handleSubscriptionHalted(payload: any) {
 
   // Deactivate boost
   const userId = subscription.userId.toString();
-  const startup = await Startup.findOne({ founderId: userId });
+  const startup = await Startup.findOne({ founderId: userId, isActive: true });
   if (startup) {
     startup.isBoosted = false;
     startup.boostExpiresAt = undefined;

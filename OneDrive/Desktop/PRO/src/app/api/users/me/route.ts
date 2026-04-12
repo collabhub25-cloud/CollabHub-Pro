@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     let roleSpecificData = {};
     
     if (user.role === 'founder') {
-      const startups = await Startup.find({ founderId: decoded.userId })
+      const startups = await Startup.find({ founderId: decoded.userId, isActive: true })
         .select('name stage industry isActive')
         .lean();
       roleSpecificData = { startups };
