@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -223,10 +223,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     return chartMonths;
   }, [startups, milestones]);
 
-  // Dynamic summary stats
-  const totalTeamMembers = startups.reduce((sum, s) => sum + (s.team?.length || 0), 0);
-  const prevMonthTeam = dynamicChartData.length >= 2 ? dynamicChartData[dynamicChartData.length - 2]?.customers || 0 : 0;
-  const teamGrowth = totalTeamMembers - prevMonthTeam;
+  // Dynamic summary stats (memoized to prevent re-computation on every render)
+  const totalTeamMembers = useMemo(() => startups.reduce((sum, s) => sum + (s.team?.length || 0), 0), [startups]);
+  const prevMonthTeam = useMemo(() => dynamicChartData.length >= 2 ? dynamicChartData[dynamicChartData.length - 2]?.customers || 0 : 0, [dynamicChartData]);
+  const teamGrowth = useMemo(() => totalTeamMembers - prevMonthTeam, [totalTeamMembers, prevMonthTeam]);
 
   // Form states
   const [newStartup, setNewStartup] = useState({
@@ -339,20 +339,22 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
     loadData();
   }, [activeTab, fetchData, fetchPitches, fetchConfirmations]);
 
-  // Fetch achievements
+  // Fetch achievements — batched to avoid N+1 API calls
   const fetchAchievements = useCallback(async () => {
     if (startups.length === 0) return;
     setAchievementsLoading(true);
     try {
-      const allAchievements: any[] = [];
-      for (const s of startups) {
-        const res = await apiFetch(`/api/achievements?startupId=${s._id}`);
-        if (res.ok) {
-          const data = await res.json();
-          allAchievements.push(...(data.achievements || []).map((a: any) => ({ ...a, startupName: s.name })));
-        }
+      // Batch all startup IDs into a single query instead of N individual requests
+      const startupIds = startups.map(s => s._id).join(',');
+      const res = await apiFetch(`/api/achievements?startupIds=${startupIds}`);
+      if (res.ok) {
+        const data = await res.json();
+        const enriched = (data.achievements || []).map((a: any) => {
+          const matchedStartup = startups.find(s => s._id === a.startupId);
+          return { ...a, startupName: matchedStartup?.name || 'Unknown' };
+        });
+        setAchievements(enriched.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       }
-      setAchievements(allAchievements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch {
     }
     setAchievementsLoading(false);
@@ -708,7 +710,17 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
               </div>
               {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                <div className="space-y-3 py-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3">
+                      <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                        <div className="h-3 w-48 bg-muted animate-pulse rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : milestones.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8 text-sm">No milestones yet</p>
               ) : (
@@ -741,7 +753,18 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0" onClick={() => useUIStore.getState().setActiveTab('pitch-requests')}>View All <ChevronRight className="ml-1 h-3 w-3" /></Button>
               </div>
               {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                <div className="space-y-3 py-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3">
+                      <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-28 bg-muted animate-pulse rounded" />
+                        <div className="h-3 w-40 bg-muted animate-pulse rounded" />
+                      </div>
+                      <div className="h-6 w-16 bg-muted animate-pulse rounded" />
+                    </div>
+                  ))}
+                </div>
               ) : pitches.filter(p => p.pitchStatus === 'requested').length === 0 ? (
                 <p className="text-center text-muted-foreground py-8 text-sm">No pending pitch requests</p>
               ) : (

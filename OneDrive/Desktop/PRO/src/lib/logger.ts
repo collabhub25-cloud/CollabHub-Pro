@@ -31,6 +31,8 @@ interface LoggerConfig {
   includeTimestamp: boolean;
   includeStack: boolean;
   redactFields: string[];
+  /** API response time threshold (ms) to trigger slow API warnings */
+  slowApiThreshold: number;
 }
 
 // ============================================
@@ -79,6 +81,7 @@ class Logger {
       includeTimestamp: true,
       includeStack: process.env.NODE_ENV !== 'production',
       redactFields: DEFAULT_REDACT_FIELDS,
+      slowApiThreshold: 500,
       ...config,
     };
     this.context = config.context;
@@ -270,7 +273,7 @@ class Logger {
     };
   }
 
-  // API request logging
+  // API request logging — auto-warns on slow responses
   apiRequest(
     method: string,
     path: string,
@@ -278,11 +281,18 @@ class Logger {
     duration: number,
     metadata?: Record<string, unknown>
   ): void {
-    this.info(`API ${method} ${path}`, {
-      statusCode,
-      duration,
-      ...metadata,
-    });
+    const logData = { statusCode, duration, ...metadata };
+
+    if (duration > this.config.slowApiThreshold) {
+      this.warn(`SLOW API ${method} ${path} (${duration}ms > ${this.config.slowApiThreshold}ms threshold)`, logData);
+    } else {
+      this.info(`API ${method} ${path}`, logData);
+    }
+  }
+
+  // Cache event logging
+  cacheEvent(event: 'hit' | 'miss' | 'set' | 'invalidate', key: string, metadata?: Record<string, unknown>): void {
+    this.debug(`Cache ${event}: ${key}`, metadata);
   }
 }
 

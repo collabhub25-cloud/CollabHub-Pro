@@ -78,6 +78,26 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // CDN caching for static assets
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Image optimization cache
+      {
+        source: '/_next/image/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
     ];
   },
 
@@ -120,9 +140,30 @@ const nextConfig: NextConfig = {
 
   // Experimental features
   experimental: {
-    // Enable server actions (if needed)
-    // serverActions: true,
+    // Tree-shake heavy barrel imports to reduce bundle size
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-alert-dialog',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-tooltip',
+      'date-fns',
+      'framer-motion',
+    ],
   },
+
+  // Heavy server-only packages excluded from client bundles
+  serverExternalPackages: [
+    'mongoose',
+    'jsonwebtoken',
+    'bcryptjs',
+    'nodemailer',
+    'sharp',
+  ],
 
   // Environment variables exposed to browser
   env: {

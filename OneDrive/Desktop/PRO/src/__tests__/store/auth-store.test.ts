@@ -8,7 +8,6 @@ const mockUser: User = {
   name: 'Test User',
   role: 'founder',
   verificationLevel: 1,
-  kycStatus: 'pending',
   isEmailVerified: true,
   bio: 'Test bio',
   skills: ['React', 'TypeScript'],

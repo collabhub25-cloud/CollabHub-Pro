@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import { User, Job, Startup } from '@/lib/models';
 import { Investment } from '@/lib/models/investment.model';
+import { getCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
 // ============================================
 // RECOMMENDATION ENGINE v2
@@ -21,21 +22,6 @@ export interface Recommendation {
 // ============================================
 // HELPERS
 // ============================================
-
-// In-memory cache: key → { data, expiry }
-const cache = new Map<string, { data: Recommendation[]; expiry: number }>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
-function getCached(key: string): Recommendation[] | null {
-  const entry = cache.get(key);
-  if (entry && Date.now() < entry.expiry) return entry.data;
-  cache.delete(key);
-  return null;
-}
-
-function setCache(key: string, data: Recommendation[]) {
-  cache.set(key, { data, expiry: Date.now() + CACHE_TTL_MS });
-}
 
 /** Normalize a skill string for comparison */
 function normalizeSkill(s: string): string {
@@ -88,8 +74,9 @@ function recencyBonus(createdAt: Date | string, maxBonus: number = 10, halfLifeD
 // Score = skillMatch(60%) + roleMatch(20%) + recency(10%) + startupQuality(10%)
 // ============================================
 export async function getRecommendedJobs(talentId: string): Promise<Recommendation[]> {
-  const cacheKey = `jobs:${talentId}`;
-  const cached = getCached(cacheKey);
+  const cache = getCache();
+  const cacheKey = CACHE_KEYS.recommendedJobs(talentId);
+  const cached = await cache.get<Recommendation[]>(cacheKey);
   if (cached) return cached;
 
   await connectDB();
@@ -182,7 +169,7 @@ export async function getRecommendedJobs(talentId: string): Promise<Recommendati
     .sort((a: Recommendation, b: Recommendation) => b.score - a.score)
     .slice(0, 10);
 
-  setCache(cacheKey, results);
+  await cache.set(cacheKey, results, CACHE_TTL.LONG);
   return results;
 }
 
@@ -191,8 +178,9 @@ export async function getRecommendedJobs(talentId: string): Promise<Recommendati
 // Score: sector(30%) + stage(25%) + quality(20%) + history(15%) + founder(10%)
 // ============================================
 export async function getRecommendedStartups(investorId: string): Promise<Recommendation[]> {
-  const cacheKey = `startups:${investorId}`;
-  const cached = getCached(cacheKey);
+  const cache = getCache();
+  const cacheKey = CACHE_KEYS.recommendedStartups(investorId);
+  const cached = await cache.get<Recommendation[]>(cacheKey);
   if (cached) return cached;
 
   await connectDB();
@@ -329,7 +317,7 @@ export async function getRecommendedStartups(investorId: string): Promise<Recomm
     .sort((a: Recommendation, b: Recommendation) => b.score - a.score)
     .slice(0, 10);
 
-  setCache(cacheKey, results);
+  await cache.set(cacheKey, results, CACHE_TTL.LONG);
   return results;
 }
 
@@ -338,8 +326,9 @@ export async function getRecommendedStartups(investorId: string): Promise<Recomm
 // Match: job skills → talent skills + experience + availability
 // ============================================
 export async function getRecommendedTalents(startupId: string): Promise<Recommendation[]> {
-  const cacheKey = `talents:${startupId}`;
-  const cached = getCached(cacheKey);
+  const cache = getCache();
+  const cacheKey = CACHE_KEYS.recommendedTalents(startupId);
+  const cached = await cache.get<Recommendation[]>(cacheKey);
   if (cached) return cached;
 
   await connectDB();
@@ -473,7 +462,7 @@ export async function getRecommendedTalents(startupId: string): Promise<Recommen
     .sort((a: Recommendation, b: Recommendation) => b.score - a.score)
     .slice(0, 10);
 
-  setCache(cacheKey, results);
+  await cache.set(cacheKey, results, CACHE_TTL.LONG);
   return results;
 }
 
@@ -482,8 +471,9 @@ export async function getRecommendedTalents(startupId: string): Promise<Recommen
 // Match: startup industry/stage → investor preferences + history + activity
 // ============================================
 export async function getRecommendedInvestors(founderId: string): Promise<Recommendation[]> {
-  const cacheKey = `investors:${founderId}`;
-  const cached = getCached(cacheKey);
+  const cache = getCache();
+  const cacheKey = CACHE_KEYS.recommendedInvestors(founderId);
+  const cached = await cache.get<Recommendation[]>(cacheKey);
   if (cached) return cached;
 
   await connectDB();
@@ -590,6 +580,6 @@ export async function getRecommendedInvestors(founderId: string): Promise<Recomm
     .sort((a: Recommendation, b: Recommendation) => b.score - a.score)
     .slice(0, 10);
 
-  setCache(cacheKey, results);
+  await cache.set(cacheKey, results, CACHE_TTL.LONG);
   return results;
 }

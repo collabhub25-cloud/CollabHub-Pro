@@ -15,12 +15,24 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const startupId = searchParams.get('startupId');
+        const startupIds = searchParams.get('startupIds');
 
-        if (!startupId) {
-            return NextResponse.json({ error: 'startupId is required' }, { status: 400 });
+        // Support batched query (comma-separated IDs) or single ID
+        const ids = startupIds
+            ? startupIds.split(',').map(id => id.trim()).filter(Boolean)
+            : startupId
+            ? [startupId]
+            : [];
+
+        if (ids.length === 0) {
+            return NextResponse.json({ error: 'startupId or startupIds is required' }, { status: 400 });
         }
 
-        const achievements = await Achievement.find({ startupId })
+        const query = ids.length === 1
+            ? { startupId: ids[0] }
+            : { startupId: { $in: ids } };
+
+        const achievements = await Achievement.find(query)
             .sort({ createdAt: -1 })
             .lean();
 

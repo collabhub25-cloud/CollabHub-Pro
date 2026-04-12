@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Suspense } from 'react';
@@ -6,15 +6,22 @@ import { Toaster } from "@/components/ui/toaster";
 import { ConditionalBeamBg } from "@/components/providers/conditional-beam-bg";
 import { AOSProvider } from "@/components/providers/aos-provider";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { WebVitalsReporter } from "@/components/providers/web-vitals";
 
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -36,6 +43,16 @@ export const metadata: Metadata = {
     title: "AlloySphere - Startup Collaboration Platform",
     description: "Connect verified talents, founders, and investors",
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 };
 
 export default function RootLayout({
@@ -60,6 +77,7 @@ export default function RootLayout({
               {children}
             </Suspense>
             <Toaster />
+            <WebVitalsReporter />
           </AOSProvider>
         </ThemeProvider>
       </body>

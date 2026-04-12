@@ -6,11 +6,15 @@ import { validateInput, CreateStartupSchema, StartupUpdateSchema } from '@/lib/v
 import { checkPlanLimit, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
 import { sanitizeObject } from '@/lib/security/sanitize';
 import { createLogger } from '@/lib/logger';
+import { cacheOrFetch, CACHE_KEYS, CACHE_TTL, getCache } from '@/lib/cache';
+import { onStartupEdit } from '@/lib/cache-invalidation';
+import { perfTracker } from '@/lib/perf-analytics';
 
 const log = createLogger('startups');
 
 // GET /api/startups - Get all startups or user's startups
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   try {
     await connectDB();
 
@@ -34,70 +38,87 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const skip = (page - 1) * limit;
 
-    // If requesting a specific startup by ID
+    // If requesting a specific startup by ID — cached 5 min
     if (startupId) {
-      const startup = await Startup.findById(startupId)
-        .populate('founderId', 'name email avatar verificationLevel')
-        .populate('team', 'name email avatar skills');
+      const data = await cacheOrFetch(
+        CACHE_KEYS.startupDetail(startupId),
+        async () => {
+          const startup = await Startup.findById(startupId)
+            .populate('founderId', 'name email avatar verificationLevel')
+            .populate('team', 'name email avatar skills')
+            .lean();
+          return startup;
+        },
+        CACHE_TTL.MEDIUM
+      );
 
-      if (!startup) {
-        return NextResponse.json(
-          { error: 'Startup not found' },
-          { status: 404 }
-        );
+      if (!data) {
+        return NextResponse.json({ error: 'Startup not found' }, { status: 404 });
       }
 
-      return NextResponse.json({
-        success: true,
-        startup,
-      });
+      const duration = Date.now() - start;
+      perfTracker.recordResponse('GET /api/startups/:id', duration);
+      const response = NextResponse.json({ success: true, startup: data });
+      response.headers.set('X-Response-Time', `${duration}ms`);
+      response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+      return response;
     }
 
-    // Build query
-    const query: Record<string, unknown> = { isActive: true };
+    // Build cache key from filters
+    const filterKey = `p${page}_l${limit}_f${founderId || ''}_i${industry || ''}_s${stage || ''}_fs${fundingStage || ''}_u${userId || ''}_a${searchParams.get('all') || ''}`;
+    
+    const data = await cacheOrFetch(
+      CACHE_KEYS.startupList(filterKey),
+      async () => {
+        // Build query
+        const query: Record<string, unknown> = { isActive: true };
 
-    if (founderId) {
-      query.founderId = founderId;
-    } else if (userId && !searchParams.get('all')) {
-      // If authenticated and not requesting all, show user's startups
-      query.$or = [
-        { founderId: userId },
-        { team: userId }
-      ];
-    }
+        if (founderId) {
+          query.founderId = founderId;
+        } else if (userId && !searchParams.get('all')) {
+          query.$or = [
+            { founderId: userId },
+            { team: userId }
+          ];
+        }
 
-    if (industry) {
-      query.industry = new RegExp(industry, 'i');
-    }
+        if (industry) {
+          query.industry = new RegExp(industry, 'i');
+        }
+        if (stage) {
+          query.stage = stage;
+        }
+        if (fundingStage) {
+          query.fundingStage = fundingStage;
+        }
 
-    if (stage) {
-      query.stage = stage;
-    }
+        const [startups, total] = await Promise.all([
+          Startup.find(query)
+            .populate('founderId', 'name email avatar verificationLevel')
+            .populate('team', 'name email avatar skills')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+          Startup.countDocuments(query),
+        ]);
 
-    if (fundingStage) {
-      query.fundingStage = fundingStage;
-    }
-
-    const startups = await Startup.find(query)
-      .populate('founderId', 'name email avatar verificationLevel')
-      .populate('team', 'name email avatar skills')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const total = await Startup.countDocuments(query);
-
-    return NextResponse.json({
-      success: true,
-      startups,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
+        return {
+          startups,
+          pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+        };
       },
-    });
+      CACHE_TTL.MEDIUM
+    );
+
+    const duration = Date.now() - start;
+    perfTracker.recordResponse('GET /api/startups', duration);
+    const response = NextResponse.json({ success: true, ...data });
+    response.headers.set('X-Response-Time', `${duration}ms`);
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    return response;
   } catch (error) {
+    perfTracker.recordResponse('GET /api/startups', Date.now() - start, true);
     log.error('Get startups error', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -226,6 +247,9 @@ export async function POST(request: NextRequest) {
 
     log.info(`New startup created: ${startup.name} by ${user.email}`);
 
+    // Invalidate startup caches after creation
+    await onStartupEdit(startup._id.toString(), payload.userId);
+
     return NextResponse.json({
       success: true,
       message: 'Startup created successfully',
@@ -319,6 +343,9 @@ export async function PUT(request: NextRequest) {
       { path: 'team', select: 'name email avatar' },
     ]);
 
+    // Invalidate startup caches after update
+    await onStartupEdit(id, payload.userId);
+
     return NextResponse.json({
       success: true,
       message: 'Startup updated successfully',
@@ -383,6 +410,9 @@ export async function DELETE(request: NextRequest) {
 
     // Soft delete
     await Startup.findByIdAndUpdate(id, { $set: { isActive: false, updatedAt: new Date() } });
+
+    // Invalidate startup caches after deletion
+    await onStartupEdit(id, payload.userId);
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useAuthStore, useUIStore } from '@/store';
 
 import { Button } from '@/components/ui/button';
@@ -91,24 +91,22 @@ export function Dashboard({ onLogout }: DashboardProps) {
     return () => window.removeEventListener('viewProfile', handleViewProfile);
   }, [setActiveTab]);
 
-  // Refresh user data using Zustand token with proper error handling
+  // Refresh user data with ref-based guard to prevent stale closures
+  const refreshingRef = React.useRef(false);
   const refreshUser = useCallback(async () => {
-    if (isRefreshing) return;
-
-    setIsRefreshing(true);
+    if (refreshingRef.current) return;
+    refreshingRef.current = true;
     try {
       const response = await apiFetch('/api/auth/me');
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-      } else if (response.status === 401) {
-        // Session expired - handled by auth state
       }
     } catch (error) {
     } finally {
-      setIsRefreshing(false);
+      refreshingRef.current = false;
     }
-  }, [isRefreshing, setUser]);
+  }, [setUser]);
 
   if (!user) return null;
 
@@ -124,7 +122,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
 
 
-  const getVerificationBadge = (level: number) => {
+  const verificationBadge = useMemo(() => {
     const badges = [
       { color: 'bg-gray-500', label: 'Unverified' },
       { color: 'bg-blue-500', label: 'Basic' },
@@ -132,10 +130,8 @@ export function Dashboard({ onLogout }: DashboardProps) {
       { color: 'bg-purple-500', label: 'Trusted' },
       { color: 'bg-yellow-500', label: 'Expert' },
     ];
-    return badges[level] || badges[0];
-  };
-
-  const verificationBadge = getVerificationBadge(user.verificationLevel);
+    return badges[user.verificationLevel] || badges[0];
+  }, [user.verificationLevel]);
 
   const renderContent = () => {
     // Common tabs across all roles
