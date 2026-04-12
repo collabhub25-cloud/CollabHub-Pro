@@ -63,7 +63,7 @@ export const CACHE_KEYS = {
 
   // Startups (TTL: 5 min)
   startupDetail: (startupId: string) => `startup:${startupId}`,
-  startupList: (filters: string) => `startups:list:${filters}`,
+  startupList: (userId: string, filters: string) => `startups:list:${userId}:${filters}`,
   startupsByFounder: (founderId: string) => `startups:founder:${founderId}`,
 
   // AI matching results (TTL: 15 min)
@@ -268,11 +268,19 @@ export async function invalidateUserCache(userId: string): Promise<void> {
 /**
  * Invalidate all startup-related caches.
  */
-export async function invalidateStartupCache(startupId: string): Promise<void> {
+export async function invalidateStartupCache(startupId: string, founderId?: string): Promise<void> {
   const c = getCache();
-  await Promise.all([
+  const ops: Promise<unknown>[] = [
     c.delete(CACHE_KEYS.startupDetail(startupId)),
-    c.invalidatePattern('startups:list:'),
-    c.invalidatePattern('startups:founder:'),
-  ]);
+  ];
+  if (founderId) {
+    // User-scoped: only invalidate this founder's caches
+    ops.push(c.invalidatePattern(`startups:list:${founderId}:`));
+    ops.push(c.delete(CACHE_KEYS.startupsByFounder(founderId)));
+  } else {
+    // Fallback: broad invalidation
+    ops.push(c.invalidatePattern('startups:list:'));
+    ops.push(c.invalidatePattern('startups:founder:'));
+  }
+  await Promise.all(ops);
 }

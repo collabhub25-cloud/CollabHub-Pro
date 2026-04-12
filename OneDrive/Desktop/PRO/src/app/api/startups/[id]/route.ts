@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/security';
 import { connectDB } from '@/lib/mongodb';
 import { Startup, User, FundingRound, TeamMember } from '@/lib/models';
+import { onStartupEdit } from '@/lib/cache-invalidation';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('startups:id');
 
 export async function GET(
     request: NextRequest,
@@ -29,8 +33,6 @@ export async function GET(
             .sort({ createdAt: -1 })
             .lean();
 
-
-
         // Fetch enriched team member data
         const teamMembers = await TeamMember.find({ startupId: id })
             .populate('userId', 'name email role avatar skills')
@@ -42,6 +44,10 @@ export async function GET(
             startup,
             fundingRounds,
             teamMembers,
+        }, {
+            headers: {
+                'Cache-Control': 'private, no-store',
+            },
         });
     } catch (error) {
         console.error('Startup Fetch Error:', error);
@@ -92,7 +98,14 @@ export async function PATCH(
 
         const updated = await Startup.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
 
-        return NextResponse.json({ success: true, startup: updated });
+        // Invalidate caches after update
+        await onStartupEdit(id, authResult.user.userId);
+
+        return NextResponse.json({ success: true, startup: updated }, {
+            headers: {
+                'Cache-Control': 'private, no-store',
+            },
+        });
     } catch (error) {
         console.error('Startup Update Error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

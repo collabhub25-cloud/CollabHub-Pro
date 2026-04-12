@@ -44,18 +44,22 @@ export async function onProfileUpdate(userId: string): Promise<void> {
  */
 export async function onStartupEdit(startupId: string, founderId: string): Promise<void> {
   const cache = getCache();
+  log.debug(`Invalidating caches: startup=${startupId}, founder=${founderId}`);
   const deleteOps = [
     cache.delete(CACHE_KEYS.startupDetail(startupId)),
     cache.delete(CACHE_KEYS.startupsByFounder(founderId)),
-    // Invalidate listing caches (all filter variants)
-    cache.invalidatePattern('startups:list:'),
+    // Invalidate user-scoped listing caches (all filter variants for this user)
+    cache.invalidatePattern(`startups:list:${founderId}:`),
+    // Also invalidate global listing caches used by discover/search
+    cache.invalidatePattern('startups:list:__global__:'),
     // Invalidate AI recommendations that reference this startup
     cache.delete(CACHE_KEYS.recommendedTalents(startupId)),
     // Founder's dashboard data is stale
     cache.delete(CACHE_KEYS.dashboardStats(founderId, 'founder')),
   ];
-  await Promise.allSettled(deleteOps);
-  log.debug(`Cache invalidated for startup ${startupId}`);
+  const results = await Promise.allSettled(deleteOps);
+  const fulfilled = results.filter(r => r.status === 'fulfilled').length;
+  log.debug(`Cache invalidation complete for startup ${startupId}: ${fulfilled}/${results.length} keys cleared`);
 }
 
 // ============================================

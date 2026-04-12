@@ -193,6 +193,12 @@ export function CreateStartupModal({ onSuccess }: CreateStartupModalProps) {
         setFieldErrors({});
         onSuccess?.();
       } else {
+        // Handle 402 Payment Required — backend enforcement
+        if (response.status === 402 || data.code === 'PAYMENT_REQUIRED') {
+          setHasProfilePayment(false);
+          toast.error('Payment required. Please complete the ₹499 payment first.');
+          return;
+        }
         if (data.fields && Object.keys(data.fields).length > 0) {
           setFieldErrors(data.fields);
           toast.error('Please fix the highlighted fields');

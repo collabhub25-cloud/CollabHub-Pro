@@ -262,8 +262,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch startups
-      const startupsRes = await apiFetch('/api/startups');
+      // Fetch startups — bypass browser HTTP cache for freshest data
+      const startupsRes = await apiFetch('/api/startups', {
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (startupsRes.ok) {
         const data = await startupsRes.json();
         setStartups(data.startups || []);
@@ -461,23 +463,31 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const handleDeleteStartup = async () => {
     if (!showDeleteStartup) return;
 
+    // Optimistic update: remove from local state immediately
+    const deletedId = showDeleteStartup._id;
+    setStartups(prev => prev.filter(s => s._id !== deletedId));
+    setShowDeleteStartup(null);
+
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/api/startups?id=${showDeleteStartup._id}`, {
+      const res = await apiFetch(`/api/startups?id=${deletedId}`, {
         method: 'DELETE',
-
       });
 
       const data = await res.json();
       if (res.ok) {
         toast.success('Startup deleted successfully!');
-        setShowDeleteStartup(null);
+        // Sync with backend to ensure consistency
         fetchData();
       } else {
         toast.error(data.error || 'Failed to delete startup');
+        // Rollback optimistic update on failure
+        fetchData();
       }
     } catch {
       toast.error('Something went wrong');
+      // Rollback optimistic update on error
+      fetchData();
     } finally {
       setSubmitting(false);
     }

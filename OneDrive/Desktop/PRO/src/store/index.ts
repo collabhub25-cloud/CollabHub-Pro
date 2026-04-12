@@ -99,7 +99,16 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Best-effort
         }
+        // Clear persisted state to prevent stale data leaking across sessions
         set({ user: null, isAuthenticated: false });
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('AlloySphere-auth');
+            localStorage.removeItem('AlloySphere-ui');
+          } catch {
+            // Storage may be unavailable
+          }
+        }
       },
 
       setLoading: (isLoading) => set({ isLoading }),
