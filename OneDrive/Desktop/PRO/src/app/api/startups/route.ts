@@ -180,8 +180,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Enforce one startup per founder limit
-    const existingStartupCount = await Startup.countDocuments({ founderId: payload.userId });
+    // Enforce one startup per active founder limit
+    const existingStartupCount = await Startup.countDocuments({ 
+      founderId: payload.userId,
+      isActive: { $ne: false }
+    });
 
     if (existingStartupCount >= 1) {
       return NextResponse.json(
