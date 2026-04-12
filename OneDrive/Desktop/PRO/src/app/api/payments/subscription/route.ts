@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const subscription = await Subscription.findOne({ userId: payload.userId }).lean();
-    const startup = await Startup.findOne({ founderId: payload.userId }).select('isBoosted boostExpiresAt').lean();
+    const startup = await Startup.findOne({ founderId: payload.userId, isActive: true }).select('isBoosted boostExpiresAt').lean();
 
     // Check if the founder has paid the ₹499 profile fee
     const profilePayment = await Payment.findOne({

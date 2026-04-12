@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
         }, { status: 409 });
       }
 
-      // Check if founder is grandfathered (has existing startup)
-      const existingStartup = await Startup.findOne({ founderId: payload.userId });
+      // Check if founder is grandfathered (has existing ACTIVE startup)
+      const existingStartup = await Startup.findOne({ founderId: payload.userId, isActive: true });
       if (existingStartup) {
         return NextResponse.json({
           error: 'You already have a startup profile — no payment needed!',
