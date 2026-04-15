@@ -20,6 +20,7 @@ export function ManageJobs() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [startupId, setStartupId] = useState<string | null>(null);
+  const [applications, setApplications] = useState<any[]>([]);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +46,11 @@ export function ManageJobs() {
             const data = await res.json();
             setJobs(data.jobs || []);
           }
+          const appsRes = await apiFetch(`/api/applications/received?startupId=${startup._id}`);
+          if (appsRes.ok) {
+             const appsData = await appsRes.json();
+             setApplications(appsData.applications || []);
+          }
         }
       } catch (error) {
       } finally {
@@ -56,6 +62,34 @@ export function ManageJobs() {
       fetchJobs();
     }
   }, [user]);
+
+  const handleApplicationStatus = async (appId: string, status: string) => {
+    try {
+      const res = await apiFetch(`/api/applications`, {
+        method: 'PUT',
+        body: JSON.stringify({ id: appId, status })
+      });
+      if (res.ok) {
+         toast.success(`Candidate ${status}`);
+         setApplications(applications.map(app => 
+            app._id === appId ? { ...app, status } : app
+         ));
+         if (status === 'accepted') {
+           const updatedApp = applications.find(a => a._id === appId);
+           if (updatedApp && updatedApp.roleId) {
+             setApplications(prev => prev.map(app => 
+                (app.roleId === updatedApp.roleId && app._id !== appId && app.status === 'pending') 
+                  ? { ...app, status: 'rejected' } : app
+             ));
+           }
+         }
+      } else {
+         toast.error(`Failed to update application`);
+      }
+    } catch {
+       toast.error(`An error occurred`);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,6 +245,48 @@ export function ManageJobs() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+                </div>
+                
+                {/* Applicants Section */}
+                <div className="mt-6 pt-4 border-t border-border/20">
+                  <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wider">Applicants</h4>
+                  {(() => {
+                    const jobApps = applications.filter(a => a.roleId === job._id);
+                    if (jobApps.length === 0) return <p className="text-sm text-muted-foreground italic bg-muted/30 p-3 rounded-lg">No applicants yet.</p>;
+                    return (
+                      <div className="space-y-3">
+                        {jobApps.map(app => (
+                          <div key={app._id} className="flex items-center justify-between p-3 border rounded-lg bg-card/50 transition-all hover:bg-card hover:shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center border">
+                                 {app.talentId?.avatar ? <img src={app.talentId.avatar} alt="avatar" className="h-full w-full object-cover" /> : <span className="font-bold text-primary">{app.talentId?.name?.charAt(0)}</span>}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm">{app.talentId?.name}</p>
+                                <p className="text-xs text-muted-foreground">{app.talentId?.email}</p>
+                                {app.coverLetter && <p className="text-xs mt-1 text-muted-foreground line-clamp-1 italic">"{app.coverLetter}"</p>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className="capitalize" variant={app.status === 'accepted' ? 'default' : app.status === 'rejected' ? 'destructive' : 'secondary'}>
+                                {app.status === 'accepted' ? 'Hired' : app.status}
+                              </Badge>
+                              {app.status === 'pending' && (
+                                <>
+                                  <Button size="sm" variant="outline" className="text-green-500 border-green-200 hover:text-green-600 hover:bg-green-50 hover:border-green-300 dark:hover:bg-green-950/30" onClick={() => handleApplicationStatus(app._id, 'accepted')}>
+                                    Accept
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:text-red-600 hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-950/30" onClick={() => handleApplicationStatus(app._id, 'rejected')}>
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>

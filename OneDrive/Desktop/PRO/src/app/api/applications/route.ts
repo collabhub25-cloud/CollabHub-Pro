@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Application, Startup, User } from '@/lib/models';
+import { Application, Startup, User, TeamMember } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { createLogger } from '@/lib/logger';
 
@@ -252,9 +252,47 @@ export async function PUT(request: NextRequest) {
           { status: 400 }
         );
       }
+      
+      // 1. Add to startup team array
       await Startup.findByIdAndUpdate(startup._id, {
         $addToSet: { team: application.talentId }
       });
+      
+      // 2. Create TeamMember record if it doesn't exist
+      const existingTeamMember = await TeamMember.findOne({ userId: application.talentId, startupId: startup._id });
+      if (!existingTeamMember) {
+        let roleName = 'Team Member';
+        const roleObj = startup.rolesNeeded?.find((r: any) => r._id?.toString() === application.roleId?.toString());
+        if (roleObj) {
+            roleName = roleObj.title;
+        }
+        
+        await TeamMember.create({
+            userId: application.talentId,
+            startupId: startup._id,
+            role: roleName,
+            equity: application.proposedEquity || 0,
+            status: 'active'
+        });
+      }
+      
+      // 3. Reject all other pending applications for this role
+      if (application.roleId) {
+        await Application.updateMany(
+            { 
+               startupId: startup._id, 
+               roleId: application.roleId, 
+               _id: { $ne: application._id },
+               status: 'pending'
+            },
+            { $set: { status: 'rejected' } }
+        );
+        
+        await Startup.findOneAndUpdate(
+            { _id: startup._id, "rolesNeeded._id": application.roleId },
+            { $set: { "rolesNeeded.$.status": "filled" } }
+        );
+      }
     }
 
     return NextResponse.json({

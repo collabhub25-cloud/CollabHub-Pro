@@ -12,6 +12,7 @@ import {
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface StartupData {
     _id: string;
@@ -131,7 +132,7 @@ export default function StartupPage({
     useEffect(() => {
         const fetchStartup = async () => {
             try {
-                const res = await fetch(`/api/startups/${id}`, { credentials: 'include' });
+                const res = await apiFetch(`/api/startups/${id}`);
                 if (!res.ok) throw new Error('Failed to load startup');
                 const data = await res.json();
                 setStartup(data.startup);
@@ -160,7 +161,7 @@ export default function StartupPage({
         const fetchJourney = async () => {
             setJourneyLoading(true);
             try {
-                const res = await fetch(`/api/startup/journey?startupId=${id}`, { credentials: 'include' });
+                const res = await apiFetch(`/api/startup/journey?startupId=${id}`);
                 if (res.ok) {
                     const data = await res.json();
                     setJourneyPosts(data.posts || []);
@@ -179,13 +180,13 @@ export default function StartupPage({
         const fetchInvestorData = async () => {
             try {
                 // Check favorites
-                const favRes = await fetch('/api/favorites', { credentials: 'include' });
+                const favRes = await apiFetch('/api/favorites');
                 if (favRes.ok) {
                     const favData = await favRes.json();
                     setIsFavorite((favData.favoriteIds || []).includes(id));
                 }
                 // Check access requests
-                const accessRes = await fetch(`/api/funding/request-access?startupId=${id}`, { credentials: 'include' });
+                const accessRes = await apiFetch(`/api/funding/request-access?startupId=${id}`);
                 if (accessRes.ok) {
                     const accessData = await accessRes.json();
                     const myRequest = (accessData.requests || []).find((r: any) =>
@@ -210,10 +211,8 @@ export default function StartupPage({
     // Investor actions
     const toggleFavorite = async () => {
         try {
-            const res = await fetch('/api/favorites', {
-                credentials: 'include',
+            const res = await apiFetch('/api/favorites', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ startupId: id }),
             });
             if (res.ok) {
@@ -229,10 +228,8 @@ export default function StartupPage({
     const handleRequestAccess = async () => {
         setSubmitting(true);
         try {
-            const res = await fetch('/api/funding/request-access', {
-                credentials: 'include',
+            const res = await apiFetch('/api/funding/request-access', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ startupId: id, message: accessMessage }),
             });
             const data = await res.json();
@@ -262,9 +259,8 @@ export default function StartupPage({
             };
             
             const updatedRoles = [...(startup?.rolesNeeded || []), rolePayload];
-            const res = await fetch(`/api/startups/${id}`, {
+            const res = await apiFetch(`/api/startups/${id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rolesNeeded: updatedRoles }),
             });
             
@@ -286,9 +282,8 @@ export default function StartupPage({
     const handleCreateJourneyPost = async () => {
         setSubmitting(true);
         try {
-            const res = await fetch('/api/startup/journey', {
+            const res = await apiFetch('/api/startup/journey', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     startupId: id,
                     ...newJourneyPost
@@ -312,10 +307,8 @@ export default function StartupPage({
     const handleSaveTeamMember = async (memberId: string) => {
         setSavingMember(true);
         try {
-            const res = await fetch(`/api/team/${memberId}`, {
+            const res = await apiFetch(`/api/team/${memberId}`, {
                 method: 'PATCH',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editMemberData),
             });
             if (res.ok) {
@@ -855,9 +848,8 @@ export default function StartupPage({
                                 onClick={async () => {
                                     if (confirm('Are you sure you want to delete this startup? This action cannot be undone.')) {
                                         try {
-                                            const res = await fetch(`/api/startups?id=${id}`, {
-                                                method: 'DELETE',
-                                                credentials: 'include'
+                                            const res = await apiFetch(`/api/startups?id=${id}`, {
+                                                method: 'DELETE'
                                             });
                                             if (res.ok) {
                                                 toast.success('Startup deleted successfully');
