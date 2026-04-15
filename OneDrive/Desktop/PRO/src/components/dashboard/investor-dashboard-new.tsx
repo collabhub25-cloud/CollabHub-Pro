@@ -78,11 +78,11 @@ export function InvestorDashboardNew() {
     }
   }, [user?._id]);
 
-  const handlePitchResponse = async (pitchId: string, status: 'accepted' | 'rejected') => {
+  const handlePitchResponse = async (pitchId: string, status: 'interested' | 'rejected') => {
       try {
-          const res = await apiFetch(`/api/pitches`, {
+          const res = await apiFetch(`/api/pitches/${pitchId}/status`, {
               method: 'PATCH',
-              body: JSON.stringify({ id: pitchId, status })
+              body: JSON.stringify({ status })
           });
           if (res.ok) {
               toast.success(`Pitch ${status} successfully`);
@@ -323,7 +323,7 @@ export function InvestorDashboardNew() {
                     <p className="mt-3 text-sm italic border-l-2 pl-3 border-purple-500/50 text-muted-foreground">"{pitch.message}"</p>
                   )}
                   <div className="mt-4 flex gap-2 w-full">
-                    <Button variant="default" className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handlePitchResponse(pitch._id, 'accepted')}>Accept & Connect</Button>
+                    <Button variant="default" className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handlePitchResponse(pitch._id, 'interested')}>Accept & Connect</Button>
                     <Button variant="outline" className="flex-1 hover:bg-destructive hover:text-white" onClick={() => handlePitchResponse(pitch._id, 'rejected')}>Pass</Button>
                   </div>
                 </div>
