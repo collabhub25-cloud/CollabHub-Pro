@@ -13,8 +13,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import { jwtVerify, SignJWT } from 'jose';
 
 // ============================================
 // CONFIGURATION
@@ -128,8 +127,23 @@ if (IS_PRODUCTION) {
 // CSRF HELPERS
 // ============================================
 
+function generateHex(length: number): string {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 function generateCsrfToken(): string {
-  return crypto.randomBytes(CSRF_TOKEN_LENGTH).toString('hex');
+  return generateHex(CSRF_TOKEN_LENGTH);
 }
 
 function setCsrfCookie(response: NextResponse, token: string): void {
@@ -154,22 +168,15 @@ function validateCsrfToken(request: NextRequest): { valid: boolean; error?: stri
     return { valid: false, error: 'CSRF header missing' };
   }
 
-  try {
-    const cookieBuffer = Buffer.from(cookieToken, 'hex');
-    const headerBuffer = Buffer.from(headerToken, 'hex');
-
-    if (cookieBuffer.length !== headerBuffer.length) {
-      return { valid: false, error: 'CSRF token length mismatch' };
-    }
-
-    if (!crypto.timingSafeEqual(cookieBuffer, headerBuffer)) {
-      return { valid: false, error: 'CSRF token mismatch' };
-    }
-
-    return { valid: true };
-  } catch {
-    return { valid: false, error: 'Invalid CSRF token format' };
+  if (cookieToken.length !== headerToken.length) {
+    return { valid: false, error: 'CSRF token length mismatch' };
   }
+
+  if (!constantTimeCompare(cookieToken, headerToken)) {
+    return { valid: false, error: 'CSRF token mismatch' };
+  }
+
+  return { valid: true };
 }
 
 function requiresCsrfProtection(method: string, pathname: string): boolean {
@@ -189,7 +196,7 @@ function requiresCsrfProtection(method: string, pathname: string): boolean {
 }
 
 function generateRequestId(): string {
-  return `req_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
+  return `req_${Date.now().toString(36)}_${generateHex(4)}`;
 }
 
 // ============================================
@@ -340,7 +347,9 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const decoded = jwt.verify(accessToken, EFFECTIVE_JWT_SECRET) as { userId: string; email: string; role: string };
+      const secret = new TextEncoder().encode(EFFECTIVE_JWT_SECRET);
+      const { payload } = await jwtVerify(accessToken, secret);
+      const decoded = payload as { userId: string; email: string; role: string };
       const requiredRole = getDashboardRole(pathname);
 
       if (requiredRole && decoded.role !== requiredRole) {
@@ -409,9 +418,12 @@ export async function middleware(request: NextRequest) {
   let decoded: { userId: string; email: string; role: string } | null = null;
   let needsTokenRefresh = false;
 
+  const secretKey = new TextEncoder().encode(EFFECTIVE_JWT_SECRET);
+
   if (accessToken) {
     try {
-      decoded = jwt.verify(accessToken, EFFECTIVE_JWT_SECRET) as unknown as typeof decoded;
+      const { payload } = await jwtVerify(accessToken, secretKey);
+      decoded = payload as any;
     } catch {
       decoded = null;
       needsTokenRefresh = true;
@@ -424,19 +436,20 @@ export async function middleware(request: NextRequest) {
   if (!decoded && refreshToken) {
     try {
       const EFFECTIVE_REFRESH_SECRET = (process.env.JWT_REFRESH_SECRET) || EFFECTIVE_JWT_SECRET + '-refresh';
-      const refreshDecoded = jwt.verify(refreshToken, EFFECTIVE_REFRESH_SECRET) as { userId: string; email: string; role: string };
+      const refreshSecretKey = new TextEncoder().encode(EFFECTIVE_REFRESH_SECRET);
+      
+      const { payload: refreshDecoded } = await jwtVerify(refreshToken, refreshSecretKey);
 
       decoded = {
-        userId: refreshDecoded.userId,
-        email: refreshDecoded.email,
-        role: refreshDecoded.role,
+        userId: refreshDecoded.userId as string,
+        email: refreshDecoded.email as string,
+        role: refreshDecoded.role as string,
       };
 
-      accessToken = jwt.sign(
-        { userId: decoded.userId, email: decoded.email, role: decoded.role },
-        EFFECTIVE_JWT_SECRET,
-        { expiresIn: '15m' }
-      );
+      accessToken = await new SignJWT({ userId: decoded.userId, email: decoded.email, role: decoded.role })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('15m')
+        .sign(secretKey);
 
       needsTokenRefresh = true;
     } catch {
@@ -492,7 +505,7 @@ export async function middleware(request: NextRequest) {
 // MATCHER — which routes this middleware runs on
 // ============================================
 
-export const runtime = 'nodejs';
+
 
 export const config = {
   matcher: [

@@ -52,6 +52,11 @@ export interface IStartup extends Document {
     AlloySphereVerifiedBy?: mongoose.Types.ObjectId;
     verificationNotes?: string;
 
+    // Verification workflow
+    verificationStatus: 'none' | 'pending' | 'approved' | 'rejected';
+    verificationRequestedAt?: Date;
+    verifiedAt?: Date;
+
     // Monetization fields
     isBoosted: boolean;
     boostExpiresAt?: Date;
@@ -87,6 +92,15 @@ const StartupSchema = new Schema<IStartup>(
         AlloySphereVerifiedAt: { type: Date },
         AlloySphereVerifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
         verificationNotes: { type: String, maxlength: 2000 },
+
+        // Verification workflow
+        verificationStatus: {
+            type: String,
+            enum: ['none', 'pending', 'approved', 'rejected'],
+            default: 'none',
+        },
+        verificationRequestedAt: { type: Date },
+        verifiedAt: { type: Date },
 
         // Monetization
         isBoosted: { type: Boolean, default: false },

@@ -3,8 +3,9 @@ import { connectDB } from '@/lib/mongodb';
 import { Pitch, User, Notification, Startup } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await connectDB();
     const token = extractTokenFromCookies(request);
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,7 +25,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: 'Invalid status update' }, { status: 400 });
     }
 
-    const pitch = await Pitch.findById(params.id);
+    const pitch = await Pitch.findById(id);
     if (!pitch) return NextResponse.json({ error: 'Pitch not found' }, { status: 404 });
 
     if (pitch.investorId.toString() !== user._id.toString()) {

@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.json(data);
     response.headers.set('X-Response-Time', `${duration}ms`);
-    response.headers.set('Cache-Control', 'private, s-maxage=30, stale-while-revalidate=60');
+    response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
     return response;
   } catch (error) {
     const duration = Date.now() - start;

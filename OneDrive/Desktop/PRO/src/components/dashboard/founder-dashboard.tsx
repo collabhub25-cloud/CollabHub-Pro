@@ -73,6 +73,11 @@ interface Startup {
   founderId: { _id: string; name: string; email: string };
   AlloySphereVerified?: boolean;
   AlloySphereVerifiedAt?: string;
+
+  // Verification workflow
+  verificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  verificationRequestedAt?: string;
+  verifiedAt?: string;
 }
 
 interface Application {
@@ -194,6 +199,10 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
   const [sendPitchData, setSendPitchData] = useState({ pitchDocumentUrl: '', message: '' });
   const [showConfirmModal, setShowConfirmModal] = useState<InvestmentConfirmation | null>(null);
   const [confirmTerms, setConfirmTerms] = useState({ amount: '', equity: '' });
+
+  // Pitch pagination
+  const PITCH_PAGE_SIZE = 6;
+  const [pitchPage, setPitchPage] = useState<Record<string, number>>({ pending: 1, sent: 1, all: 1 });
 
   // Compute dynamic chart data from real user data
   const dynamicChartData = React.useMemo(() => {
@@ -893,6 +902,13 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                       <span>{startup.team?.length || 1} members</span>
                     </div>
                   </div>
+                  {/* Verification Status */}
+                  {startup.verificationStatus === 'pending' && (
+                    <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <Clock className="h-3.5 w-3.5 text-yellow-500" />
+                      <span className="text-yellow-600 dark:text-yellow-400 font-medium">Verification in progress</span>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex gap-2">
                     <Button
@@ -912,6 +928,39 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    {/* Request Verification Button */}
+                    {(!startup.verificationStatus || startup.verificationStatus === 'none' || startup.verificationStatus === 'rejected') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const res = await apiFetch('/api/startups/verify', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ startupId: startup._id }),
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                              toast.success('Verification request submitted!');
+                              // Optimistic UI: update local state
+                              setStartups(prev => prev.map(s =>
+                                s._id === startup._id ? { ...s, verificationStatus: 'pending' as const, verificationRequestedAt: new Date().toISOString() } : s
+                              ));
+                            } else {
+                              toast.error(data.error || 'Failed to request verification');
+                            }
+                          } catch {
+                            toast.error('Network error');
+                          }
+                        }}
+                      >
+                        <Shield className="h-4 w-4 mr-1" />
+                        Request Verification
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1350,6 +1399,128 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
   // Pitch Requests
   if (activeTab === 'pitch-requests') {
+    // Compute filtered lists
+    const pendingPitches = pitches.filter(p => p.pitchStatus === 'requested');
+    const sentPitches = pitches.filter(p => p.pitchStatus === 'sent');
+    const allPitches = pitches;
+
+    // Helper to get status badge
+    const getStatusBadge = (status: string) => {
+      switch (status) {
+        case 'requested':
+          return <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600">Pending</Badge>;
+        case 'sent':
+          return <Badge className="text-xs bg-green-500">Pitch Sent</Badge>;
+        case 'rejected':
+          return <Badge variant="outline" className="text-xs border-red-500 text-red-500">Rejected</Badge>;
+        case 'invested':
+          return <Badge className="text-xs bg-blue-500">Invested</Badge>;
+        case 'expired':
+          return <Badge variant="secondary" className="text-xs">Expired</Badge>;
+        default:
+          return <Badge variant="secondary" className="text-xs capitalize">{status}</Badge>;
+      }
+    };
+
+    // Paginate helper
+    const paginateList = (list: Pitch[], tabKey: string) => {
+      const currentPage = pitchPage[tabKey] || 1;
+      const totalPages = Math.max(1, Math.ceil(list.length / PITCH_PAGE_SIZE));
+      const paginated = list.slice((currentPage - 1) * PITCH_PAGE_SIZE, currentPage * PITCH_PAGE_SIZE);
+      return { paginated, currentPage, totalPages };
+    };
+
+    // Render a pitch card with full detail
+    const renderPitchCard = (pitch: Pitch, showActions: boolean = false) => (
+      <Card key={pitch._id} className="overflow-hidden">
+        <CardContent className="p-6">
+          <div className="flex justify-between items-start">
+            <div className="flex gap-4">
+              <Avatar className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+                safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, pitch.investorId._id);
+                useUIStore.getState().setActiveTab('profile');
+              }}>
+                <AvatarImage src={pitch.investorId.avatar} />
+                <AvatarFallback>{pitch.investorId.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-lg cursor-pointer hover:underline" onClick={() => {
+                  safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, pitch.investorId._id);
+                  useUIStore.getState().setActiveTab('profile');
+                }}>{pitch.investorId.name}</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {pitch.startupId.name} • {pitch.pitchSentAt ? formatDistanceToNow(new Date(pitch.pitchSentAt)) : formatDistanceToNow(new Date(pitch.createdAt))} ago
+                </p>
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(pitch.pitchStatus)}
+                  <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 text-xs">Level {pitch.investorId.verificationLevel} Investor</Badge>
+                  {pitch.investorId.verificationLevel >= 3 && <AlloySphereVerifiedBadge verified={true} />}
+                </div>
+              </div>
+            </div>
+            {showActions && pitch.pitchStatus === 'requested' && (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600" onClick={() => handleRejectPitch(pitch._id)}>Decline</Button>
+                <Button size="sm" onClick={() => setShowSendPitchModal(pitch)}>Send Pitch Deck</Button>
+              </div>
+            )}
+            {!showActions && pitch.pitchStatus === 'sent' && (
+              <div className="flex items-center gap-3">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted p-1 px-2 rounded-full">
+                        <Clock className="h-3 w-3" />
+                        2h Timer Active
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Investment confirmation will be enabled 2 hours after sending the pitch.</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
+          </div>
+          {pitch.message && (
+            <div className="mt-4 p-4 rounded-lg bg-muted/50 border italic text-sm text-muted-foreground">
+              &quot;{pitch.message}&quot;
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+
+    // Render pagination controls
+    const renderPagination = (tabKey: string, totalPages: number, currentPage: number) => {
+      if (totalPages <= 1) return null;
+      return (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => setPitchPage(prev => ({ ...prev, [tabKey]: currentPage - 1 }))}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setPitchPage(prev => ({ ...prev, [tabKey]: currentPage + 1 }))}
+          >
+            Next
+          </Button>
+        </div>
+      );
+    };
+
+    const pendingPagination = paginateList(pendingPitches, 'pending');
+    const sentPagination = paginateList(sentPitches, 'sent');
+    const allPagination = paginateList(allPitches, 'all');
+
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -1361,90 +1532,51 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
 
         <Tabs defaultValue="pending">
           <TabsList>
-            <TabsTrigger value="pending">Pending ({pitches.filter(p => p.pitchStatus === 'requested').length})</TabsTrigger>
-            <TabsTrigger value="sent">Sent ({pitches.filter(p => p.pitchStatus === 'sent').length})</TabsTrigger>
-            <TabsTrigger value="all">All ({pitches.length})</TabsTrigger>
+            <TabsTrigger value="pending">Pending ({pendingPitches.length})</TabsTrigger>
+            <TabsTrigger value="sent">Sent ({sentPitches.length})</TabsTrigger>
+            <TabsTrigger value="all">All ({allPitches.length})</TabsTrigger>
           </TabsList>
 
+          {/* Pending Tab */}
           <TabsContent value="pending" className="space-y-4 mt-6">
             {pitchLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-            ) : pitches.filter(p => p.pitchStatus === 'requested').length === 0 ? (
+            ) : pendingPitches.length === 0 ? (
               <Card><CardContent className="py-12 text-center text-muted-foreground">No pending pitch requests</CardContent></Card>
             ) : (
-              pitches.filter(p => p.pitchStatus === 'requested').map((pitch) => (
-                <Card key={pitch._id} className="overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-4">
-                        <Avatar className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
-                          safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, pitch.investorId._id);
-                          useUIStore.getState().setActiveTab('profile');
-                        }}>
-                          <AvatarImage src={pitch.investorId.avatar} />
-                          <AvatarFallback>{pitch.investorId.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-lg cursor-pointer hover:underline" onClick={() => {
-                            safeLocalStorage.setItem(STORAGE_KEYS.VIEW_PROFILE, pitch.investorId._id);
-                            useUIStore.getState().setActiveTab('profile');
-                          }}>{pitch.investorId.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">{pitch.startupId.name} • {formatDistanceToNow(new Date(pitch.createdAt))} ago</p>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">Level {pitch.investorId.verificationLevel} Investor</Badge>
-                            {pitch.investorId.verificationLevel >= 3 && <AlloySphereVerifiedBadge verified={true} />}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600" onClick={() => handleRejectPitch(pitch._id)}>Decline</Button>
-                        <Button size="sm" onClick={() => setShowSendPitchModal(pitch)}>Send Pitch Deck</Button>
-                      </div>
-                    </div>
-                    {pitch.message && (
-                      <div className="mt-4 p-4 rounded-lg bg-muted/50 border italic text-sm text-muted-foreground">
-                        &quot;{pitch.message}&quot;
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
+              <>
+                {pendingPagination.paginated.map((pitch) => renderPitchCard(pitch, true))}
+                {renderPagination('pending', pendingPagination.totalPages, pendingPagination.currentPage)}
+              </>
             )}
           </TabsContent>
 
+          {/* Sent Tab */}
           <TabsContent value="sent" className="space-y-4 mt-6">
-            {pitches.filter(p => p.pitchStatus === 'sent').map((pitch) => (
-              <Card key={pitch._id}>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex gap-4 items-center">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={pitch.investorId.avatar} />
-                        <AvatarFallback>{pitch.investorId.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold">{pitch.investorId.name}</h3>
-                        <p className="text-sm text-muted-foreground">Sent {formatDistanceToNow(new Date(pitch.pitchSentAt!))} ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge className="bg-green-500">Pitch Sent</Badge>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted p-1 px-2 rounded-full">
-                              <Clock className="h-3 w-3" />
-                              2h Timer Active
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>Investment confirmation will be enabled 2 hours after sending the pitch.</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {pitchLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            ) : sentPitches.length === 0 ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">No pitch requests sent yet</CardContent></Card>
+            ) : (
+              <>
+                {sentPagination.paginated.map((pitch) => renderPitchCard(pitch, false))}
+                {renderPagination('sent', sentPagination.totalPages, sentPagination.currentPage)}
+              </>
+            )}
+          </TabsContent>
+
+          {/* All Tab */}
+          <TabsContent value="all" className="space-y-4 mt-6">
+            {pitchLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            ) : allPitches.length === 0 ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">No pitch requests sent yet</CardContent></Card>
+            ) : (
+              <>
+                {allPagination.paginated.map((pitch) => renderPitchCard(pitch, pitch.pitchStatus === 'requested'))}
+                {renderPagination('all', allPagination.totalPages, allPagination.currentPage)}
+              </>
+            )}
           </TabsContent>
         </Tabs>
 

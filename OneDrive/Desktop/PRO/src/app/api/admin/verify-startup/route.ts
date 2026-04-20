@@ -70,9 +70,13 @@ export async function POST(req: NextRequest) {
         if (verified) {
             update.AlloySphereVerifiedAt = new Date();
             update.AlloySphereVerifiedBy = admin._id;
+            update.verificationStatus = 'approved';
+            update.verifiedAt = new Date();
         } else {
             update.AlloySphereVerifiedAt = null;
             update.AlloySphereVerifiedBy = null;
+            update.verificationStatus = 'rejected';
+            update.verifiedAt = null;
         }
 
         const startup = await Startup.findByIdAndUpdate(startupId, update, { new: true });
@@ -98,14 +102,16 @@ export async function GET(req: NextRequest) {
     try {
         await connectDB();
         const { searchParams } = new URL(req.url);
-        const status = searchParams.get('status'); // 'verified', 'unverified', or 'all'
+        const status = searchParams.get('status'); // 'verified', 'unverified', 'pending', or 'all'
 
         const filter: any = {};
         if (status === 'verified') filter.AlloySphereVerified = true;
         else if (status === 'unverified') filter.AlloySphereVerified = { $ne: true };
+        else if (status === 'pending') filter.verificationStatus = 'pending';
+        else if (status === 'rejected') filter.verificationStatus = 'rejected';
 
         const startups = await Startup.find(filter)
-            .select('name industry stage AlloySphereVerified AlloySphereVerifiedAt verificationNotes founderId')
+            .select('name industry stage AlloySphereVerified AlloySphereVerifiedAt verificationNotes verificationStatus verificationRequestedAt verifiedAt founderId')
             .populate('founderId', 'name email isEmailVerified')
             .sort({ createdAt: -1 })
             .limit(100)

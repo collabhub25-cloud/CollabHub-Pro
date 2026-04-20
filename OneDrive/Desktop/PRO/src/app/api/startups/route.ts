@@ -60,7 +60,9 @@ export async function GET(request: NextRequest) {
       perfTracker.recordResponse('GET /api/startups/:id', duration);
       const response = NextResponse.json({ success: true, startup: data });
       response.headers.set('X-Response-Time', `${duration}ms`);
-      response.headers.set('Cache-Control', 'private, no-store');
+      
+      // SWR Cache: Browser caches for 30s, serves stale while checking for updates up to 5min
+      response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');
       return response;
     }
 
@@ -120,8 +122,15 @@ export async function GET(request: NextRequest) {
     log.debug(`GET /api/startups: userId=${userId}, cacheKey=startups:list:${cacheUserId}:${filterKey}, duration=${duration}ms`);
     const response = NextResponse.json({ success: true, ...data });
     response.headers.set('X-Response-Time', `${duration}ms`);
-    // CRITICAL: user-specific data must NOT be publicly cached
-    response.headers.set('Cache-Control', 'private, no-store');
+    
+    // Apply appropriate cache strategy based on whether it's a personalized view
+    if (!userId && !founderId) {
+      // Public view (e.g. general discover page) - CDN cache
+      response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    } else {
+      // User-specific dashboard view - Browser cache only
+      response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+    }
     return response;
   } catch (error) {
     perfTracker.recordResponse('GET /api/startups', Date.now() - start, true);

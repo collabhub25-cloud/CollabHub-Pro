@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import {
   MessageSquare, Send, Loader2, Search, User,
   ChevronRight, ArrowLeft, Check, CheckCheck, Paperclip, Image as ImageIcon
@@ -121,65 +121,84 @@ export function MessagingPage() {
       return () => clearInterval(pollingInterval);
     }
 
-    const socketInstance = io(wsUrl, {
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 3,
-      timeout: 5000,
-    });
+    let socketInstance: Socket | null = null;
+    let isMounted = true;
 
-    socketInstance.on('connect', () => {
-      setConnected(true);
-    });
+    (async () => {
+      try {
+        const { io } = await import('socket.io-client');
+        if (!isMounted) return;
 
-    socketInstance.on('disconnect', () => {
-      setConnected(false);
-    });
+        socketInstance = io(wsUrl, {
+          transports: ['websocket', 'polling'],
+          reconnectionAttempts: 3,
+          timeout: 5000,
+        });
 
-    socketInstance.on('connect_error', () => {
-      setConnected(false);
-    });
+        socketInstance.on('connect', () => {
+          if (isMounted) setConnected(true);
+        });
 
-    // Listen for new messages
-    socketInstance.on('message:new', (message: Message) => {
-      if (selectedConversation?._id.includes(message.senderId)) {
-        setMessages(prev => [...prev, { ...message, isMine: false }]);
+        socketInstance.on('disconnect', () => {
+          if (isMounted) setConnected(false);
+        });
+
+        socketInstance.on('connect_error', () => {
+          if (isMounted) setConnected(false);
+        });
+
+        // Listen for new messages
+        socketInstance.on('message:new', (message: Message) => {
+          if (!isMounted) return;
+          if (selectedConversation?._id.includes(message.senderId)) {
+            setMessages(prev => [...prev, { ...message, isMine: false }]);
+          }
+          fetchConversations();
+        });
+
+        // Listen for sent message confirmation
+        socketInstance.on('message:sent', (message: Message) => {
+          if (!isMounted) return;
+          setMessages(prev => {
+            // Check if already exists
+            if (prev.some(m => m._id === message._id)) return prev;
+            return [...prev, message];
+          });
+          fetchConversations();
+        });
+
+        // Listen for errors
+        socketInstance.on('message:error', (data: { error: string }) => {
+          if (!isMounted) return;
+          toast.error(data.error);
+          setSending(false);
+        });
+
+        // Listen for typing
+        socketInstance.on('message:typing', (data: { userId: string }) => {
+          if (!isMounted) return;
+          if (selectedConversation?._id.includes(data.userId)) {
+            setTyping(true);
+            setTimeout(() => setTyping(false), 3000);
+          }
+        });
+
+        // Listen for unread count updates
+        socketInstance.on('message:unread_count', (data: { count: number }) => {
+          if (isMounted) setUnreadTotal(data.count);
+        });
+
+        if (isMounted) setSocket(socketInstance);
+      } catch (err) {
+        console.error('Failed to load socket.io-client', err);
       }
-      fetchConversations();
-    });
-
-    // Listen for sent message confirmation
-    socketInstance.on('message:sent', (message: Message) => {
-      setMessages(prev => {
-        // Check if already exists
-        if (prev.some(m => m._id === message._id)) return prev;
-        return [...prev, message];
-      });
-      fetchConversations();
-    });
-
-    // Listen for errors
-    socketInstance.on('message:error', (data: { error: string }) => {
-      toast.error(data.error);
-      setSending(false);
-    });
-
-    // Listen for typing
-    socketInstance.on('message:typing', (data: { userId: string }) => {
-      if (selectedConversation?._id.includes(data.userId)) {
-        setTyping(true);
-        setTimeout(() => setTyping(false), 3000);
-      }
-    });
-
-    // Listen for unread count updates
-    socketInstance.on('message:unread_count', (data: { count: number }) => {
-      setUnreadTotal(data.count);
-    });
-
-    setSocket(socketInstance);
+    })();
 
     return () => {
-      socketInstance.disconnect();
+      isMounted = false;
+      if (socketInstance) {
+        socketInstance.disconnect();
+      }
       clearInterval(pollingInterval);
     };
   }, [selectedConversation?._id, fetchConversations]);

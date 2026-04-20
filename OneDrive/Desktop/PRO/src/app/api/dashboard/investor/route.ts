@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       timestamp: n.createdAt,
     }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       portfolio,
       dealflow: startups,
       pitches: pendingPitches,
@@ -80,6 +80,9 @@ export async function GET(request: NextRequest) {
         avgTicketSize,
       },
     });
+    
+    response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+    return response;
   } catch (error) {
     console.error('Investor Dashboard Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

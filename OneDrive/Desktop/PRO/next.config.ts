@@ -153,6 +153,13 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-tooltip',
       'date-fns',
       'framer-motion',
+      'motion',
+      'chart.js',
+      'react-chartjs-2',
+      'react-markdown',
+      'react-syntax-highlighter',
+      '@tanstack/react-table',
+      '@tanstack/react-query',
     ],
   },
 

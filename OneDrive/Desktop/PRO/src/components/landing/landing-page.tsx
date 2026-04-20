@@ -7,6 +7,7 @@ import { LiquidButton } from '@/components/ui/liquid-glass-button';
 import { Shield, Menu, X, ArrowRight, Share2, Globe, Sparkles, Code2, Terminal } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -162,7 +163,14 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="flex-1 w-full lg:w-auto h-full min-h-[500px] flex justify-end">
             <RevealSection delay={0.3} className="w-full h-full xl:w-[680px] xl:h-[580px]">
               <div className="w-full h-full rounded-[2rem] bg-white dark:bg-card shadow-2xl shadow-gray-200/50 dark:shadow-black/30 flex flex-col items-center justify-center relative overflow-hidden">
-                <img src="/images/dashboard_ui_preview_1774367513473.png" alt="AlloySphere Dashboard Overview" className="w-[110%] h-[110%] object-cover object-top opacity-95 transition-transform duration-700 hover:scale-105" />
+                <Image 
+                  src="/images/dashboard_ui_preview_1774367513473.png" 
+                  alt="AlloySphere Dashboard Overview" 
+                  width={1200}
+                  height={800}
+                  priority
+                  className="w-[110%] h-[110%] object-cover object-top opacity-95 transition-transform duration-700 hover:scale-105" 
+                />
               </div>
             </RevealSection>
           </div>

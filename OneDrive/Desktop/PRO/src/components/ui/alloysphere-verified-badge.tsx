@@ -25,12 +25,7 @@ export function AlloySphereVerifiedBadge({
     const [isHovered, setIsHovered] = useState(false);
 
     if (!verified) {
-        return variant === 'full' ? (
-            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 ${className}`}>
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Not Verified
-            </div>
-        ) : null;
+        return null;
     }
 
     // Inline variant — Instagram-style small blue tick

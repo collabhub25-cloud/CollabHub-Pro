@@ -3,26 +3,26 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store';
-import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { Dashboard } from '@/components/dashboard/dashboard';
 
+/**
+ * Investor Dashboard Page
+ * 
+ * Auth is verified server-side by dashboard/layout.tsx.
+ * ThemeProvider is already in root layout — removed duplicate.
+ */
 export default function InvestorDashboardPage() {
-    const { isAuthenticated, user, isLoading, fetchUser, setLoading, logout } = useAuthStore();
+    const { isAuthenticated, user, isLoading, fetchUser, logout } = useAuthStore();
     const router = useRouter();
 
+    // Background revalidation of user data (non-blocking)
     useEffect(() => {
-        const check = async () => {
-            try { await fetchUser(); } catch { /* not authenticated */ }
-            setLoading(false);
-        };
-        check();
-    }, [fetchUser, setLoading]);
+        fetchUser().catch(() => {});
+    }, [fetchUser]);
 
     useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.push('/login');
-        } else if (!isLoading && isAuthenticated && user?.role !== 'investor') {
+        if (!isLoading && isAuthenticated && user?.role !== 'investor') {
             router.push(`/dashboard/${user?.role}`);
         }
     }, [isLoading, isAuthenticated, user, router]);
@@ -31,7 +31,7 @@ export default function InvestorDashboardPage() {
         document.documentElement.style.setProperty('--role-accent', 'var(--accent-investor)');
     }, []);
 
-    if (isLoading || !isAuthenticated || user?.role !== 'investor') {
+    if (!isAuthenticated || !user) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-transparent">
                 <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent" />
@@ -40,9 +40,9 @@ export default function InvestorDashboardPage() {
     }
 
     return (
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <>
             <Dashboard onLogout={() => { logout(); router.push('/login'); }} />
             <Toaster />
-        </ThemeProvider>
+        </>
     );
 }

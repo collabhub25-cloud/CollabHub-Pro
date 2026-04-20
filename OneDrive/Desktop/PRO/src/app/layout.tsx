@@ -4,7 +4,7 @@ import "./globals.css";
 import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { ConditionalBeamBg } from "@/components/providers/conditional-beam-bg";
-import { AOSProvider } from "@/components/providers/aos-provider";
+
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { WebVitalsReporter } from "@/components/providers/web-vitals";
 
@@ -71,14 +71,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AOSProvider>
             <ConditionalBeamBg />
             <Suspense fallback={null}>
               {children}
             </Suspense>
             <Toaster />
             <WebVitalsReporter />
-          </AOSProvider>
         </ThemeProvider>
       </body>
     </html>

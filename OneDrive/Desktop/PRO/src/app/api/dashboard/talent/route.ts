@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       date: n.createdAt,
     }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       applications,
       milestones: milestoneList,
       matchingStartups,
@@ -81,6 +81,9 @@ export async function GET(request: NextRequest) {
         pendingEarnings,
       },
     });
+    
+    response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+    return response;
   } catch (error) {
     console.error('Talent Dashboard Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

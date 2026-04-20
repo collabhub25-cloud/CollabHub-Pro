@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Search, Filter, ChevronDown, X, Loader2, Users, Building2,
-  TrendingUp, MapPin, Star, Briefcase, DollarSign
+  TrendingUp, MapPin, Star, Briefcase, DollarSign, Award
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,7 @@ import { AllianceButton } from '@/components/alliances/alliance-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { apiFetch } from '@/lib/api-client';
+import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
 
 type SearchType = 'startups' | 'founders' | 'talents' | 'investors';
 
@@ -69,6 +70,16 @@ interface SearchResult {
   };
   // Application status for talent
   hasApplied?: boolean;
+  // Startup verification
+  AlloySphereVerified?: boolean;
+  AlloySphereVerifiedAt?: string;
+  // Skill test scores (talent)
+  skillTestScores?: {
+    skill: string;
+    score: number;
+    percentile: number;
+    completedAt: string;
+  }[];
 }
 
 interface SearchFilters {
@@ -362,7 +373,13 @@ export function SearchPage() {
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold">{result.name}</h3>
 
-                              {result.verificationLevel !== undefined && result.verificationLevel > 0 && (
+                              {/* Startup verified badge */}
+                              {activeTab === 'startups' && result.AlloySphereVerified && (
+                                <AlloySphereVerifiedBadge verified={true} variant="inline" />
+                              )}
+
+                              {/* User verification level (talents, founders, investors) */}
+                              {activeTab !== 'startups' && result.verificationLevel !== undefined && result.verificationLevel > 0 && (
                                 <Badge variant="outline" className="text-xs">
                                   Level {result.verificationLevel}
                                 </Badge>
@@ -408,6 +425,17 @@ export function SearchPage() {
                                 <Badge key={ind} variant="outline">{ind}</Badge>
                               ))}
                             </div>
+
+                            {/* Skill Test Score — only for talents with test data */}
+                            {activeTab === 'talents' && result.skillTestScores && result.skillTestScores.length > 0 && (() => {
+                              const bestScore = Math.max(...result.skillTestScores!.map(s => s.score));
+                              return (
+                                <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+                                  <Award className="h-3.5 w-3.5 text-amber-500" />
+                                  <span>Skill Score: <span className="font-semibold text-foreground">{bestScore}%</span> (Best Score)</span>
+                                </div>
+                              );
+                            })()}
 
                             {/* Roles available for Founders/Startups */}
                             {(activeTab === 'founders' || activeTab === 'startups') && result.rolesNeeded && result.rolesNeeded.length > 0 && (
