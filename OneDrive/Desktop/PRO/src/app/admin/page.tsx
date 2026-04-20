@@ -1,514 +1,348 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store';
 import { apiFetch } from '@/lib/api-client';
-import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
-import { ThemeProvider } from '@/components/layout/theme-provider';
 import {
-  Shield, ShieldCheck, ShieldX, Clock, Building2, Users,
-  TrendingUp, Loader2, CheckCircle2, XCircle, RefreshCw,
-  LogOut, ChevronRight, Eye, Filter, Mail, Calendar,
+  Users, Building2, CreditCard, ShieldCheck, TrendingUp,
+  ArrowUpRight, ArrowDownRight, Clock, Loader2, RefreshCw,
+  UserPlus, Activity, IndianRupee,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
-interface StartupVerification {
-  _id: string;
-  name: string;
-  industry: string;
-  stage: string;
-  description: string;
-  AlloySphereVerified: boolean;
-  AlloySphereVerifiedAt?: string;
-  verificationStatus: string;
-  verificationRequestedAt?: string;
-  verifiedAt?: string;
-  verificationNotes?: string;
-  founderId: {
-    _id: string;
-    name: string;
-    email: string;
-    isEmailVerified: boolean;
+interface DashboardData {
+  users: {
+    total: number;
+    byRole: { founder: number; investor: number; talent: number };
+    newThisWeek: number;
+    newThisMonth: number;
+    recent: Array<{
+      _id: string;
+      name: string;
+      email: string;
+      role: string;
+      isEmailVerified: boolean;
+      createdAt: string;
+    }>;
+  };
+  startups: {
+    total: number;
+    active: number;
+    pendingVerifications: number;
+    approved: number;
+    rejected: number;
+    byStage: Array<{ _id: string; count: number }>;
+    byIndustry: Array<{ _id: string; count: number }>;
+  };
+  payments: {
+    total: number;
+    completed: number;
+    totalRevenue: number;
+    byPurpose: Array<{ _id: string; count: number; total: number }>;
+  };
+  growth: {
+    monthlyUsers: Array<{ _id: { year: number; month: number }; count: number }>;
   };
 }
 
-interface DashboardStats {
-  totalUsers: number;
-  totalStartups: number;
-  pendingCount: number;
-  approvedCount: number;
-  rejectedCount: number;
-}
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function AdminPage() {
-  const { isAuthenticated, user, isLoading, fetchUser, setLoading, logout } = useAuthStore();
-  const router = useRouter();
-  const [startups, setStartups] = useState<StartupVerification[]>([]);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [fetching, setFetching] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('pending');
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    open: boolean;
-    startupId: string;
-    startupName: string;
-    action: 'approve' | 'reject';
-  }>({ open: false, startupId: '', startupName: '', action: 'approve' });
+const STAGE_COLORS: Record<string, string> = {
+  idea: 'bg-purple-500',
+  validation: 'bg-blue-500',
+  mvp: 'bg-cyan-500',
+  growth: 'bg-emerald-500',
+  scaling: 'bg-amber-500',
+};
 
-  // Auth check
-  useEffect(() => {
-    const check = async () => {
-      try { await fetchUser(); } catch { /* not authenticated */ }
-      setLoading(false);
-    };
-    check();
-  }, [fetchUser, setLoading]);
+const ROLE_BADGE_STYLES: Record<string, string> = {
+  founder: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+  investor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  talent: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+  admin: 'bg-red-500/15 text-red-400 border-red-500/30',
+};
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    } else if (!isLoading && isAuthenticated && user?.role !== 'admin') {
-      router.push(`/dashboard/${user?.role}`);
-    }
-  }, [isLoading, isAuthenticated, user, router]);
+export default function AdminDashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch verification data
-  const fetchStartups = useCallback(async (status: string) => {
-    setFetching(true);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await apiFetch(`/api/admin/verify-startup?status=${status}`);
+      const res = await apiFetch('/api/admin/stats');
       if (res.ok) {
-        const data = await res.json();
-        setStartups(data.startups || []);
+        setData(await res.json());
       }
-    } catch {
-      toast.error('Failed to fetch startups');
-    } finally {
-      setFetching(false);
-    }
-  }, []);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const [pendingRes, approvedRes, allRes] = await Promise.all([
-        apiFetch('/api/admin/verify-startup?status=pending'),
-        apiFetch('/api/admin/verify-startup?status=verified'),
-        apiFetch('/api/admin/verify-startup?status=all'),
-      ]);
-      const pending = pendingRes.ok ? (await pendingRes.json()).startups : [];
-      const approved = approvedRes.ok ? (await approvedRes.json()).startups : [];
-      const all = allRes.ok ? (await allRes.json()).startups : [];
-      const rejected = all.filter((s: StartupVerification) => s.verificationStatus === 'rejected');
-
-      setStats({
-        totalUsers: 0,
-        totalStartups: all.length,
-        pendingCount: pending.length,
-        approvedCount: approved.length,
-        rejectedCount: rejected.length,
-      });
     } catch {
       // silently fail
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && user?.role === 'admin') {
-      fetchStartups(activeFilter);
-      fetchStats();
-    }
-  }, [isAuthenticated, user, activeFilter, fetchStartups, fetchStats]);
+    fetchData();
+  }, [fetchData]);
 
-  // Approve / Reject handlers
-  const handleAction = async (startupId: string, verified: boolean) => {
-    setActionLoading(startupId);
-    try {
-      const res = await apiFetch('/api/admin/verify-startup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startupId,
-          verified,
-          notes: verified ? 'Approved via Admin Panel' : 'Rejected via Admin Panel',
-        }),
-      });
-      if (res.ok) {
-        toast.success(verified ? 'Startup verified successfully! ✅' : 'Verification rejected ❌');
-        fetchStartups(activeFilter);
-        fetchStats();
-      } else {
-        const data = await res.json();
-        toast.error(data.error || 'Action failed');
-      }
-    } catch {
-      toast.error('Network error');
-    } finally {
-      setActionLoading(null);
-      setConfirmDialog({ open: false, startupId: '', startupName: '', action: 'approve' });
-    }
-  };
-
-  const handleTabChange = (value: string) => {
-    const statusMap: Record<string, string> = {
-      pending: 'pending',
-      approved: 'verified',
-      rejected: 'rejected',
-      all: 'all',
-    };
-    setActiveFilter(statusMap[value] || 'pending');
-  };
-
-  // Loading state
-  if (isLoading || !isAuthenticated || user?.role !== 'admin') {
+  if (loading || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent" />
-          <p className="text-sm text-slate-400">Verifying admin access...</p>
-        </div>
+      <div className="flex items-center justify-center py-32">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
       </div>
     );
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge className="bg-yellow-500/15 text-yellow-500 border-yellow-500/30 hover:bg-yellow-500/20"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
-      case 'approved':
-        return <Badge className="bg-emerald-500/15 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/20"><CheckCircle2 className="h-3 w-3 mr-1" /> Approved</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-500/15 text-red-500 border-red-500/30 hover:bg-red-500/20"><XCircle className="h-3 w-3 mr-1" /> Rejected</Badge>;
-      default:
-        return <Badge variant="outline">None</Badge>;
-    }
-  };
+  const revenueInRupees = (data.payments.totalRevenue / 100).toLocaleString('en-IN');
+  const maxBarValue = Math.max(...(data.growth.monthlyUsers.map(m => m.count) || [1]), 1);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-        {/* Top Bar */}
-        <header className="sticky top-0 z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                <Shield className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-base font-bold tracking-tight">AlloySphere Admin</h1>
-                <p className="text-xs text-slate-500">Startup Verification Panel</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-slate-400 hidden sm:block">{user?.email}</span>
-              <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">Admin</Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-slate-400 hover:text-red-400"
-                onClick={() => { logout(); router.push('/login'); }}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-          {/* Stats Cards */}
-          {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Total Startups</p>
-                      <p className="text-2xl font-bold mt-1 text-white">{stats.totalStartups}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-blue-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Pending Review</p>
-                      <p className="text-2xl font-bold mt-1 text-yellow-400">{stats.pendingCount}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-yellow-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Verified</p>
-                      <p className="text-2xl font-bold mt-1 text-emerald-400">{stats.approvedCount}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                      <ShieldCheck className="h-5 w-5 text-emerald-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Rejected</p>
-                      <p className="text-2xl font-bold mt-1 text-red-400">{stats.rejectedCount}</p>
-                    </div>
-                    <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-                      <ShieldX className="h-5 w-5 text-red-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Verification Table */}
-          <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg text-white">Startup Verification Requests</CardTitle>
-                  <CardDescription className="text-slate-500">Review and manage startup verification requests</CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-white/10 text-slate-300 hover:bg-white/5"
-                  onClick={() => { fetchStartups(activeFilter); fetchStats(); }}
-                >
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                  Refresh
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="pending" onValueChange={handleTabChange}>
-                <TabsList className="bg-white/[0.03] border border-white/5 mb-6">
-                  <TabsTrigger value="pending" className="data-[state=active]:bg-yellow-500/15 data-[state=active]:text-yellow-400">
-                    <Clock className="h-3.5 w-3.5 mr-1.5" /> Pending {stats ? `(${stats.pendingCount})` : ''}
-                  </TabsTrigger>
-                  <TabsTrigger value="approved" className="data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400">
-                    <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Approved
-                  </TabsTrigger>
-                  <TabsTrigger value="rejected" className="data-[state=active]:bg-red-500/15 data-[state=active]:text-red-400">
-                    <XCircle className="h-3.5 w-3.5 mr-1.5" /> Rejected
-                  </TabsTrigger>
-                  <TabsTrigger value="all" className="data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-400">
-                    <Filter className="h-3.5 w-3.5 mr-1.5" /> All
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Shared content for all tabs */}
-                {['pending', 'approved', 'rejected', 'all'].map((tab) => (
-                  <TabsContent key={tab} value={tab} className="mt-0">
-                    {fetching ? (
-                      <div className="flex items-center justify-center py-16">
-                        <Loader2 className="h-7 w-7 animate-spin text-slate-500" />
-                      </div>
-                    ) : startups.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="h-14 w-14 rounded-2xl bg-white/[0.03] flex items-center justify-center mb-4">
-                          <Building2 className="h-7 w-7 text-slate-600" />
-                        </div>
-                        <p className="text-sm text-slate-400 font-medium">No startups in this category</p>
-                        <p className="text-xs text-slate-600 mt-1">Verification requests will appear here</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {startups.map((startup) => (
-                          <div
-                            key={startup._id}
-                            className="group rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-200 p-5"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              {/* Left: Startup Info */}
-                              <div className="flex-1 min-w-0 space-y-3">
-                                <div className="flex items-center gap-2.5 flex-wrap">
-                                  <h3 className="font-semibold text-white text-sm">{startup.name}</h3>
-                                  {getStatusBadge(startup.verificationStatus || 'none')}
-                                  <Badge variant="outline" className="text-xs border-white/10 text-slate-400 capitalize">{startup.stage}</Badge>
-                                  <Badge variant="outline" className="text-xs border-white/10 text-slate-400">{startup.industry}</Badge>
-                                </div>
-
-                                {startup.description && (
-                                  <p className="text-xs text-slate-500 line-clamp-2 max-w-xl">{startup.description}</p>
-                                )}
-
-                                {/* Founder Info */}
-                                <div className="flex items-center gap-4 text-xs text-slate-500">
-                                  <span className="flex items-center gap-1">
-                                    <Users className="h-3 w-3" />
-                                    {startup.founderId?.name || 'Unknown'}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Mail className="h-3 w-3" />
-                                    {startup.founderId?.email || 'N/A'}
-                                  </span>
-                                  {startup.founderId?.isEmailVerified && (
-                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] px-1.5 py-0">
-                                      Email Verified
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                {/* Dates */}
-                                <div className="flex items-center gap-4 text-[11px] text-slate-600">
-                                  {startup.verificationRequestedAt && (
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                      Requested: {new Date(startup.verificationRequestedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    </span>
-                                  )}
-                                  {startup.verifiedAt && (
-                                    <span className="flex items-center gap-1">
-                                      <CheckCircle2 className="h-3 w-3" />
-                                      Verified: {new Date(startup.verifiedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    </span>
-                                  )}
-                                </div>
-
-                                {startup.verificationNotes && (
-                                  <p className="text-[11px] text-slate-600 italic">Note: {startup.verificationNotes}</p>
-                                )}
-                              </div>
-
-                              {/* Right: Action Buttons */}
-                              <div className="flex items-center gap-2 shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-slate-400 hover:text-white"
-                                  onClick={() => router.push(`/startup/${startup._id}`)}
-                                >
-                                  <Eye className="h-3.5 w-3.5 mr-1" /> View
-                                </Button>
-
-                                {(startup.verificationStatus === 'pending' || startup.verificationStatus === 'none' || !startup.verificationStatus) && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30"
-                                      disabled={actionLoading === startup._id}
-                                      onClick={() => setConfirmDialog({
-                                        open: true,
-                                        startupId: startup._id,
-                                        startupName: startup.name,
-                                        action: 'approve',
-                                      })}
-                                    >
-                                      {actionLoading === startup._id ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                      ) : (
-                                        <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>
-                                      )}
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                                      disabled={actionLoading === startup._id}
-                                      onClick={() => setConfirmDialog({
-                                        open: true,
-                                        startupId: startup._id,
-                                        startupName: startup.name,
-                                        action: 'reject',
-                                      })}
-                                    >
-                                      <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
-                                    </Button>
-                                  </>
-                                )}
-
-                                {startup.verificationStatus === 'approved' && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                                    disabled={actionLoading === startup._id}
-                                    onClick={() => setConfirmDialog({
-                                      open: true,
-                                      startupId: startup._id,
-                                      startupName: startup.name,
-                                      action: 'reject',
-                                    })}
-                                  >
-                                    <XCircle className="h-3.5 w-3.5 mr-1" /> Revoke
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </CardContent>
-          </Card>
-        </main>
-
-        {/* Confirmation Dialog */}
-        <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
-          <AlertDialogContent className="bg-slate-900 border-white/10">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-white">
-                {confirmDialog.action === 'approve' ? '✅ Approve Verification' : '❌ Reject Verification'}
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-slate-400">
-                {confirmDialog.action === 'approve'
-                  ? `Are you sure you want to approve "${confirmDialog.startupName}"? This will grant them the AlloySphere Verified Badge.`
-                  : `Are you sure you want to reject "${confirmDialog.startupName}"? The verified badge will be removed.`
-                }
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-transparent border-white/10 text-slate-300 hover:bg-white/5">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className={confirmDialog.action === 'approve'
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                  : 'bg-red-600 hover:bg-red-500 text-white'
-                }
-                onClick={() => handleAction(confirmDialog.startupId, confirmDialog.action === 'approve')}
-              >
-                {confirmDialog.action === 'approve' ? 'Approve' : 'Reject'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+    <div className="space-y-8 max-w-7xl">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1">Platform overview and key metrics</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-white/10 text-slate-300 hover:bg-white/5"
+          onClick={fetchData}
+        >
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+          Refresh
+        </Button>
       </div>
-      <Toaster />
-    </ThemeProvider>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm hover:bg-white/[0.05] transition-colors">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-400" />
+              </div>
+              <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px]">
+                <ArrowUpRight className="h-3 w-3 mr-0.5" />+{data.users.newThisWeek} this week
+              </Badge>
+            </div>
+            <p className="text-3xl font-bold text-white">{data.users.total.toLocaleString()}</p>
+            <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-medium">Total Users</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm hover:bg-white/[0.05] transition-colors">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                <Building2 className="h-5 w-5 text-indigo-400" />
+              </div>
+              <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[10px]">
+                {data.startups.active} active
+              </Badge>
+            </div>
+            <p className="text-3xl font-bold text-white">{data.startups.total.toLocaleString()}</p>
+            <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-medium">Total Startups</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm hover:bg-white/[0.05] transition-colors">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <IndianRupee className="h-5 w-5 text-emerald-400" />
+              </div>
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">
+                {data.payments.completed} txns
+              </Badge>
+            </div>
+            <p className="text-3xl font-bold text-white">₹{revenueInRupees}</p>
+            <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-medium">Total Revenue</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm hover:bg-white/[0.05] transition-colors">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-10 w-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-yellow-400" />
+              </div>
+              {data.startups.pendingVerifications > 0 && (
+                <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 text-[10px] animate-pulse">
+                  Action needed
+                </Badge>
+              )}
+            </div>
+            <p className="text-3xl font-bold text-white">{data.startups.pendingVerifications}</p>
+            <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-medium">Pending Verification</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* User Growth Chart */}
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base text-white flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-400" />
+              User Growth
+            </CardTitle>
+            <CardDescription className="text-slate-500">New registrations per month</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-40">
+              {data.growth.monthlyUsers.map((month, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                  <span className="text-[10px] text-slate-400 font-medium">{month.count}</span>
+                  <div
+                    className="w-full rounded-t-lg bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-500 min-h-[4px]"
+                    style={{ height: `${Math.max((month.count / maxBarValue) * 100, 4)}%` }}
+                  />
+                  <span className="text-[10px] text-slate-600">
+                    {MONTH_NAMES[month._id.month - 1]}
+                  </span>
+                </div>
+              ))}
+              {data.growth.monthlyUsers.length === 0 && (
+                <div className="flex-1 flex items-center justify-center text-xs text-slate-600">
+                  No growth data yet
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* User Role Distribution */}
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-base text-white flex items-center gap-2">
+              <Users className="h-4 w-4 text-indigo-400" />
+              Users by Role
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {Object.entries(data.users.byRole).map(([role, count]) => (
+              <div key={role} className="space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-300 capitalize">{role}s</span>
+                  <span className="text-white font-semibold">{count}</span>
+                </div>
+                <div className="h-2 bg-white/[0.03] rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      role === 'founder' ? 'bg-indigo-500' : role === 'investor' ? 'bg-emerald-500' : 'bg-cyan-500'
+                    }`}
+                    style={{ width: `${data.users.total ? (count / data.users.total) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Second Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Startups by Stage */}
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-base text-white flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-purple-400" />
+              Startups by Stage
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {data.startups.byStage.map((item) => (
+                <div key={item._id} className="flex items-center gap-3">
+                  <div className={`h-2.5 w-2.5 rounded-full ${STAGE_COLORS[item._id] || 'bg-slate-500'}`} />
+                  <span className="text-sm text-slate-300 capitalize flex-1">{item._id}</span>
+                  <span className="text-sm font-semibold text-white">{item.count}</span>
+                  <div className="w-24 h-1.5 bg-white/[0.03] rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${STAGE_COLORS[item._id] || 'bg-slate-500'}`}
+                      style={{ width: `${data.startups.total ? (item.count / data.startups.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+              {data.startups.byStage.length === 0 && (
+                <p className="text-xs text-slate-600 text-center py-4">No startups yet</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Industries */}
+        <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-base text-white flex items-center gap-2">
+              <Activity className="h-4 w-4 text-amber-400" />
+              Top Industries
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {data.startups.byIndustry.map((item) => (
+                <div
+                  key={item._id}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5"
+                >
+                  <span className="text-sm text-slate-300">{item._id || 'N/A'}</span>
+                  <Badge variant="outline" className="text-[10px] border-white/10 text-slate-400">
+                    {item.count}
+                  </Badge>
+                </div>
+              ))}
+              {data.startups.byIndustry.length === 0 && (
+                <p className="text-xs text-slate-600 text-center py-4 w-full">No data</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Users */}
+      <Card className="bg-white/[0.03] border-white/5 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-base text-white flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-blue-400" />
+            Recent Sign-ups
+          </CardTitle>
+          <CardDescription className="text-slate-500">Latest users who joined the platform</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {data.users.recent.map((user) => (
+              <div
+                key={user._id}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-xs font-bold shrink-0">
+                  {user.name?.charAt(0) || '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                </div>
+                <Badge className={`text-[10px] ${ROLE_BADGE_STYLES[user.role] || 'border-white/10 text-slate-400'}`}>
+                  {user.role}
+                </Badge>
+                {user.isEmailVerified && (
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px]">
+                    Verified
+                  </Badge>
+                )}
+                <span className="text-[10px] text-slate-600 shrink-0">
+                  {new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

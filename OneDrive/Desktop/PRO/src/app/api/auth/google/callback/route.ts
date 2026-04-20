@@ -90,8 +90,8 @@ export async function GET(request: NextRequest) {
 
     let user = await User.findOne({ email: email.toLowerCase() });
 
-    // If signup mode and user exists with different role
-    if (user && role && user.role !== role && mode === 'signup') {
+    // If signup mode and user exists with different role (skip for admins — they can always log in)
+    if (user && role && user.role !== role && user.role !== 'admin' && mode === 'signup') {
       return NextResponse.redirect(
         `${BASE_URL}/login?error=role_mismatch&existing_role=${user.role}`
       );
@@ -137,8 +137,9 @@ export async function GET(request: NextRequest) {
     const sub = await Subscription.findOne({ userId: user._id });
     const userPlan = sub ? sub.plan : 'free';
 
-    const dashboardUrl = `${BASE_URL}/dashboard/${user.role}`;
-    const response = NextResponse.redirect(dashboardUrl);
+    // Admin users go to /admin, all others go to /dashboard/{role}
+    const redirectPath = user.role === 'admin' ? '/admin' : `/dashboard/${user.role}`;
+    const response = NextResponse.redirect(`${BASE_URL}${redirectPath}`);
 
     return setAuthCookies(response, accessToken, refreshToken);
   } catch (error) {

@@ -330,8 +330,35 @@ export async function middleware(request: NextRequest) {
   // Generate request ID for tracing
   const requestId = generateRequestId();
 
-  // --- Static / public pages pass through ---
-  if (!isApiRoute(pathname) && !pathname.startsWith('/dashboard')) {
+  // --- Static / public pages pass through (except /admin) ---
+  if (!isApiRoute(pathname) && !pathname.startsWith('/dashboard') && !pathname.startsWith('/admin')) {
+    const response = NextResponse.next();
+    applySecurityHeaders(response, requestId);
+    ensureCsrfCookie(request, response);
+    return response;
+  }
+
+  // --- Admin Page Guards ---
+  if (pathname.startsWith('/admin')) {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    try {
+      const secret = new TextEncoder().encode(EFFECTIVE_JWT_SECRET);
+      const { payload } = await jwtVerify(accessToken, secret);
+      const decoded = payload as { userId: string; email: string; role: string };
+
+      if (decoded.role !== 'admin') {
+        // Non-admin users get redirected to their own dashboard
+        return NextResponse.redirect(new URL(`/dashboard/${decoded.role}`, request.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
     const response = NextResponse.next();
     applySecurityHeaders(response, requestId);
     ensureCsrfCookie(request, response);
