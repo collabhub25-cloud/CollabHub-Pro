@@ -4,7 +4,7 @@
  * Call these functions after any data mutation to keep caches consistent.
  */
 
-import { getCache, CACHE_KEYS } from './cache';
+import { getCache, CACHE_KEYS, invalidateCachePattern } from './cache';
 import { createLogger } from './logger';
 
 const log = createLogger('cache-invalidation');
@@ -27,9 +27,9 @@ export async function onProfileUpdate(userId: string): Promise<void> {
     cache.delete(CACHE_KEYS.dashboardStats(userId, 'talent')),
     cache.delete(CACHE_KEYS.dashboardStats(userId, 'investor')),
     // Invalidate AI recommendations that referenced this user
-    cache.invalidatePattern(`match:jobs:${userId}`),
-    cache.invalidatePattern(`match:investors:${userId}`),
-    cache.invalidatePattern(`match:startups:${userId}`),
+    invalidateCachePattern(`match:jobs:${userId}`),
+    invalidateCachePattern(`match:investors:${userId}`),
+    invalidateCachePattern(`match:startups:${userId}`),
   ];
   await Promise.allSettled(deleteOps);
   log.debug(`Cache invalidated for user ${userId}`);
@@ -49,9 +49,9 @@ export async function onStartupEdit(startupId: string, founderId: string): Promi
     cache.delete(CACHE_KEYS.startupDetail(startupId)),
     cache.delete(CACHE_KEYS.startupsByFounder(founderId)),
     // Invalidate user-scoped listing caches (all filter variants for this user)
-    cache.invalidatePattern(`startups:list:${founderId}:`),
+    invalidateCachePattern(`startups:list:${founderId}:`),
     // Also invalidate global listing caches used by discover/search
-    cache.invalidatePattern('startups:list:__global__:'),
+    invalidateCachePattern('startups:list:__global__:'),
     // Invalidate AI recommendations that reference this startup
     cache.delete(CACHE_KEYS.recommendedTalents(startupId)),
     // Founder's dashboard data is stale
@@ -73,7 +73,7 @@ export async function onJobChange(startupId: string, founderId: string): Promise
   const cache = getCache();
   const deleteOps = [
     // Talent-facing AI recommendations are stale
-    cache.invalidatePattern('match:jobs:'),
+    invalidateCachePattern('match:jobs:'),
     // Founder's startup talent recommendations are stale
     cache.delete(CACHE_KEYS.recommendedTalents(startupId)),
     // Founder dashboard stats (active jobs count)

@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
           pitchesInvested,
         },
       };
-    }, CACHE_TTL.DASHBOARD);
+    }, CACHE_TTL.SHORT);
 
     const duration = Date.now() - start;
     perfTracker.recordResponse('GET /api/dashboard/founder', duration);

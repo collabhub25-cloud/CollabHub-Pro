@@ -39,11 +39,11 @@ export const BeamBackground = () => {
     const noiseRef = useRef<HTMLCanvasElement>(null);
     const beamsRef = useRef<Beam[]>([]);
     const animationFrameRef = useRef<number>(0);
-    const isDarkRef = useRef(false);
-    const frameCountRef = useRef(0);
+    const noiseGenerated = useRef(false);
   
     const LAYERS = 3;
-
+    const BEAMS_PER_LAYER = 4;
+  
     useEffect(() => {
       const canvas = canvasRef.current;
       const noiseCanvas = noiseRef.current;
@@ -51,19 +51,6 @@ export const BeamBackground = () => {
       const ctx = canvas.getContext("2d");
       const nCtx = noiseCanvas.getContext("2d");
       if (!ctx || !nCtx) return;
-
-      // Detect dark mode from <html> class
-      const checkDark = () => {
-        isDarkRef.current = document.documentElement.classList.contains('dark');
-      };
-      checkDark();
-
-      // Watch for theme changes
-      const observer = new MutationObserver(checkDark);
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-      // Responsive beam count: fewer on mobile for performance
-      const getBeamsPerLayer = () => window.innerWidth < 768 ? 4 : 8;
   
       const resizeCanvas = () => {
         const dpr = window.devicePixelRatio || 1;
@@ -81,10 +68,10 @@ export const BeamBackground = () => {
         nCtx.setTransform(1, 0, 0, 1, 0, 0);
         nCtx.scale(dpr, dpr);
   
-        const beamsPerLayer = getBeamsPerLayer();
+        noiseGenerated.current = false;
         beamsRef.current = [];
         for (let layer = 1; layer <= LAYERS; layer++) {
-          for (let i = 0; i < beamsPerLayer; i++) {
+          for (let i = 0; i < BEAMS_PER_LAYER; i++) {
             beamsRef.current.push(createBeam(window.innerWidth, window.innerHeight, layer));
           }
         }
@@ -100,30 +87,29 @@ export const BeamBackground = () => {
           imgData.data[i] = v;
           imgData.data[i + 1] = v;
           imgData.data[i + 2] = v;
-          imgData.data[i + 3] = isDarkRef.current ? 8 : 12;
+          imgData.data[i + 3] = 12;
         }
         nCtx.putImageData(imgData, 0, 0);
       };
   
       const drawBeam = (beam: Beam) => {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        const opacityMultiplier = isDarkMode ? 1.5 : 1;
+
         ctx.save();
         ctx.translate(beam.x, beam.y);
         ctx.rotate((beam.angle * Math.PI) / 180);
   
-        const dark = isDarkRef.current;
-        const opacityMult = dark ? 0.6 : 1;
-        const pulsingOpacity = Math.min(1, beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.4) * opacityMult);
-        
+        const pulsingOpacity = Math.min(1, beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.4)) * opacityMultiplier;
         const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
-        if (dark) {
-          // Dark mode: softer, more visible beams with adjusted colors
-          gradient.addColorStop(0, `rgba(74,222,128,0)`);
-          gradient.addColorStop(0.2, `rgba(74,222,128,${pulsingOpacity * 0.2})`);
-          gradient.addColorStop(0.5, `rgba(96,165,250,${pulsingOpacity * 0.4})`);
-          gradient.addColorStop(0.8, `rgba(96,165,250,${pulsingOpacity * 0.2})`);
-          gradient.addColorStop(1, `rgba(96,165,250,0)`);
+
+        if (isDarkMode) {
+          gradient.addColorStop(0, `rgba(250,250,250,0)`);
+          gradient.addColorStop(0.2, `rgba(250,250,250,${pulsingOpacity * 0.2})`);
+          gradient.addColorStop(0.5, `rgba(161,161,170,${pulsingOpacity * 0.4})`);
+          gradient.addColorStop(0.8, `rgba(161,161,170,${pulsingOpacity * 0.2})`);
+          gradient.addColorStop(1, `rgba(161,161,170,0)`);
         } else {
-          // Light mode: original colors
           gradient.addColorStop(0, `rgba(46,139,87,0)`);
           gradient.addColorStop(0.2, `rgba(46,139,87,${pulsingOpacity * 0.3})`);
           gradient.addColorStop(0.5, `rgba(0,71,171,${pulsingOpacity * 0.6})`);
@@ -139,13 +125,13 @@ export const BeamBackground = () => {
   
       const animate = () => {
         if (!canvas || !ctx) return;
-        frameCountRef.current++;
-        const dark = isDarkRef.current;
+
+        const isDarkMode = document.documentElement.classList.contains('dark');
   
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        if (dark) {
+        if (isDarkMode) {
           gradient.addColorStop(0, "#09090B");
-          gradient.addColorStop(1, "#0c0c0e");
+          gradient.addColorStop(1, "#0C0C0E");
         } else {
           gradient.addColorStop(0, "#ffffff");
           gradient.addColorStop(1, "#f8fafc");
@@ -163,16 +149,15 @@ export const BeamBackground = () => {
           drawBeam(beam);
         });
   
-        // Throttle noise: regenerate every 3rd frame for performance
-        if (frameCountRef.current % 3 === 0) {
+        if (!noiseGenerated.current) {
           generateNoise();
+          noiseGenerated.current = true;
         }
         animationFrameRef.current = requestAnimationFrame(animate);
       };
       animate();
   
       return () => {
-        observer.disconnect();
         window.removeEventListener("resize", resizeCanvas);
         cancelAnimationFrame(animationFrameRef.current);
       };

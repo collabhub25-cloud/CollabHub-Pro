@@ -26,7 +26,7 @@ import { PremiumGithub, PremiumLinkedIn, PremiumGlobe } from '@/components/ui/so
 import { safeLocalStorage, STORAGE_KEYS, getInitials } from '@/lib/client-utils';
 import { getPlanDisplayName } from '@/lib/subscription/features';
 import { toast } from 'sonner';
-import { apiFetch, apiPatch } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api-client';
 
 interface ProfileData {
   _id: string;
@@ -180,7 +180,12 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         ? `/api/users/profile/${profileId}`
         : '/api/users/me';
 
-      const response = await apiFetch(endpoint);
+      const response = await fetch(endpoint, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      });
 
 
       if (response.ok) {
@@ -216,11 +221,6 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
   }, [fetchProfile]);
 
   const handleSaveProfile = async () => {
-    // Client-side validation
-    if (!editForm.name.trim()) {
-      toast.error('Name is required');
-      return;
-    }
 
     setSaving(true);
     try {
@@ -252,7 +252,14 @@ export function ProfilePage({ profileId }: ProfilePageProps) {
         updates.experience = editForm.experience;
       }
 
-      const response = await apiPatch('/api/users/me', updates);
+      const response = await fetch('/api/users/me', {
+        credentials: 'include',
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -855,7 +862,7 @@ function InvestmentProfileSection({ userId }: { userId: string }) {
   useEffect(() => {
     const fetchInvestments = async () => {
       try {
-        const res = await apiFetch(`/api/investments?userId=${userId}`);
+        const res = await fetch(`/api/investments?userId=${userId}`, { credentials: 'include' });
         if (res.ok) {
           const json = await res.json();
           setData(json);

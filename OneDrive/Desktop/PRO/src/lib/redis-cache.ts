@@ -1,13 +1,9 @@
 /**
  * Redis Cache Implementation
- * Production-ready Redis caching with Upstash REST and optional ioredis support.
- * Uses SCAN instead of KEYS for production safety.
+ * Production-ready Redis caching with Upstash/Redis support
  */
 
 import { CacheInterface, CacheStats, CACHE_TTL, MemoryCache } from './cache';
-import { createLogger } from './logger';
-
-const log = createLogger('redis-cache');
 
 // ============================================
 // REDIS CLIENT INTERFACE
@@ -16,26 +12,17 @@ const log = createLogger('redis-cache');
 interface RedisClient {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, options?: { ex?: number }): Promise<'OK' | null>;
-  del(...keys: string[]): Promise<number>;
+  del(key: string): Promise<number>;
   keys(pattern: string): Promise<string[]>;
-  scan(cursor: string, options: { match: string; count: number }): Promise<[string, string[]]>;
   incr(key: string): Promise<number>;
   expire(key: string, seconds: number): Promise<number>;
   ttl(key: string): Promise<number>;
   dbsize(): Promise<number>;
   info(section?: string): Promise<string>;
-  mget(...keys: string[]): Promise<(string | null)[]>;
-  pipeline?(): RedisPipeline;
-}
-
-interface RedisPipeline {
-  set(key: string, value: string, options?: { ex?: number }): RedisPipeline;
-  del(key: string): RedisPipeline;
-  exec(): Promise<unknown[]>;
 }
 
 // ============================================
-// UPSTASH REDIS CLIENT (REST-based, serverless-safe)
+// UPSTASH REDIS CLIENT
 // ============================================
 
 class UpstashRedisClient implements RedisClient {
@@ -70,23 +57,18 @@ class UpstashRedisClient implements RedisClient {
   }
 
   async set(key: string, value: string, options?: { ex?: number }): Promise<'OK' | null> {
-    const command = options?.ex
+    const command = options?.ex 
       ? ['SET', key, value, 'EX', String(options.ex)]
       : ['SET', key, value];
     return this.fetch<'OK' | null>(command);
   }
 
-  async del(...keys: string[]): Promise<number> {
-    if (keys.length === 0) return 0;
-    return this.fetch<number>(['DEL', ...keys]);
+  async del(key: string): Promise<number> {
+    return this.fetch<number>(['DEL', key]);
   }
 
   async keys(pattern: string): Promise<string[]> {
     return this.fetch<string[]>(['KEYS', pattern]);
-  }
-
-  async scan(cursor: string, options: { match: string; count: number }): Promise<[string, string[]]> {
-    return this.fetch<[string, string[]]>(['SCAN', cursor, 'MATCH', options.match, 'COUNT', String(options.count)]);
   }
 
   async incr(key: string): Promise<number> {
@@ -108,11 +90,6 @@ class UpstashRedisClient implements RedisClient {
   async info(section?: string): Promise<string> {
     return this.fetch<string>(section ? ['INFO', section] : ['INFO']);
   }
-
-  async mget(...keys: string[]): Promise<(string | null)[]> {
-    if (keys.length === 0) return [];
-    return this.fetch<(string | null)[]>(['MGET', ...keys]);
-  }
 }
 
 // ============================================
@@ -126,7 +103,7 @@ export class ProductionRedisCache implements CacheInterface {
   private misses = 0;
   private connected = false;
 
-  constructor(client: RedisClient, prefix = 'AS:') {
+  constructor(client: RedisClient, prefix = 'AlloySphere:') {
     this.client = client;
     this.prefix = prefix;
     this.connected = true;
@@ -149,20 +126,31 @@ export class ProductionRedisCache implements CacheInterface {
       this.hits++;
       return JSON.parse(value) as T;
     } catch (error) {
-      log.debug('Redis get error', { key, error: String(error) });
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis get error:', error);
+        }
+
+      }
       this.misses++;
       return null;
     }
   }
 
-  async set<T>(key: string, value: T, ttl: number = CACHE_TTL.MEDIUM): Promise<void> {
+  async set<T>(key: string, value: T, ttl = CACHE_TTL.MEDIUM): Promise<void> {
     try {
-      if (value === undefined) return;
       const fullKey = this.getKey(key);
       const serialized = JSON.stringify(value);
       await this.client.set(fullKey, serialized, { ex: ttl });
     } catch (error) {
-      log.debug('Redis set error', { key, error: String(error) });
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis set error:', error);
+        }
+
+      }
     }
   }
 
@@ -172,30 +160,37 @@ export class ProductionRedisCache implements CacheInterface {
       const result = await this.client.del(fullKey);
       return result > 0;
     } catch (error) {
-      log.debug('Redis delete error', { key, error: String(error) });
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis delete error:', error);
+        }
+
+      }
       return false;
     }
   }
 
   async clear(): Promise<void> {
     try {
-      // Use SCAN instead of KEYS for production safety (non-blocking)
-      let cursor = '0';
-      do {
-        const [nextCursor, keys] = await this.client.scan(cursor, {
-          match: `${this.prefix}*`,
-          count: 100,
-        });
-        cursor = nextCursor;
-        if (keys.length > 0) {
-          await this.client.del(...keys);
+      const keys = await this.client.keys(`${this.prefix}*`);
+      if (keys.length > 0) {
+        // Delete in batches of 100 to avoid blocking
+        for (let i = 0; i < keys.length; i += 100) {
+          const batch = keys.slice(i, i + 100);
+          await Promise.all(batch.map(key => this.client.del(key)));
         }
-      } while (cursor !== '0');
-
+      }
       this.hits = 0;
       this.misses = 0;
     } catch (error) {
-      log.error('Redis clear error', error);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis clear error:', error);
+        }
+
+      }
     }
   }
 
@@ -205,43 +200,28 @@ export class ProductionRedisCache implements CacheInterface {
       const value = await this.client.get(fullKey);
       return value !== null;
     } catch (error) {
-      log.debug('Redis has error', { key, error: String(error) });
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis has error:', error);
+        }
+
+      }
       return false;
     }
   }
 
-  /**
-   * Pattern-based invalidation using SCAN (production-safe, non-blocking).
-   * Pattern is auto-prefixed with the cache namespace.
-   */
-  async invalidatePattern(pattern: string): Promise<number> {
-    try {
-      let cursor = '0';
-      let totalDeleted = 0;
-
-      do {
-        const [nextCursor, keys] = await this.client.scan(cursor, {
-          match: `${this.prefix}${pattern}*`,
-          count: 100,
-        });
-        cursor = nextCursor;
-        if (keys.length > 0) {
-          const deleted = await this.client.del(...keys);
-          totalDeleted += deleted;
-        }
-      } while (cursor !== '0');
-
-      return totalDeleted;
-    } catch (error) {
-      log.error('Redis invalidatePattern error', error);
-      return 0;
-    }
+  getStats(): CacheStats {
+    return {
+      hits: this.hits,
+      misses: this.misses,
+      keys: -1, // Would need DBSIZE call
+      memoryUsage: -1, // Would need INFO memory call
+    };
   }
 
-  /**
-   * Cache-aside: get existing value, or compute and cache it.
-   */
-  async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttl: number = CACHE_TTL.MEDIUM): Promise<T> {
+  // Additional production methods
+  async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttl = CACHE_TTL.MEDIUM): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) {
       return cached;
@@ -252,42 +232,23 @@ export class ProductionRedisCache implements CacheInterface {
     return data;
   }
 
-  /**
-   * Batch get multiple keys at once (reduces round-trips).
-   */
-  async mget<T>(keys: string[]): Promise<(T | null)[]> {
+  async invalidatePattern(pattern: string): Promise<number> {
     try {
-      const fullKeys = keys.map(k => this.getKey(k));
-      const values = await this.client.mget(...fullKeys);
-      return values.map(v => {
-        if (v === null) {
-          this.misses++;
-          return null;
-        }
-        this.hits++;
-        try {
-          return JSON.parse(v) as T;
-        } catch {
-          return null;
-        }
-      });
+      const keys = await this.client.keys(`${this.prefix}${pattern}*`);
+      if (keys.length > 0) {
+        await Promise.all(keys.map(key => this.client.del(key)));
+      }
+      return keys.length;
     } catch (error) {
-      log.debug('Redis mget error', { error: String(error) });
-      return keys.map(() => null);
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Redis invalidatePattern error:', error);
+        }
+
+      }
+      return 0;
     }
-  }
-
-  getStats(): CacheStats {
-    const total = this.hits + this.misses;
-    const hitRate = total > 0 ? ((this.hits / total) * 100).toFixed(1) : '0.0';
-    log.debug(`Cache stats: ${this.hits} hits, ${this.misses} misses, ${hitRate}% hit rate`);
-
-    return {
-      hits: this.hits,
-      misses: this.misses,
-      keys: -1, // Would need DBSIZE call
-      memoryUsage: -1,
-    };
   }
 
   isConnected(): boolean {
@@ -297,19 +258,19 @@ export class ProductionRedisCache implements CacheInterface {
   async healthCheck(): Promise<{ status: 'up' | 'down'; latency?: number; error?: string }> {
     try {
       const start = Date.now();
-      await this.client.set('__health__', 'ok', { ex: 10 });
-      const value = await this.client.get('__health__');
-
+      await this.client.set('__health_check__', 'ok', { ex: 10 });
+      const value = await this.client.get('__health_check__');
+      
       if (value === 'ok') {
-        await this.client.del('__health__');
+        await this.client.del('__health_check__');
         return { status: 'up', latency: Date.now() - start };
       }
-
-      return { status: 'down', error: 'Health check value mismatch' };
+      
+      return { status: 'down', error: 'Health check failed' };
     } catch (error) {
-      return {
-        status: 'down',
-        error: error instanceof Error ? error.message : 'Unknown error',
+      return { 
+        status: 'down', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       };
     }
   }
@@ -322,29 +283,36 @@ export class ProductionRedisCache implements CacheInterface {
 let cacheInstance: CacheInterface | null = null;
 
 export function initializeRedisCache(): CacheInterface {
-  if (cacheInstance) return cacheInstance;
-
   const redisUrl = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL;
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!redisUrl) {
-    log.info('No Redis URL configured, using in-memory cache');
-    cacheInstance = new MemoryCache();
-    return cacheInstance;
+    if (process.env.NODE_ENV === 'development') {
+
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ No Redis URL configured, falling back to memory cache');
+      }
+
+    }
+    return new MemoryCache();
   }
 
   if (redisUrl.includes('upstash') && redisToken) {
-    log.info('Initializing Upstash Redis cache');
+    // Upstash Redis
     const client = new UpstashRedisClient(redisUrl, redisToken);
-    cacheInstance = new ProductionRedisCache(client);
-    return cacheInstance;
+    return new ProductionRedisCache(client);
   }
 
-  // For other Redis providers (ioredis), fall back to memory cache
-  // To use ioredis, install it and create a client adapter here
-  log.warn('Redis URL set but provider not fully configured, using in-memory cache');
-  cacheInstance = new MemoryCache();
-  return cacheInstance;
+  // For other Redis providers, would need ioredis or similar
+  // For now, fall back to memory cache
+  if (process.env.NODE_ENV === 'development') {
+
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Redis provider not fully configured, falling back to memory cache');
+    }
+
+  }
+  return new MemoryCache();
 }
 
 export function getCache(): CacheInterface {
@@ -368,8 +336,8 @@ export class RedisRateLimiter {
   }
 
   async checkLimit(
-    key: string,
-    limit: number,
+    key: string, 
+    limit: number, 
     windowMs: number
   ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
     const fullKey = `${this.prefix}${key}`;
@@ -379,7 +347,8 @@ export class RedisRateLimiter {
 
     try {
       const count = await this.client.incr(windowKey);
-
+      
+      // Set expiry on first request in window
       if (count === 1) {
         await this.client.expire(windowKey, Math.ceil(windowMs / 1000));
       }
@@ -390,7 +359,14 @@ export class RedisRateLimiter {
         resetTime: (window + 1) * windowMs,
       };
     } catch (error) {
-      log.debug('Rate limiter error', { error: String(error) });
+      if (process.env.NODE_ENV === 'development') {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Rate limiter error:', error);
+        }
+
+      }
+      // Allow on error (fail open)
       return { allowed: true, remaining: limit, resetTime: now + windowMs };
     }
   }

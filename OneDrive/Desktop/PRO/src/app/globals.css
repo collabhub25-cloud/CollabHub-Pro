@@ -91,7 +91,6 @@
    DARK MODE PALETTE
    ========================================== */
 .dark {
-  --radius: 0.25rem;
   --background: #09090B;
   --foreground: #FAFAFA;
   --card: #111113;
@@ -124,19 +123,18 @@
   --sidebar-border: #27272A;
   --sidebar-ring: #D4D4D8;
 
-  --accent-founder: #E4E4E7;
-  --accent-investor: #A1A1AA;
-  --accent-talent: #D4D4D8;
-  --role-accent: var(--accent-founder);
+  --accent-founder: #FAFAFA;
+  --accent-investor: #D4D4D8;
+  --accent-talent: #A1A1AA;
 
-  --sea-green: #E4E4E7;
-  --sea-green-light: #A1A1AA;
+  --sea-green: #FAFAFA;
+  --sea-green-light: #D4D4D8;
   --sea-green-dark: #FAFAFA;
-  --cobalt-blue: #D4D4D8;
+  --cobalt-blue: #E4E4E7;
   --cobalt-blue-light: #A1A1AA;
-  --cobalt-blue-dark: #E4E4E7;
-  --verified-gradient: linear-gradient(135deg, #E4E4E7 0%, #A1A1AA 100%);
-  --verified-gradient-light: linear-gradient(135deg, #E4E4E740 0%, #A1A1AA40 100%);
+  --cobalt-blue-dark: #FAFAFA;
+  --verified-gradient: linear-gradient(135deg, #FAFAFA 0%, #A1A1AA 100%);
+  --verified-gradient-light: linear-gradient(135deg, #FAFAFA40 0%, #A1A1AA40 100%);
 }
 
 @layer base {
@@ -315,10 +313,6 @@
   border-radius: 9999px;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #3F3F46;
-}
-
 /* ==========================================
    MONOCHROME ACCENT PALETTE
    ========================================== */
@@ -435,10 +429,6 @@
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
-.dark .card-3d-hover:hover {
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
-}
-
 .gradient-mesh-bg {
   background:
     radial-gradient(ellipse at 20% 50%, rgba(0, 0, 0, 0.04) 0%, transparent 50%),
@@ -448,8 +438,8 @@
 
 .dark .gradient-mesh-bg {
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(255, 255, 255, 0.015) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 80%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
 }
 
@@ -482,10 +472,6 @@
 .card-hover-lift:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.1);
-}
-
-.dark .card-hover-lift:hover {
-  box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.4);
 }
 
 /* Fade-up entrance — staggered content reveals */
@@ -627,14 +613,6 @@
   background-color: rgba(0, 0, 0, 0.06);
 }
 
-.dark .sidebar-nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.04);
-}
-
-.dark .sidebar-nav-item:active {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -642,4 +620,4 @@
   50% {
     transform: translateY(-10px);
   }
-}
+}

@@ -1,7 +1,6 @@
 /**
- * Unified Caching Layer
- * Production-ready cache with Redis + memory fallback.
- * All cache access MUST go through the exported `cache` singleton.
+ * Caching Utility with Redis-ready abstraction
+ * Provides in-memory caching for development with interface for Redis in production
  */
 
 // ============================================
@@ -28,78 +27,16 @@ export interface CacheInterface {
   clear(): Promise<void>;
   has(key: string): Promise<boolean>;
   getStats(): CacheStats;
-  /** Delete all keys matching a prefix pattern */
-  invalidatePattern(pattern: string): Promise<number>;
-  /** Get-or-set with auto-fetch */
-  getOrSet<T>(key: string, fetcher: () => Promise<T>, ttl?: number): Promise<T>;
 }
 
 // ============================================
-// TTL PRESETS (seconds)
-// ============================================
-
-export const CACHE_TTL = {
-  /** 30 seconds — dashboard aggregated data */
-  DASHBOARD: 30,
-  /** 60 seconds — frequently changing data */
-  SHORT: 60,
-  /** 300 seconds (5 min) — startup listings */
-  MEDIUM: 300,
-  /** 900 seconds (15 min) — AI matching results */
-  LONG: 900,
-  /** 3600 seconds (1 hour) — static reference data */
-  VERY_LONG: 3600,
-  /** 86400 seconds (1 day) — rarely changing data */
-  DAY: 86400,
-} as const;
-
-// ============================================
-// STRUCTURED CACHE KEYS
-// ============================================
-
-export const CACHE_KEYS = {
-  // User profiles (invalidate on update)
-  userProfile: (userId: string) => `user:${userId}`,
-
-  // Startups (TTL: 5 min)
-  startupDetail: (startupId: string) => `startup:${startupId}`,
-  startupList: (userId: string, filters: string) => `startups:list:${userId}:${filters}`,
-  startupsByFounder: (founderId: string) => `startups:founder:${founderId}`,
-
-  // AI matching results (TTL: 15 min)
-  matchResult: (userId: string, startupId: string) => `match:${userId}:${startupId}`,
-  recommendedJobs: (talentId: string) => `match:jobs:${talentId}`,
-  recommendedStartups: (investorId: string) => `match:startups:${investorId}`,
-  recommendedTalents: (startupId: string) => `match:talents:${startupId}`,
-  recommendedInvestors: (founderId: string) => `match:investors:${founderId}`,
-
-  // Dashboard aggregated data (TTL: 30-60 sec)
-  dashboardStats: (userId: string, role: string) => `dashboard:${role}:${userId}`,
-
-  // Trust scores
-  trustScore: (userId: string) => `trust:score:${userId}`,
-
-  // Subscriptions
-  subscriptionFeatures: (plan: string) => `subscription:features:${plan}`,
-  userSubscription: (userId: string) => `subscription:user:${userId}`,
-
-  // Search results
-  searchResults: (query: string, filters: string) => `search:${query}:${filters}`,
-} as const;
-
-// ============================================
-// IN-MEMORY CACHE (Development / Fallback)
+// IN-MEMORY CACHE (Development)
 // ============================================
 
 export class MemoryCache implements CacheInterface {
   private cache = new Map<string, CacheEntry<unknown>>();
   private hits = 0;
   private misses = 0;
-  private maxSize: number;
-
-  constructor(maxSize = 1000) {
-    this.maxSize = maxSize;
-  }
 
   async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
@@ -120,15 +57,7 @@ export class MemoryCache implements CacheInterface {
     return entry.data;
   }
 
-  async set<T>(key: string, value: T, ttl: number = CACHE_TTL.MEDIUM): Promise<void> {
-    // Evict oldest entries if at capacity
-    if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey !== undefined) {
-        this.cache.delete(firstKey);
-      }
-    }
-
+  async set<T>(key: string, value: T, ttl = 300): Promise<void> {
     this.cache.set(key, {
       data: value,
       timestamp: Date.now(),
@@ -150,6 +79,7 @@ export class MemoryCache implements CacheInterface {
     const entry = this.cache.get(key);
     if (!entry) return false;
 
+    // Check if expired
     if (Date.now() - entry.timestamp > entry.ttl * 1000) {
       this.cache.delete(key);
       return false;
@@ -158,30 +88,10 @@ export class MemoryCache implements CacheInterface {
     return true;
   }
 
-  async invalidatePattern(pattern: string): Promise<number> {
-    let count = 0;
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(pattern)) {
-        this.cache.delete(key);
-        count++;
-      }
-    }
-    return count;
-  }
-
-  async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttl: number = CACHE_TTL.MEDIUM): Promise<T> {
-    const cached = await this.get<T>(key);
-    if (cached !== null) return cached;
-
-    const data = await fetcher();
-    await this.set(key, data, ttl);
-    return data;
-  }
-
   getStats(): CacheStats {
     let memoryUsage = 0;
     this.cache.forEach((value, key) => {
-      memoryUsage += key.length * 2;
+      memoryUsage += key.length * 2; // Rough estimate
       memoryUsage += JSON.stringify(value).length * 2;
     });
 
@@ -195,92 +105,152 @@ export class MemoryCache implements CacheInterface {
 }
 
 // ============================================
-// CACHE SINGLETON
+// REDIS CACHE STUB (Production)
 // ============================================
 
-let cacheInstance: CacheInterface | null = null;
+class RedisCache implements CacheInterface {
+  // This would be implemented with actual Redis client
+  // For now, falls back to memory cache
+  private fallback = new MemoryCache();
 
-/**
- * Get the global cache instance.
- * In production with Redis configured, uses ProductionRedisCache.
- * Otherwise falls back to MemoryCache.
- */
-export function getCache(): CacheInterface {
-  if (!cacheInstance) {
-    // Lazy import to avoid circular dependency issues
-    try {
-      const { initializeRedisCache } = require('./redis-cache');
-      cacheInstance = initializeRedisCache();
-    } catch {
-      cacheInstance = new MemoryCache();
-    }
+  async get<T>(key: string): Promise<T | null> {
+    // TODO: Implement with Redis client
+    return this.fallback.get<T>(key);
   }
-  return cacheInstance as CacheInterface;
+
+  async set<T>(key: string, value: T, ttl = 300): Promise<void> {
+    // TODO: Implement with Redis client
+    return this.fallback.set<T>(key, value, ttl);
+  }
+
+  async delete(key: string): Promise<boolean> {
+    return this.fallback.delete(key);
+  }
+
+  async clear(): Promise<void> {
+    return this.fallback.clear();
+  }
+
+  async has(key: string): Promise<boolean> {
+    return this.fallback.has(key);
+  }
+
+  getStats(): CacheStats {
+    return this.fallback.getStats();
+  }
 }
 
-/** Direct reference for convenience (lazy-init on first access) */
-export const cache: CacheInterface = new Proxy({} as CacheInterface, {
-  get(_target, prop) {
-    const instance = getCache();
-    const value = (instance as any)[prop];
-    if (typeof value === 'function') {
-      return value.bind(instance);
-    }
-    return value;
-  },
-});
+// ============================================
+// CACHE INSTANCE
+// ============================================
+
+// Use memory cache in development, Redis in production
+const shouldUseRedis = process.env.NODE_ENV === 'production' && process.env.REDIS_URL;
+
+export const cache: CacheInterface = shouldUseRedis
+  ? new RedisCache()
+  : new MemoryCache();
+
+export const getCache = () => cache;
+
+// ============================================
+// CACHE KEYS
+// ============================================
+
+export const CACHE_KEYS = {
+  // Public profiles
+  userProfile: (userId: string) => `user:profile:${userId}`,
+
+  // Startups
+  startupList: (userId: string, filters: string) => `startups:list:${userId}:${filters}`,
+  startupsByFounder: (founderId: string) => `startups:founder:${founderId}`,
+  startupDetail: (startupId: string) => `startups:detail:${startupId}`,
+
+  // Trust scores
+  trustScore: (userId: string) => `trust:score:${userId}`,
+  trustLog: (userId: string) => `trust:log:${userId}`,
+
+  // Dashboard metrics
+  dashboardStats: (userId: string, role: string) => `dashboard:stats:${role}:${userId}`,
+
+  // Subscriptions
+  subscriptionFeatures: (plan: string) => `subscription:features:${plan}`,
+  userSubscription: (userId: string) => `subscription:user:${userId}`,
+
+  // AI Recommendations
+  recommendedTalents: (startupId: string) => `ai:match:talents:${startupId}`,
+  recommendedStartups: (investorId: string) => `ai:match:startups:${investorId}`,
+  recommendedInvestors: (founderId: string) => `ai:match:investors:${founderId}`,
+  recommendedJobs: (talentId: string) => `ai:match:jobs:${talentId}`,
+
+  // Search results
+  searchResults: (query: string, filters: string) => `search:${query}:${filters}`,
+} as const;
+
+// ============================================
+// CACHE TTL VALUES (in seconds)
+// ============================================
+
+export const CACHE_TTL = {
+  SHORT: 60,          // 1 minute - for frequently changing data
+  MEDIUM: 300,        // 5 minutes - for moderately changing data
+  LONG: 900,          // 15 minutes - for semi-static data
+  VERY_LONG: 3600,    // 1 hour - for static data
+  DAY: 86400,         // 1 day - for rarely changing data
+} as const;
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
 /**
- * Cache-aside pattern: get from cache, or fetch and cache the result.
+ * Get or set cache with automatic fetch
  */
 export async function cacheOrFetch<T>(
   key: string,
   fetcher: () => Promise<T>,
   ttl: number = CACHE_TTL.MEDIUM
 ): Promise<T> {
-  return getCache().getOrSet(key, fetcher, ttl);
+  const cached = await cache.get<T>(key);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const data = await fetcher();
+  await cache.set(key, data, ttl);
+  return data;
 }
 
 /**
- * Invalidate all cache keys matching a prefix.
+ * Invalidate cache by pattern prefix
  */
-export async function invalidateCachePattern(prefix: string): Promise<number> {
-  return getCache().invalidatePattern(prefix);
+export async function invalidateCachePattern(prefix: string): Promise<void> {
+  // For memory cache, we can iterate and delete
+  // For Redis, we'd use SCAN with DEL
+  if (cache instanceof MemoryCache) {
+    const stats = cache.getStats();
+    // Note: This is a simplified implementation
+    // In production with Redis, you'd use pattern matching
+    // Note: pattern-based invalidation requires Redis in production
+  }
 }
 
 /**
- * Invalidate all user-related caches.
+ * Invalidate user-related caches
  */
 export async function invalidateUserCache(userId: string): Promise<void> {
-  const c = getCache();
-  await Promise.all([
-    c.delete(CACHE_KEYS.userProfile(userId)),
-    c.delete(CACHE_KEYS.trustScore(userId)),
-    c.delete(CACHE_KEYS.userSubscription(userId)),
-    c.invalidatePattern(`dashboard:`).catch(() => {}),
-  ]);
+  await cache.delete(CACHE_KEYS.userProfile(userId));
+  await cache.delete(CACHE_KEYS.trustScore(userId));
+  await cache.delete(CACHE_KEYS.dashboardStats(userId, 'founder'));
+  await cache.delete(CACHE_KEYS.dashboardStats(userId, 'talent'));
+  await cache.delete(CACHE_KEYS.dashboardStats(userId, 'investor'));
+  await cache.delete(CACHE_KEYS.userSubscription(userId));
 }
 
 /**
- * Invalidate all startup-related caches.
+ * Invalidate startup-related caches
  */
-export async function invalidateStartupCache(startupId: string, founderId?: string): Promise<void> {
-  const c = getCache();
-  const ops: Promise<unknown>[] = [
-    c.delete(CACHE_KEYS.startupDetail(startupId)),
-  ];
-  if (founderId) {
-    // User-scoped: only invalidate this founder's caches
-    ops.push(c.invalidatePattern(`startups:list:${founderId}:`));
-    ops.push(c.delete(CACHE_KEYS.startupsByFounder(founderId)));
-  } else {
-    // Fallback: broad invalidation
-    ops.push(c.invalidatePattern('startups:list:'));
-    ops.push(c.invalidatePattern('startups:founder:'));
-  }
-  await Promise.all(ops);
+export async function invalidateStartupCache(startupId: string): Promise<void> {
+  await cache.delete(CACHE_KEYS.startupDetail(startupId));
+  // Clear list caches (simplified - in production would use pattern matching)
 }

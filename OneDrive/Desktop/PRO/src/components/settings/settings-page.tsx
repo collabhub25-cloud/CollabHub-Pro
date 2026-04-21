@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { useAuthStore } from '@/store';
+import { useTheme } from 'next-themes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
     Loader2, Shield, Settings as SettingsIcon, Bell,
     User as UserIcon, LogOut, Trash2, BadgeCheck,
-    Building2, CheckCircle2, Clock, Send, Sun, Moon, Monitor
+    Building2, CheckCircle2, Clock, Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -29,16 +29,19 @@ import {
     AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import { AlloySphereVerifiedBadge } from '@/components/ui/alloysphere-verified-badge';
-import { apiFetch, apiPatch, apiPost, apiDelete } from '@/lib/api-client';
 
 export function SettingsPage() {
     const { user, updateUser, logout } = useAuthStore();
-    const { theme, setTheme } = useTheme();
     const [loading, setLoading] = useState(false);
     const [startups, setStartups] = useState<any[]>([]);
     const [startupsLoading, setStartupsLoading] = useState(false);
+    const { theme, setTheme } = useTheme();
 
-
+    // Helper to read CSRF token from cookie
+    const getCsrfToken = () => {
+        const match = document.cookie.match(/(?:^|; )_csrf_token=([^;]*)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    };
 
     // Profile settings state
     const [profile, setProfile] = useState({
@@ -62,13 +65,13 @@ export function SettingsPage() {
             const fetchStartups = async () => {
                 setStartupsLoading(true);
                 try {
-                    const res = await apiFetch('/api/startups');
+                    const res = await fetch('/api/startups', { credentials: 'include' });
                     if (res.ok) {
                         const data = await res.json();
                         setStartups(data.startups || []);
                     }
                 } catch (err) {
-                    console.error('Error fetching startups:', err);
+                    // error handled silently
                 } finally {
                     setStartupsLoading(false);
                 }
@@ -82,10 +85,18 @@ export function SettingsPage() {
         setLoading(true);
         try {
             const skillsArray = profile.skills.split(',').map(s => s.trim()).filter(s => s);
-            const res = await apiPatch('/api/users/me', {
+            const res = await fetch('/api/users/me', {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-csrf-token': getCsrfToken(),
+                },
+                body: JSON.stringify({
                     name: profile.name,
                     bio: profile.bio,
                     skills: skillsArray
+                })
             });
 
             if (!res.ok) throw new Error('Failed to update profile');
@@ -108,7 +119,11 @@ export function SettingsPage() {
 
     const handleLogoutAll = async () => {
         try {
-            const res = await apiPost('/api/auth/logout-all', {});
+            const res = await fetch('/api/auth/logout-all', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'x-csrf-token': getCsrfToken() },
+            });
             if (!res.ok) throw new Error('Failed to logout');
             toast.success('Logged out of all sessions');
             logout();
@@ -119,7 +134,11 @@ export function SettingsPage() {
 
     const handleDeleteAccount = async () => {
         try {
-            const res = await apiDelete('/api/users/me');
+            const res = await fetch('/api/users/me', {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'x-csrf-token': getCsrfToken() },
+            });
             if (!res.ok) throw new Error('Failed to delete account');
             logout();
         } catch (err) {
@@ -266,6 +285,38 @@ export function SettingsPage() {
                     </CardContent>
                 </Card>
 
+                {/* THEME / APPEARANCE */}
+                <Card className="col-span-1 card-3d-hover glassmorphic">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <SettingsIcon className="h-5 w-5 icon-float" style={{ color: 'var(--cobalt-blue)' }} />
+                            Appearance
+                        </CardTitle>
+                        <CardDescription>Customize the look and feel</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <Label>Theme</Label>
+                                <p className="text-sm text-muted-foreground">Choose your preferred color scheme</p>
+                            </div>
+                            <div className="flex gap-2">
+                                {(['light', 'dark', 'system'] as const).map(t => (
+                                    <Button
+                                        key={t}
+                                        variant={theme === t ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => setTheme(t)}
+                                        className="capitalize"
+                                    >
+                                        {t}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* NOTIFICATIONS */}
                 <Card className="col-span-1 card-3d-hover glassmorphic">
                     <CardHeader>
@@ -311,40 +362,6 @@ export function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                {/* APPEARANCE */}
-                <Card className="col-span-1 md:col-span-2 card-3d-hover glassmorphic">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Sun className="h-5 w-5 icon-float" style={{ color: 'var(--cobalt-blue)' }} />
-                            Appearance
-                        </CardTitle>
-                        <CardDescription>Customize how AlloySphere looks on your device</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-3 gap-3">
-                            {[
-                                { value: 'light', label: 'Light', icon: Sun },
-                                { value: 'dark', label: 'Dark', icon: Moon },
-                                { value: 'system', label: 'System', icon: Monitor },
-                            ].map(({ value, label, icon: Icon }) => (
-                                <button
-                                    key={value}
-                                    type="button"
-                                    onClick={() => setTheme(value)}
-                                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                                        theme === value
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-transparent bg-secondary hover:bg-muted'
-                                    }`}
-                                >
-                                    <Icon className={`h-5 w-5 ${theme === value ? 'text-primary' : 'text-muted-foreground'}`} />
-                                    <span className={`text-sm font-medium ${theme === value ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
                 {/* AlloySphere VERIFICATION PANEL (Founder only) */}
                 {user?.role === 'founder' && (
                     <Card
@@ -378,10 +395,10 @@ export function SettingsPage() {
                         <CardContent className="relative z-10 space-y-4">
                             {/* How it works */}
                             <div
-                                className="p-4 rounded-lg border bg-card/50"
                                 style={{
                                     borderColor: 'rgba(46, 139, 87, 0.12)',
                                 }}
+                                className="p-4 rounded-lg border bg-background/50"
                             >
                                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                                     <Shield className="h-4 w-4" style={{ color: 'var(--sea-green)' }} />

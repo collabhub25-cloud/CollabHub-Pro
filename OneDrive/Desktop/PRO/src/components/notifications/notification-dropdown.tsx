@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import { Bell, Check, CheckCheck, X, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore, useUIStore } from '@/store';
 import { toast } from 'sonner';
-import { apiFetch, apiPatch } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api-client';
 
 interface Notification {
   _id: string;
@@ -89,7 +89,9 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
     
     setLoading(true);
     try {
-      const response = await apiFetch('/api/notifications?limit=20');
+      const response = await fetch('/api/notifications?limit=20', {
+          credentials: 'include',
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -103,83 +105,60 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
     }
   }, []);
 
-  // Initialize WebSocket connection (only if server is configured)
+  // Initialize WebSocket connection
   useEffect(() => {
-    // Fetch notifications via HTTP (always works)
+
+    const socketInstance = io('/?XTransformPort=3003', {
+      transports: ['websocket', 'polling'],
+    });
+
+    socketInstance.on('connect', () => {
+      setConnected(true);
+    });
+
+    socketInstance.on('disconnect', () => {
+      setConnected(false);
+    });
+
+    socketInstance.on('notification:new', (notification: Notification) => {
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      
+      // Show toast notification
+      toast.success(notification.title, {
+        description: notification.message,
+      });
+    });
+
+    socketInstance.on('notification:unread_count', (data: { count: number }) => {
+      setUnreadCount(data.count);
+    });
+
+    socketInstance.on('notifications:recent', (notifs: Notification[]) => {
+      setNotifications(notifs);
+    });
+
+    setSocket(socketInstance);
+
+    // Fetch initial data
     fetchNotifications();
 
-    // Only attempt WebSocket if explicitly configured
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-    if (!wsUrl) {
-      // No WebSocket server configured — use HTTP polling fallback
-      const pollInterval = setInterval(() => {
-        fetchNotifications();
-      }, 30000); // Poll every 30 seconds
-      return () => clearInterval(pollInterval);
-    }
-
-    let socketInstance: Socket | null = null;
-    let isMounted = true;
-
-    (async () => {
-      try {
-        const { io } = await import('socket.io-client');
-        if (!isMounted) return;
-
-        socketInstance = io(wsUrl, {
-          transports: ['websocket', 'polling'],
-          reconnectionAttempts: 3,
-          timeout: 5000,
-        });
-
-        socketInstance.on('connect', () => {
-          if (isMounted) setConnected(true);
-        });
-
-        socketInstance.on('disconnect', () => {
-          if (isMounted) setConnected(false);
-        });
-
-        socketInstance.on('connect_error', () => {
-          if (isMounted) setConnected(false);
-        });
-
-        socketInstance.on('notification:new', (notification: Notification) => {
-          if (!isMounted) return;
-          setNotifications(prev => [notification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-          
-          toast.success(notification.title, {
-            description: notification.message,
-          });
-        });
-
-        socketInstance.on('notification:unread_count', (data: { count: number }) => {
-          if (isMounted) setUnreadCount(data.count);
-        });
-
-        socketInstance.on('notifications:recent', (notifs: Notification[]) => {
-          if (isMounted) setNotifications(notifs);
-        });
-
-        if (isMounted) setSocket(socketInstance);
-      } catch (err) {
-        console.error('Failed to load socket.io-client', err);
-      }
-    })();
-
     return () => {
-      isMounted = false;
-      if (socketInstance) {
-        socketInstance.disconnect();
-      }
+      socketInstance.disconnect();
     };
   }, [fetchNotifications]);
 
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await apiPatch('/api/notifications/read', { notificationIds: [notificationId] });
+      const response = await fetch('/api/notifications/read', {
+          credentials: 'include',
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationIds: [notificationId] }),
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -196,7 +175,14 @@ export const NotificationDropdown = React.memo(function NotificationDropdown() {
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      const response = await apiPatch('/api/notifications/read', { markAll: true });
+      const response = await fetch('/api/notifications/read', {
+          credentials: 'include',
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ markAll: true }),
+      });
 
       if (response.ok) {
         setUnreadCount(0);
