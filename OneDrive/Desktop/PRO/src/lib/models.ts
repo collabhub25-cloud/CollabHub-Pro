@@ -25,4 +25,5 @@ export * from './models/dispute.model';
 export * from './models/payment.model';
 export * from './models/subscription.model';
 export * from './models/notification.model';
+export * from './models/email-preferences.model';
 
