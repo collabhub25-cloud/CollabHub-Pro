@@ -3,7 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import { Startup, User, Subscription, TeamMember, Payment } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { validateInput, CreateStartupSchema, StartupUpdateSchema } from '@/lib/validation/schemas';
-import { checkPlanLimit, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
+import { checkPlanLimit, checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS, requireAuth } from '@/lib/security';
 import { sanitizeObject } from '@/lib/security/sanitize';
 import { createLogger } from '@/lib/logger';
 import { cacheOrFetch, CACHE_KEYS, CACHE_TTL, getCache } from '@/lib/cache';
@@ -18,13 +18,15 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const token = extractTokenFromCookies(request);
-
-    let userId: string | null = null;
-    if (token) {
-      const payload = verifyAccessToken(token);
-      if (payload) {
-        userId = payload.userId;
+    let userId: string | null = request.headers.get('x-user-id');
+    if (!userId) {
+      // Fallback for test environments
+      const token = extractTokenFromCookies(request);
+      if (token) {
+        const payload = verifyAccessToken(token);
+        if (payload) {
+          userId = payload.userId;
+        }
       }
     }
 
@@ -155,22 +157,14 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const token = extractTokenFromCookies(request);
-
-    if (!token) {
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: authResult.error },
+        { status: authResult.status }
       );
     }
-
-    const payload = verifyAccessToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    const payload = authResult.user;
 
     // Check if user is a founder
     const user = await User.findById(payload.userId);
@@ -307,22 +301,14 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
 
-    const token = extractTokenFromCookies(request);
-
-    if (!token) {
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: authResult.error },
+        { status: authResult.status }
       );
     }
-
-    const payload = verifyAccessToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    const payload = authResult.user;
 
     const body = await request.json();
     const { id, ...updateData } = body;
@@ -403,22 +389,14 @@ export async function DELETE(request: NextRequest) {
   try {
     await connectDB();
 
-    const token = extractTokenFromCookies(request);
-
-    if (!token) {
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: authResult.error },
+        { status: authResult.status }
       );
     }
-
-    const payload = verifyAccessToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    const payload = authResult.user;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

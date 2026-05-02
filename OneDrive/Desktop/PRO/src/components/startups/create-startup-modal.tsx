@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 import { apiPost } from '@/lib/api-client';
 import { apiFetch } from '@/lib/api-fetch';
 import { useRazorpayCheckout, type RazorpaySuccessResponse } from '@/components/payments/razorpay-checkout';
-import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
 
 interface CreateStartupModalProps {
   onSuccess?: () => void;
@@ -224,7 +224,7 @@ export function CreateStartupModal({ onSuccess, disabled, useHoverButton }: Crea
       <DialogTrigger asChild>
         {useHoverButton ? (
           <div>
-            <InteractiveHoverButton text="Create Startup" disabled={disabled} className="w-40" />
+            <Button variant="cta" disabled={disabled} className="w-40">Create Startup</Button>
           </div>
         ) : (
           <Button disabled={disabled}>

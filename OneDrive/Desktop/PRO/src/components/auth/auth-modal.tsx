@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -193,7 +193,7 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
                   />
                 </div>
               </div>
-              <InteractiveHoverButton type="submit" className="w-full" disabled={isLoading} text={isLoading ? 'Signing In...' : 'Sign In'} />
+              <Button type="submit" variant="cta" className="w-full" loading={isLoading} loadingText="Signing In...">Sign In</Button>
             </form>
           </TabsContent>
 
@@ -285,7 +285,7 @@ export function AuthModal({ open, onClose, mode, onSwitchMode }: AuthModalProps)
                 </div>
               </div>
 
-              <InteractiveHoverButton type="submit" className="w-full" disabled={isLoading} text={isLoading ? 'Creating...' : 'Create Account'} />
+              <Button type="submit" variant="cta" className="w-full" loading={isLoading} loadingText="Creating...">Create Account</Button>
 
               <p className="text-xs text-center text-muted-foreground">
                 By signing up, you agree to our Terms of Service and Privacy Policy.

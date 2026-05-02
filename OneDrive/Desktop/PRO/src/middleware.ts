@@ -232,7 +232,7 @@ const RATE_LIMITS_TIERS: Record<string, { windowMs: number; maxRequests: number 
 
 function getRateLimitTier(pathname: string, method: string): string {
   if (pathname.startsWith('/api/auth/login') || pathname.startsWith('/api/auth/register')) return 'auth';
-  if (pathname.startsWith('/api/ai/')) return 'ai';
+  if (pathname.startsWith('/api/ai')) return 'ai';
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return 'mutation';
   return 'default';
 }
@@ -376,11 +376,17 @@ export async function middleware(request: NextRequest) {
     try {
       const secret = new TextEncoder().encode(EFFECTIVE_JWT_SECRET);
       const { payload } = await jwtVerify(accessToken, secret);
-      const decoded = payload as { userId: string; email: string; role: string };
+      const decoded = payload as { userId: string; email: string; role: string; isEmailVerified?: boolean };
       const requiredRole = getDashboardRole(pathname);
 
       if (requiredRole && decoded.role !== requiredRole) {
         return NextResponse.redirect(new URL(`/dashboard/${decoded.role}`, request.url));
+      }
+
+      // Enforce email verification
+      if (decoded.isEmailVerified === false) {
+        // Exclude the verify-email page itself if it were inside /dashboard, but it's not.
+        return NextResponse.redirect(new URL('/verify-email', request.url));
       }
     } catch {
       return NextResponse.redirect(new URL('/login', request.url));

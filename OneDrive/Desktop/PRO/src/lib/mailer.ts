@@ -6,7 +6,9 @@ const SMTP_USER = process.env.EMAIL_USER;
 const SMTP_PASS = process.env.EMAIL_PASS;
 const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@AlloySphere.com';
 
-const transporter = nodemailer.createTransport({
+import { dispatchEmail } from '@/lib/aws';
+
+const nodemailerTransporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_PORT === 465,
@@ -15,6 +17,28 @@ const transporter = nodemailer.createTransport({
         pass: SMTP_PASS,
     },
 });
+
+// AWS-aware transporter wrapper
+const transporter = {
+  sendMail: async (options: any) => {
+    // Attempt AWS dispatch first
+    const awsResult = await dispatchEmail({
+      to: options.to as string,
+      subject: options.subject as string,
+      html: options.html as string,
+      text: options.text as string,
+      templateType: (options.subject as string).replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 30),
+      priority: options.priority || 'normal',
+    });
+
+    if (awsResult.channel === 'smtp-fallback') {
+      // Fallback to legacy SMTP
+      return nodemailerTransporter.sendMail(options);
+    }
+
+    return { messageId: awsResult.messageId };
+  }
+};
 
 // ============================================
 // Branded HTML wrapper

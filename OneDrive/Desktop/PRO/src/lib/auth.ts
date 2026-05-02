@@ -37,6 +37,7 @@ export interface TokenPayload {
   userId: string;
   email: string;
   role: string;
+  isEmailVerified?: boolean;
   iat?: number;
   exp?: number;
 }
@@ -186,6 +187,7 @@ export async function authenticateUser(
     userId: user._id.toString(),
     email: user.email,
     role: user.role,
+    isEmailVerified: user.isEmailVerified || false,
   };
 
   const accessToken = generateAccessToken(tokenPayload);

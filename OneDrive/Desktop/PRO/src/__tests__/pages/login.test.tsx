@@ -16,12 +16,13 @@ vi.mock('@/components/ui/logo', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/liquid-glass-button', () => ({
-  LiquidButton: ({ children, onClick, disabled, className, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} className={className} {...props}>
-      {children}
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, onClick, disabled, className, loading, loadingText, variant, size, ...props }: any) => (
+    <button onClick={onClick} disabled={disabled || loading} className={className} data-variant={variant} {...props}>
+      {loading ? (loadingText || children) : children}
     </button>
   ),
+  buttonVariants: () => '',
 }));
 
 vi.mock('@/store', () => ({

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store';
-import { LiquidButton } from '@/components/ui/liquid-glass-button';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const roles = [
@@ -78,11 +78,13 @@ function LoginForm() {
             </div>
 
             <div className="flex flex-col gap-3">
-                <LiquidButton
+                <Button
                     type="button"
+                    variant="cta"
+                    size="xl"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-bold transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-3 py-3.5"
                 >
                     {isLoading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -99,7 +101,7 @@ function LoginForm() {
                             </span>
                         </>
                     )}
-                </LiquidButton>
+                </Button>
             </div>
 
             <p className="text-center text-sm font-medium text-muted-foreground mt-8">

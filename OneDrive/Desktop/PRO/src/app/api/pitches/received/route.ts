@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // We filter by 'pending', 'viewed', 'interested', 'rejected'
     const pitches = await Pitch.find({
       investorId: user._id,
-      pitchStatus: { $in: ['pending', 'viewed', 'interested', 'rejected'] }
+      pitchStatus: { $in: ['requested', 'sent', 'pending', 'viewed', 'interested', 'rejected'] }
     })
       .populate('startupId', 'name logo industry stage fundingStage')
       .populate('founderId', 'name avatar verificationLevel')
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       
     const total = await Pitch.countDocuments({
       investorId: user._id,
-      pitchStatus: { $in: ['pending', 'viewed', 'interested', 'rejected'] }
+      pitchStatus: { $in: ['requested', 'sent', 'pending', 'viewed', 'interested', 'rejected'] }
     });
 
     return NextResponse.json({ success: true, pitches, total, page, limit });

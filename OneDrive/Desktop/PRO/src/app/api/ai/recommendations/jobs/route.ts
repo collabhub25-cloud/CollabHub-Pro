@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/security';
 import { getRecommendedJobs } from '@/lib/ai/recommendationEngine';
+import { requireAuth } from '@/lib/security';
 
-export const runtime = 'nodejs';
-
-/**
- * GET /api/ai/recommendations/jobs
- * Returns AI-powered job recommendations for talents
- */
 export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAuth(request);
@@ -15,10 +9,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
+    if (authResult.user.role !== 'talent') {
+      return NextResponse.json({ error: 'Only talents can get job recommendations' }, { status: 403 });
+    }
+
     const recommendations = await getRecommendedJobs(authResult.user.userId);
-    return NextResponse.json({ recommendations });
+    return NextResponse.json({ success: true, data: recommendations });
   } catch (error) {
-    console.error('Job recommendations error:', error);
+    console.error('Jobs Recommendation Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

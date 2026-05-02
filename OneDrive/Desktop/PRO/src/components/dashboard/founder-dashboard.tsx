@@ -6,7 +6,7 @@ import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -1052,7 +1052,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 <Button type="button" variant="outline" onClick={() => setShowEditStartup(null)}>
                   Cancel
                 </Button>
-                <InteractiveHoverButton type="submit" disabled={submitting} text={submitting ? 'Saving...' : 'Save Changes'} className="w-40" />
+                <Button type="submit" variant="cta" loading={submitting} loadingText="Saving..." className="w-40">Save Changes</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -1167,7 +1167,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Funding</h1>
-          <InteractiveHoverButton text="Create Funding Round" onClick={() => setShowCreateFundingRound(true)} className="w-52" />
+          <Button variant="cta" onClick={() => setShowCreateFundingRound(true)} className="w-52">Create Funding Round</Button>
         </div>
 
         {/* Create Funding Round Modal */}
@@ -1271,7 +1271,7 @@ export function FounderDashboard({ activeTab }: FounderDashboardProps) {
                 <Button type="button" variant="outline" onClick={() => setShowCreateFundingRound(false)}>
                   Cancel
                 </Button>
-                <InteractiveHoverButton type="submit" disabled={submitting} text={submitting ? 'Creating...' : 'Create Round'} className="w-40" />
+                <Button type="submit" variant="cta" loading={submitting} loadingText="Creating..." className="w-40">Create Round</Button>
               </DialogFooter>
             </form>
           </DialogContent>

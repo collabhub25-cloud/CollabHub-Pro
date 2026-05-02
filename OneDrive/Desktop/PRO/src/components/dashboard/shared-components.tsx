@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { LucideIcon, ArrowUpRight, Sparkles } from 'lucide-react';
 import { PlanType, getPlanDisplayName, FOUNDER_PLAN_FEATURES, FounderPlanType } from '@/lib/subscription/features';
@@ -160,7 +160,7 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
         <h3 className="text-lg font-semibold mb-2">{title}</h3>
         <p className="text-muted-foreground max-w-sm mb-4">{description}</p>
         {action && (
-          <InteractiveHoverButton text={action.label} onClick={action.onClick} className="w-44" />
+          <Button variant="cta" onClick={action.onClick} className="w-44">{action.label}</Button>
         )}
       </CardContent>
     </Card>

@@ -133,24 +133,37 @@ export interface AuthError {
  * Require authentication - verifies JWT token from httpOnly cookies
  */
 export async function requireAuth(request: NextRequest): Promise<AuthResult | AuthError> {
-  const token = extractTokenFromCookies(request);
+  const userId = request.headers.get('x-user-id');
+  const email = request.headers.get('x-user-email');
+  const role = request.headers.get('x-user-role');
 
-  if (!token) {
-    return {
-      success: false,
-      error: 'Authentication required',
-      status: 401,
-    };
+  if (!userId || !email || !role) {
+    // Fallback to token extraction if headers are missing (e.g. for some test environments)
+    const token = extractTokenFromCookies(request);
+    if (!token) {
+      return {
+        success: false,
+        error: 'Authentication required',
+        status: 401,
+      };
+    }
+
+    const decoded = verifyAccessToken(token);
+    if (!decoded) {
+      return {
+        success: false,
+        error: 'Invalid or expired token',
+        status: 401,
+      };
+    }
+    
+    return processAuthResult(decoded);
   }
 
-  const decoded = verifyAccessToken(token);
-  if (!decoded) {
-    return {
-      success: false,
-      error: 'Invalid or expired token',
-      status: 401,
-    };
-  }
+  return processAuthResult({ userId, email, role });
+}
+
+async function processAuthResult(decoded: TokenPayload): Promise<AuthResult | AuthError> {
 
   // Get user's subscription (only matters for founders)
   try {

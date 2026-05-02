@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/security';
-import { connectDB } from '@/lib/mongodb';
-import { Startup } from '@/lib/models';
 import { getRecommendedTalents } from '@/lib/ai/recommendationEngine';
+import { requireAuth } from '@/lib/security';
 
-export const runtime = 'nodejs';
-
-/**
- * GET /api/ai/recommendations/talents
- * Returns AI-powered talent recommendations for founders
- */
 export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAuth(request);
@@ -17,21 +9,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    await connectDB();
-
-    // Find the founder's startup
-    const startup = await Startup.findOne({ founderId: authResult.user.userId })
-      .select('_id')
-      .lean() as any;
-
-    if (!startup) {
-      return NextResponse.json({ recommendations: [] });
+    if (authResult.user.role !== 'founder') {
+      return NextResponse.json({ error: 'Only founders can get talent recommendations' }, { status: 403 });
     }
 
-    const recommendations = await getRecommendedTalents(startup._id.toString());
-    return NextResponse.json({ recommendations });
+    // Usually, you need a startupId to recommend talents.
+    // Assuming the frontend passes startupId as a query param.
+    const url = new URL(request.url);
+    const startupId = url.searchParams.get('startupId');
+
+    if (!startupId) {
+      return NextResponse.json({ error: 'startupId is required' }, { status: 400 });
+    }
+
+    const recommendations = await getRecommendedTalents(startupId);
+    return NextResponse.json({ success: true, data: recommendations });
   } catch (error) {
-    console.error('Talent recommendations error:', error);
+    console.error('Talents Recommendation Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

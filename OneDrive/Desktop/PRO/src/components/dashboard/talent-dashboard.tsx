@@ -6,7 +6,7 @@ import { DateTime } from 'luxon';
 import { useAuthStore, useUIStore } from '@/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -489,7 +489,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
 
                 {isEditing && (
                   <div className="flex gap-2 pt-4">
-                    <InteractiveHoverButton type="submit" disabled={saving} text={saving ? 'Saving...' : 'Save Changes'} className="w-40" />
+                    <Button type="submit" variant="cta" loading={saving} loadingText="Saving..." className="w-40">Save Changes</Button>
                     <Button type="button" variant="outline" onClick={handleCancelEdit}>
                       <X className="h-4 w-4 mr-2" />
                       Cancel
@@ -514,7 +514,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">My Applications</h1>
-          <InteractiveHoverButton text="Browse Opportunities" onClick={() => setGlobalTab('search')} className="w-52" />
+          <Button variant="cta" onClick={() => setGlobalTab('search')} className="w-52">Browse Opportunities</Button>
         </div>
         <Tabs defaultValue="active">
           <TabsList>
@@ -532,7 +532,7 @@ export function TalentDashboard({ activeTab }: TalentDashboardProps) {
                 <CardContent className="flex flex-col items-center justify-center py-8">
                   <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">No active applications</p>
-                  <InteractiveHoverButton text="Find Opportunities" onClick={() => setGlobalTab('search')} className="w-44" />
+                  <Button variant="cta" onClick={() => setGlobalTab('search')} className="w-44">Find Opportunities</Button>
                 </CardContent>
               </Card>
             ) : (

@@ -61,8 +61,6 @@ export async function POST(request: NextRequest) {
       passwordHash,
       role,
       verificationLevel: 0,
-
-      kycStatus: 'pending',
       isEmailVerified: false,
       verificationOtpHash: otpHash,
       verificationOtpExpires: otpExpires,
@@ -82,19 +80,13 @@ export async function POST(request: NextRequest) {
       // Proceed without failing registration; user can hit resend later
     }
 
-    // Send welcome email (non-blocking)
-    try {
-      const { sendWelcomeEmail } = await import('@/lib/mailer');
-      sendWelcomeEmail(user.email, user.name, user.role).catch(() => {});
-    } catch {
-      // Non-critical
-    }
 
     // Generate tokens
     const tokenPayload = {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
+      isEmailVerified: false,
     };
 
     const accessToken = generateAccessToken(tokenPayload);

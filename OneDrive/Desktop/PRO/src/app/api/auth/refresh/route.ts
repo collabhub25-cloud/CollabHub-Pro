@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
             userId: payload.userId,
             email: user.email,
             role: user.role,
+            isEmailVerified: user.isEmailVerified || false,
         };
 
         const newAccessToken = generateAccessToken(tokenPayload);

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
-import { LiquidButton } from '@/components/ui/liquid-glass-button';
+import { Button } from '@/components/ui/button';
 
 interface RoleSignupPageProps {
     role: 'founder' | 'investor' | 'talent';
@@ -124,11 +124,13 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
                     </div>
 
                     <div className="flex flex-col gap-3">
-                        <LiquidButton
+                        <Button
                             type="button"
+                            variant="cta"
+                            size="xl"
                             onClick={handleGoogleSignUp}
                             disabled={isLoading}
-                            className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-bold transition-colors disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-3 py-3.5"
                         >
                             {isLoading ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -145,7 +147,7 @@ export function RoleSignupPage({ role, title, subtitle }: RoleSignupPageProps) {
                                     </span>
                                 </>
                             )}
-                        </LiquidButton>
+                        </Button>
                     </div>
 
                     <p className="text-center text-sm font-medium text-muted-foreground mt-8">

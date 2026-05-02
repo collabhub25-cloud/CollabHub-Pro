@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AIMatchingPanel } from '@/components/ai/ai-matching-panel';
 import { AIAnalyticsPanel } from '@/components/ai/ai-analytics-panel';
 import { DealFlowPanel } from '@/components/investor/deal-flow-panel';
-import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -649,8 +649,8 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                 <Button variant="outline" onClick={() => setShowInvestModal(false)}>
                   Cancel
                 </Button>
-                <InteractiveHoverButton
-                  text="Message Founder"
+                <Button
+                  variant="cta"
                   onClick={() => {
                     if (selectedRound?.startupId.founderId) {
                       handleContactFounder(selectedRound.startupId.founderId, selectedRound.startupId.name);
@@ -659,7 +659,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     }
                   }}
                   className="w-44"
-                />
+                >Message Founder</Button>
               </div>
             </div>
           </DialogContent>
@@ -998,8 +998,8 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                 <Button variant="outline" onClick={() => setShowInvestModal(false)}>
                   Cancel
                 </Button>
-                <InteractiveHoverButton
-                  text="Message Founder"
+                <Button
+                  variant="cta"
                   onClick={() => {
                     if (selectedRound?.startupId.founderId) {
                       handleContactFounder(selectedRound.startupId.founderId, selectedRound.startupId.name);
@@ -1008,7 +1008,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
                     }
                   }}
                   className="w-44"
-                />
+                >Message Founder</Button>
               </div>
             </div>
           </DialogContent>
@@ -1215,7 +1215,7 @@ export function InvestorDashboard({ activeTab }: InvestorDashboardProps) {
 
                 {isEditing && (
                   <div className="flex gap-2 pt-4">
-                    <InteractiveHoverButton type="submit" disabled={saving} text={saving ? 'Saving...' : 'Save Changes'} className="w-40" />
+                    <Button type="submit" variant="cta" loading={saving} loadingText="Saving..." className="w-40">Save Changes</Button>
                     <Button type="button" variant="outline" onClick={handleCancelEdit}>
                       <X className="h-4 w-4 mr-2" />
                       Cancel

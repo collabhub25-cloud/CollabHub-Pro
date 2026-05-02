@@ -15,7 +15,11 @@ export type NotificationType =
   | 'alliance_rejected'
   | 'message_received'
   | 'pitch_requested'
+  | 'pitch_received'
   | 'pitch_sent'
+  | 'pitch_viewed'
+  | 'pitch_interested'
+  | 'pitch_rejected'
   | 'investment_entry_prompt'
   | 'investment_matched'
   | 'investment_mismatched';

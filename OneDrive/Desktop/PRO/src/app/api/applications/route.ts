@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { Application, Startup, User, TeamMember } from '@/lib/models';
+import { Application, Startup, User, TeamMember, Notification } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { createLogger } from '@/lib/logger';
 
@@ -243,6 +243,33 @@ export async function PUT(request: NextRequest) {
       { path: 'startupId', select: 'name industry stage' },
       { path: 'talentId', select: 'name email avatar skills verificationLevel' },
     ]);
+
+    // Notify talent about status change
+    if (status && ['accepted', 'rejected', 'shortlisted', 'reviewed'].includes(status)) {
+      const statusMessages: Record<string, { title: string; message: string }> = {
+        accepted: { title: 'Application Accepted! 🎉', message: `Your application to ${startup.name} has been accepted. Welcome to the team!` },
+        rejected: { title: 'Application Update', message: `Your application to ${startup.name} was not selected. Keep exploring other opportunities!` },
+        shortlisted: { title: 'You\'ve Been Shortlisted! ⭐', message: `Your application to ${startup.name} has been shortlisted for further review.` },
+        reviewed: { title: 'Application Reviewed', message: `Your application to ${startup.name} has been reviewed by the founder.` },
+      };
+
+      const msg = statusMessages[status];
+      if (msg) {
+        await Notification.create({
+          userId: application.talentId,
+          type: 'application_status',
+          title: msg.title,
+          message: msg.message,
+          actionUrl: '/dashboard/talent',
+          metadata: {
+            applicationId: application._id.toString(),
+            startupId: startup._id.toString(),
+            startupName: startup.name,
+            newStatus: status,
+          },
+        });
+      }
+    }
 
     // If accepted, add the talent to the startup's team (max 20 members)
     if (status === 'accepted') {

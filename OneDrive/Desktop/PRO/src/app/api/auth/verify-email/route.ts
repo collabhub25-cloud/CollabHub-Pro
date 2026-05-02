@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/lib/models';
+import { generateAccessToken, generateRefreshToken, setAuthCookies } from '@/lib/auth';
 import { checkRateLimit, getRateLimitKey, rateLimitResponse, RATE_LIMITS } from '@/lib/security';
 import crypto from 'crypto';
 
@@ -61,7 +62,18 @@ export async function POST(request: NextRequest) {
         user.verificationOtpAttempts = 0;
         await user.save();
 
-        return NextResponse.json({ success: true, message: 'Email verified successfully' });
+        const tokenPayload = {
+            userId: user._id.toString(),
+            email: user.email,
+            role: user.role,
+            isEmailVerified: true,
+        };
+
+        const accessToken = generateAccessToken(tokenPayload);
+        const refreshToken = generateRefreshToken(tokenPayload);
+
+        const response = NextResponse.json({ success: true, message: 'Email verified successfully' });
+        return setAuthCookies(response, accessToken, refreshToken);
     } catch (error) {
         console.error('Verify email error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

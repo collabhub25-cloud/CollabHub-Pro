@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
-import { LiquidButton } from '@/components/ui/liquid-glass-button';
 import { Shield, Menu, X, ArrowRight, Share2, Globe, Sparkles, Code2, Terminal } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import { motion } from 'framer-motion';
@@ -99,7 +97,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
           <div className="hidden md:flex items-center gap-4">
             <Button variant="ghost" onClick={onLogin} className="font-medium hover:bg-transparent hover:text-primary">Sign In</Button>
-            <InteractiveHoverButton text="Get Started" onClick={onRegister} className="w-32 bg-[#0d3b2e] hover:bg-[#1a5b48] text-white rounded-xl border-none font-medium h-10" />
+            <Button variant="cta" onClick={onRegister} className="w-32 h-10">Get Started</Button>
           </div>
 
           <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -115,7 +113,7 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               ))}
               <div className="flex gap-2 pt-4 border-t">
                 <Button variant="outline" className="flex-1" onClick={onLogin}>Sign In</Button>
-                <InteractiveHoverButton text="Get Started" onClick={onRegister} className="flex-1 bg-[#0d3b2e] text-white border-none" />
+                <Button variant="cta" onClick={onRegister} className="flex-1">Get Started</Button>
               </div>
             </div>
           </div>
@@ -140,20 +138,23 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </p>
               
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <LiquidButton 
+                <Button 
+                  variant="cta"
+                  size="xl"
                   onClick={onRegister} 
-                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl group transition-all"
+                  className="w-full sm:w-auto group"
                 >
                   Join the Network
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </LiquidButton>
-                <LiquidButton 
+                </Button>
+                <Button 
                   variant="outline"
+                  size="xl"
                   onClick={onLogin}
-                  className="w-full sm:w-auto px-8 h-12 text-base font-medium rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 transition-all"
+                  className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-800"
                 >
                   Sign In
-                </LiquidButton>
+                </Button>
               </div>
             </RevealSection>
           </div>
@@ -268,19 +269,22 @@ export function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                 Ready to build the <span className="text-emerald-400">future?</span>
               </h2>
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <LiquidButton 
+                <Button 
+                  variant="cta"
+                  size="xl"
                   onClick={onRegister}
-                  className="w-full sm:w-auto px-8 h-12 text-sm font-bold bg-emerald-200 text-emerald-950 hover:bg-emerald-300 rounded-xl"
+                  className="w-full sm:w-auto bg-emerald-200 text-emerald-950 hover:bg-emerald-300"
                 >
                   Get Started Now
-                </LiquidButton>
-                <LiquidButton 
-                  onClick={onLogin}
+                </Button>
+                <Button 
                   variant="outline"
-                  className="w-full sm:w-auto px-8 h-12 text-sm font-medium border-gray-600 text-white hover:bg-white/10 hover:text-white rounded-xl bg-transparent"
+                  size="xl"
+                  onClick={onLogin}
+                  className="w-full sm:w-auto border-gray-600 text-white hover:bg-white/10 hover:text-white bg-transparent"
                 >
                   Contact Sales
-                </LiquidButton>
+                </Button>
               </div>
             </div>
             

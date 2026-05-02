@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
         // Find all funding rounds where this user invested
         const investments = await FundingRound.find({
-            'investors.userId': userId,
+            'investors.investorId': userId,
         })
             .populate('startupId', 'name industry stage logo isActive')
             .lean();

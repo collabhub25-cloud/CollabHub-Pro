@@ -128,6 +128,7 @@ export async function GET(request: NextRequest) {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
+      isEmailVerified: user.isEmailVerified || false,
     };
 
     const accessToken = generateAccessToken(tokenPayload);

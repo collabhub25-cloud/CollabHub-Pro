@@ -3,22 +3,26 @@ import { connectDB } from '@/lib/mongodb';
 import { Pitch, Startup, User, Notification } from '@/lib/models';
 import { verifyAccessToken, extractTokenFromCookies } from '@/lib/auth';
 import { sanitizeObject } from '@/lib/security/sanitize';
+import { requireAuth } from '@/lib/security';
 
 // GET /api/pitches — Fetch pitches for current user
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const token = extractTokenFromCookies(request);
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
 
-    const payload = verifyAccessToken(token);
-    if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const user = await User.findById(payload.userId);
+    const user = await User.findById(authResult.user.userId);
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const { searchParams } = new URL(request.url);
     const startupId = searchParams.get('startupId');
+
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = parseInt(searchParams.get('page') || '1');
+    const skip = (page - 1) * limit;
 
     if (user.role === 'founder') {
       // Founder sees pitch requests for their startups
@@ -36,17 +40,34 @@ export async function GET(request: NextRequest) {
         query.startupId = { $in: startupIds };
       }
 
+      const total = await Pitch.countDocuments(query);
       const pitches = await Pitch.find(query)
         .populate('investorId', 'name avatar email verificationLevel')
         .populate('startupId', 'name logo industry stage fundingStage')
-        .sort({ createdAt: -1 });
-      return NextResponse.json({ success: true, pitches });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+        
+      return NextResponse.json({ 
+        success: true, 
+        pitches,
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) }
+      });
 
     } else if (user.role === 'investor') {
-      const pitches = await Pitch.find({ investorId: user._id })
+      const query = { investorId: user._id };
+      const total = await Pitch.countDocuments(query);
+      const pitches = await Pitch.find(query)
         .populate('startupId', 'name logo industry stage fundingStage founderId')
-        .sort({ createdAt: -1 });
-      return NextResponse.json({ success: true, pitches });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+        
+      return NextResponse.json({ 
+        success: true, 
+        pitches,
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) }
+      });
     }
 
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
@@ -60,11 +81,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    const token = extractTokenFromCookies(request);
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = verifyAccessToken(token);
-    if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const payload = authResult.user;
 
     const user = await User.findById(payload.userId);
     if (!user || user.role !== 'investor') {
